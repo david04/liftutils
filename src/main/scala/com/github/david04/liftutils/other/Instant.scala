@@ -1,17 +1,36 @@
 package com.github.david04.liftutils.other
 
 import net.liftweb.http.SHtml.ElemAttr
-import scala.xml.{MetaData, NodeSeq}
+import scala.xml.NodeSeq
 import java.util.UUID
 import net.liftweb.http.SHtml
-import net.liftweb.http.js.JE.JsRaw
+import net.liftweb.http.js.JE.{JsNull, JsRaw}
 import net.liftweb.json._
-import net.liftweb.http.js.JE.JsRaw
-import net.liftweb.http.js.JsCmds.SetHtml
+import net.liftweb.http.js.JsCmds.{Replace, SetHtml}
 import net.liftweb.http.js.JsCmd
 
 
 object InstantEdit {
+
+  def text(get: () => String, set: String => Unit, attrs: ElemAttr*): NodeSeq = {
+    val uid = UUID.randomUUID().toString
+    def display: NodeSeq = <span id={uid} onclick={SHtml.jsonCall(JsNull, (_: JValue) => Replace(uid, edit)).toJsCmd}>
+      {get()}
+    </span>
+    def edit: NodeSeq = <div id={uid}>
+      <input type="text" id={uid + "input"} value={get()} class="input-medium" style="margin-bottom: 0px;"></input>
+      <button class="btn"
+              onclick={SHtml.jsonCall(JsNull, (_: JValue) => Replace(uid, display)).toJsCmd}>Cancel</button>
+      <button class="btn btn-primary"
+              onclick={SHtml.jsonCall(JsRaw("$('#" + uid + "input').val()"), (v: JValue) => v match {
+                case JString(s) => {
+                  set(s)
+                  Replace(uid, display)
+                }
+              }).toJsCmd}>Save</button>
+    </div>
+    display
+  }
 
   def enum[ENUM <: Enumeration](e: ENUM, get: () => ENUM#Value, set: (ENUM#Value) => Unit, attrs: ElemAttr*): NodeSeq = {
     val uid = UUID.randomUUID().toString
