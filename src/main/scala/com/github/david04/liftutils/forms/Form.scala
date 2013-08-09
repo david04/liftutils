@@ -2,7 +2,7 @@ package com.github.david04.liftutils.forms
 
 import net.liftweb.mapper._
 import net.liftweb.common._
-import net.liftweb.http.{Templates, S, SHtml}
+import net.liftweb.http.{SessionVar, Templates, S, SHtml}
 import scala.xml.NodeSeq
 import scala.xml.Text
 import net.liftweb.http.js.JsCmds._
@@ -14,184 +14,105 @@ import com.github.david04.liftutils.util.Util._
 import java.util.UUID
 import scala.collection.mutable
 import net.liftweb.http.js.jquery.JqJsCmds.AppendHtml
+import com.github.david04.liftutils.entity.{ChildEntity, Entity}
+import net.liftweb.http.S._
+import net.liftweb.http.js.JsCmds.Run
+import net.liftweb.http.js.JsCmds.SetHtml
+import scala.Some
+import com.github.david04.liftutils.crud.{Editable, Crudable}
 
 trait RederedField {
   val id = UUID.randomUUID().toString
   val html: NodeSeq
 
-  def update: JsCmd
+  def validate: List[NodeSeq]
+
+  def update = {
+    validate match {
+      case err :: rest => SetHtml(id + "help", err) & Run("$('#" + id + "').addClass('error');")
+      case Nil => SetHtml(id + "help", NodeSeq.Empty) & Run("$('#" + id + "').removeClass('error');")
+    }
+  }
 }
 
-trait FormField[T, E <: Mapper[E]] {
+abstract class RederedFieldImpl[E](setTmp: Any => Unit, getTmp: () => Option[Any]) extends RederedField {
+
+  def value: Option[E] = getTmp().asInstanceOf[Option[E]]
+
+  def value_=(v: E) = setTmp(v)
+}
+
+trait FormField[E] {
   protected def fieldType: String
 
-  def template(row: Boolean, name: String = "") = Templates("templates-crud-hidden" :: (fieldType + (if (row) "Row" else "") + name) :: Nil).openOrThrowException("")
+  def templateRoot = "templates-crud-hidden" :: Nil
 
-  val name: String
+  def template(row: Boolean, name: String = "") =
+    Templates(templateRoot ::: ("edit" :: (if (row) "row" else "field") :: (fieldType + name) :: Nil)).openOrThrowException("")
 
-  def render(instance: E, row: Boolean = false): RederedField
+  def name: String
 
-}
-
-case class MappedTextFormField[E <: KeyedMapper[_, E]](name: String, field: E => MappedField[String, E], placeholder: String = "") extends FormField[String, E] {
-
-  def fieldType = "Text"
-
-  def render(instance: E, row: Boolean = false) = new RederedField {
-    val html = {
-      <div class="control-group" id={id}>
-        <label class="control-label">
-          {name.capitalize + ":"}
-        </label>
-
-        <div class="controls">
-          {SHtml.text(field(instance).get, field(instance).apply _, "id" -> (id + "input"), "class" -> "span6", "placeholder" -> placeholder)}<!---->
-          <span class="help-inline" id={id + "help"}></span>
-        </div>
-      </div>
-    }
-
-    def update = {
-      field(instance).validate match {
-        case err :: rest => SetHtml(id + "help", err.msg) & Run("$('#" + id + "').addClass('error');")
-        case Nil => SetHtml(id + "help", NodeSeq.Empty) & Run("$('#" + id + "').removeClass('error');")
-      }
-    }
-  }
+  def render(
+              saveAndRedirect: String => JsCmd,
+              instance: E,
+              row: Boolean,
+              edit: Boolean,
+              setTmp: Any => Unit,
+              getTmp: () => Option[Any]
+              ): RederedField
 
 }
 
-
-abstract class MappedForeignKeyFormField[K, E <: KeyedMapper[_, E], O <: KeyedMapper[K, O]](
-                                                                                             all: E => Seq[O],
-                                                                                             field: E => MappedForeignKey[K, E, O],
-                                                                                             fieldName: O => MappedText[O],
-                                                                                             placeholder: String = "",
-                                                                                             toStr: K => String,
-                                                                                             fromStr: String => K
-                                                                                             ) extends FormField[K, E] {
-
-  def fieldType = "ForeignKey"
-
-  def render(instance: E, row: Boolean = false) = new RederedField {
-
-    val html = {
-      val dlft = Option(field(instance).get).map(toStr)
-      S.appendJs(Run(
-        (dlft.map(d => "$(\"#" + id + "sel\").val(" + d.encJs + ");").getOrElse("") + "$(\"#" + id + "sel\").chosen();")))
-
-      (
-        "@wrap [id]" #> id &
-          "@name *" #> (name.capitalize + ":") &
-          "@select [data-placeholder]" #> placeholder &
-          "@select" #> SHtml.select(
-            all(instance).map(o => (toStr(o.primaryKeyField.get), fieldName(o).get)),
-            Box(dlft),
-            s => if (all(instance).exists(_.primaryKeyField.get == fromStr(s))) field(instance).apply(fromStr(s)),
-            "id" -> (id + "sel")) &
-          "@help [id]" #> (id + "help")
-        )(template(row))
-    }
-
-    def update = {
-      field(instance).validate match {
-        case err :: rest => SetHtml(id + "help", err.msg) & Run("$('#" + id + "').addClass('error');")
-        case Nil => SetHtml(id + "help", NodeSeq.Empty) & Run("$('#" + id + "').removeClass('error');")
-      }
-    }
-  }
-}
-
-abstract class MappedTableFormField[K, E <: OneToMany[K, E], O <: KeyedMapper[K, O]](
-                                                                                      all: E => E#MappedOneToMany[O],
-                                                                                      fields: Seq[FormField[_, O]],
-                                                                                      create: E => O
-                                                                                      ) extends FormField[K, E] {
-  def fieldType = "Table"
-
-  def render(instance: E, row: Boolean = false): RederedField = new RederedField() {
-
-    var rendered: mutable.Buffer[(O, Seq[RederedField], String)] = all(instance).map(r => (r, fields.map(f => f.render(r, true)), UUID.randomUUID().toString))
-
-    val html = {
-      val tbodyId = UUID.randomUUID().toString
-
-      def deleteButton(e: (O, Seq[RederedField], String)) = (("@btn [onclick]" #> run(delete(e)))).apply(template(row, "DelBtn"))
-
-      def delete(e: (O, Seq[RederedField], String)) = {
-        if (rendered.contains(e)) {
-          e._1.delete_!
-          all(instance) -= e._1
-          rendered = rendered.filter(_ != e)
-          Replace(e._3, Text(""))
-        } else {
-          Noop
-        }
-      }
-
-      var rowTemplate: NodeSeq = NodeSeq.Empty
-      def renderRow(e: (O, Seq[RederedField], String)) = e match {
-        case (r, rdrd, _id) =>
-          ("@tr [id]" #> _id &
-            "@td *" #> (rdrd.map(_.html) :+ deleteButton(e)))(rowTemplate)
-      }
-      def renderRows(r: NodeSeq) = {
-        rowTemplate = r
-        rendered.map(renderRow _).reduceOption(_ ++ _).getOrElse(Text(""))
-      }
-
-      def newline() = run {
-        val nw = create(instance)
-        all(instance) += nw
-        val nwRendered = (nw, fields.map(f => f.render(nw, true)), UUID.randomUUID().toString)
-        nwRendered +=: rendered
-        AppendHtml(tbodyId, renderRow(nwRendered))
-      }
-
-      (
-        "@wrap [id]" #> id &
-          "@title *" #> name &
-          "@table @thead @tr @th *" #> (fields.map(_.name) :+ "").map(name => Text(name)) &
-          "@table @tbody [id]" #> tbodyId &
-          "@table @tbody @tr" #> renderRows _ &
-          "@newline [onclick]" #> newline()
-        ).apply({template(row, "")})
-    }
-
-    def update = rendered.map(_._2.map(_.update).reduceOption(_ & _).getOrElse(Noop)).reduceOption(_ & _).getOrElse(Noop)
-  }
-}
-
-abstract class Form[E <: Mapper[E]](instance: E) {
+abstract class Form[E <: Editable[E]](instance: E, template: NodeSeq) {
 
 
   val primaryBtnText: String
-  val back: String
-  val fields: List[FormField[_, E]]
+  val cancelBtnText: String
+  val back: JsCmd
+  val fields: List[FormField[E]]
+
+  protected def save(): Unit
 
   private lazy val html = {
 
-    val rendered = fields.map(_.render(instance))
+    val submitId = nextFuncName
+    var url: Option[String] = None
+    lazy val rendered: List[RederedField] = fields.map(f => f.render(
+      url => runJsCmd(saveAndRedirect(url)),
+      instance,
+      false,
+      true,
+      v => instance.tmpMap(System.identityHashCode(f)) = v,
+      () => instance.tmpMap.get(System.identityHashCode(f))
+    ))
 
     def submit() = {
-      val errors = instance.validate
-      if (errors.isEmpty) {
-        instance.save()
-        RedirectTo(back)
+      if (rendered forall {_.validate.isEmpty}) {
+        save()
+        back
       } else {
         rendered.map(_.update).reduce(_ & _)
       }
     }
 
-    <form class="lift:form.ajax">
-      <div class="form-horizontal">
-        {rendered.map(_.html)}<!---->{SHtml.hidden(submit _)}<!---->
-        <div class="form-actions no-margin-bottom">
-          <a class="btn" href={back}>Cancel</a>
-          <input class="btn btn-primary" value={primaryBtnText} type="submit"></input>
-        </div>
-      </div>
-    </form>
+    def temporarySave() =
+      url.map(url => Run("window.location = " + S.encodeURL(url).encJs + ";")).getOrElse(Noop)
+
+    def saveAndRedirect(_url: String) = {
+      url = Some(_url);
+      val name = "z" + nextFuncName
+      addFunctionMap(name, temporarySave _)
+      Run("$('#" + submitId + "').attr('name', " + name.encJs + ");" +
+        "$('#" + submitId + "').submit();")
+    }
+
+    (
+      "@fields" #> rendered.map(_.html) &
+        "@cancelbtn [onclick]" #> back.toJsCmd &
+        "@cancelbtn *" #> cancelBtnText &
+        "@submitbtn [value]" #> primaryBtnText &
+        "@hidden" #> S.formGroup(10000)(SHtml.hidden(submit _, "id" -> submitId))
+      )(template)
   }
 
   def render = html

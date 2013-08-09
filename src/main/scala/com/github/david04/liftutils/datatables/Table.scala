@@ -8,6 +8,7 @@ import S._
 import net.liftweb.json.JsonDSL._
 import net.liftweb.json._
 import net.liftweb.util.StringHelpers.encJs
+import com.github.david04.liftutils.util.Util.___printable
 
 case class OLanguage(
                       sEmptyTable: String = "No data available in table",
@@ -27,7 +28,8 @@ case class Col[T](
                    defaultSort: Boolean = false,
                    defaultSortAscending: Boolean = true,
                    centerH: Boolean = null.asInstanceOf[Boolean],
-                   centerR: Boolean = null.asInstanceOf[Boolean]
+                   centerR: Boolean = null.asInstanceOf[Boolean],
+                   sClass: String = ""
                    ) {
 
   def center(b: Boolean, s: String) = if (b) s"<center>$s</center>" else s
@@ -35,6 +37,7 @@ case class Col[T](
   override def toString = s"{ " +
     s"'sTitle': ${encJs(center(centerH, title))}, " +
     s"'bSortable': ${"" + bSortable}, " +
+    s"'sClass': ${sClass.encJs}, " +
     s"}"
 
   def value(t: T) = _value(t) match {
@@ -57,6 +60,9 @@ abstract class Table[T](
   val id: String = ## + ""
   val bJQueryUI = false
 
+  val refreshEveryMillis: Option[Int] = None
+  val infiniteScrollHeight: Option[String] = None
+
   def defaultOLanguage = OLanguage()
 
   val columns: List[Col[T]]
@@ -69,11 +75,26 @@ abstract class Table[T](
     data.indexWhere(e => selector(e._1))
   })
 
-  def reload() = Run("$('#" + id + "').dataTable().fnReloadAjax()")
+  def reload() = Run("$('#" + id + "').dataTable().fnReloadAjax(null, null, true);")
 
   var initialized = false
 
-  val f = (_: String) => JsonResponse("aaData" -> JArray(values().map(e => JArray(columns.map(_.value(e)))).toList))
+  var currentRendered: Seq[T] = null.asInstanceOf[Seq[T]]
+
+  val f = (_: String) => JsonResponse("aaData" -> JArray({
+    currentRendered = values()
+    currentRendered.map(e => JArray(columns.map(_.value(e)))).toList
+  }))
+
+  def update(v: T, col: Col[T]) =
+    Run("$('#" + id + "').dataTable({'bRetrieve': true}).fnUpdate(" +
+      (col.value(v) match {case JString(s) => s.encJs}) + ", " +
+      currentRendered.indexOf(v) + ", " +
+      columns.indexOf(col) + "," +
+      // Do not redraw:
+      "false);" +
+      "$('#" + id + "').dataTable({'bRetrieve': true}).fnStandingRedraw();"
+    )
 
   lazy val setUpJs = fmapFunc(SFuncHolder(f)) {
     func =>
@@ -93,8 +114,11 @@ abstract class Table[T](
         s"          'sAjaxSource': ${where.encJs}," +
         s"          'sDom': ${sDom.encJs}," +
         s"          'sPaginationType': ${sPaginationType.encJs}," +
+        s"          'fnInitComplete': function() { this.fnAdjustColumnSizing(true); }," +
+        infiniteScrollHeight.map(h => s"'bDeferRender': true, 'sScrollY': '$h',").getOrElse("") +
         s"          'bJQueryUI': $bJQueryUI" +
-        "      });")
+        "      });" +
+        refreshEveryMillis.map(t => s"setInterval(function(){${reload().toJsCmd}},$t);").getOrElse(""))
   }
 
   def setUpOnLoad(): Unit = if (!initialized) {
