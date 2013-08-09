@@ -15,7 +15,7 @@ case class MappedIntFormField[E <: Entity[E]](name: String, field: E => MappedFi
 
   def fieldType = "Int"
 
-  def render(saveAndRedirect: String => JsCmd, instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedFieldImpl[String](setTmp, getTmp) {
+  def render( instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedFieldImpl[String](setTmp, getTmp) {
 
     value = "" + field(instance).get
 

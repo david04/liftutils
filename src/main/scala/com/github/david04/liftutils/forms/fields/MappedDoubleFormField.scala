@@ -15,7 +15,7 @@ case class MappedDoubleFormField[E <: Entity[E]](name: String, field: E => Mappe
 
   def fieldType = "Double"
 
-  def render(saveAndRedirect: String => JsCmd, instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) =
+  def render( instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) =
     new RederedFieldImpl[String](setTmp, getTmp) {
 
       value = "" + field(instance).get

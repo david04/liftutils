@@ -20,7 +20,7 @@ case class MappedDateFormField[E <: Entity[E]](name: String, field: E => MappedF
 
   def fieldType = "Date"
 
-  def render(saveAndRedirect: String => JsCmd, instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedFieldImpl[String](setTmp, getTmp) {
+  def render( instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedFieldImpl[String](setTmp, getTmp) {
 
     def dpFormat = "yyyy-mm-dd"
 

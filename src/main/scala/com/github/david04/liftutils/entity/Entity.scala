@@ -1,13 +1,15 @@
 package com.github.david04.liftutils.entity
 
 import com.github.david04.liftutils.crud.{MetaCrudable, Editable, Crudable}
-import com.github.david04.liftutils.forms.fields.{MappedExtEditTableFormField, MappedTableFormField, MappedForeignKeyFormField}
+import com.github.david04.liftutils.forms.fields.{MappedTableFormField, MappedForeignKeyFormField}
 import net.liftweb.mapper._
 import net.liftweb.util.FieldError
 import scala.xml.Text
 
 trait Entity[T <: Entity[T]] extends LongKeyedMapper[T] with OneToMany[Long, T] with IdPK {
   self: T =>
+
+  val tmpMap = collection.mutable.Map[Int, Any]()
 }
 
 trait MetaEntity[T <: Entity[T]] extends Entity[T] with LongKeyedMetaMapper[T] {

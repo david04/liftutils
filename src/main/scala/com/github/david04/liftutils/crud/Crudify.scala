@@ -49,8 +49,6 @@ trait Editable[E <: Entity[E]] extends Entity[E] {
 
   final def crudId: String = this.getClass.getSimpleName.filter(_.isLetter).toLowerCase
 
-  val tmpMap = collection.mutable.Map[Int, Any]()
-
   def fFields: List[FormField[E]] = Nil
 }
 
@@ -188,11 +186,14 @@ trait MetaDefaultCrudable[E <: DefaultCrudable[E]] extends DefaultCrudable[E] wi
   }
 
   private def form(primaryBtn: String, cancelBtn: String, e: E) =
-    new Form[E](e, formTemplateNodeSeq) {
+    new Form[E](e) {
+
+      def template = formTemplateNodeSeq
 
       val primaryBtnText = if (transientParent_?(e)) unsavedChildPrimaryBtn else primaryBtn
       val cancelBtnText = if (transientParent_?(e)) unsavedChildCancelBtn else cancelBtn
-      val back = Run("history.back();")
+      val onCancel = Run("history.back();")
+      val onSuccess = Run("history.back();")
       val fields = fFields
 
       protected def save() { saveE(e) }

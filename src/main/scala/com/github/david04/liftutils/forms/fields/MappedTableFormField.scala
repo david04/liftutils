@@ -25,10 +25,9 @@ abstract class MappedTableFormField[E <: Entity[E], O <: Editable[O]](
 
   def fieldType = "Table"
 
-  def render(saveAndRedirect: String => JsCmd, instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]): RederedField = new RederedField {
+  def render( instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]): RederedField = new RederedField {
 
     var rendered: mutable.Buffer[(O, Seq[RederedField], String)] = all(instance).map(r => (r, ot.fFields.map(f => f.render(
-      saveAndRedirect,
       r,
       true,
       true,
@@ -71,7 +70,6 @@ abstract class MappedTableFormField[E <: Entity[E], O <: Editable[O]](
         val nw = ot.newInstance()
         all(instance) += nw
         val nwRendered = (nw, ot.fFields.map(f => f.render(
-          saveAndRedirect,
           nw,
           true,
           true,

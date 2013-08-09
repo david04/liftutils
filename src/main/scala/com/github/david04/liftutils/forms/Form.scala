@@ -42,8 +42,11 @@ abstract class RederedFieldImpl[E](setTmp: Any => Unit, getTmp: () => Option[Any
   def value_=(v: E) = setTmp(v)
 }
 
-trait FormField[E] {
+trait FormField {
   protected def fieldType: String
+  val field = this
+
+  def validate: List[NodeSeq] = Nil
 
   def templateRoot = "templates-crud-hidden" :: Nil
 
@@ -53,7 +56,26 @@ trait FormField[E] {
   def name: String
 
   def render(
-              saveAndRedirect: String => JsCmd,
+              row: Boolean,
+              edit: Boolean,
+              setTmp: Any => Unit,
+              getTmp: () => Option[Any]
+              ): RederedField
+
+}
+
+trait MappedFormField[E] {
+  protected def fieldType: String
+  val field = this
+
+  def templateRoot = "templates-crud-hidden" :: Nil
+
+  def template(row: Boolean, name: String = "") =
+    Templates(templateRoot ::: ("edit" :: (if (row) "row" else "field") :: (fieldType + name) :: Nil)).openOrThrowException("")
+
+  def name: String
+
+  def render(
               instance: E,
               row: Boolean,
               edit: Boolean,
@@ -63,22 +85,28 @@ trait FormField[E] {
 
 }
 
-abstract class Form[E <: Editable[E]](instance: E, template: NodeSeq) {
+abstract class Form[E <: Entity[E]](protected val instance: E) {
 
+  def template: NodeSeq
 
   val primaryBtnText: String
   val cancelBtnText: String
-  val back: JsCmd
+  val onCancel: JsCmd
+  val onSuccess: JsCmd
   val fields: List[FormField[E]]
 
   protected def save(): Unit
+
+  val id = ## + ""
+
+  val extCancelJs = Run("$('#" + id + "-cancel').trigger('onclick');")
+  val extSubmitJs = Run("$('#" + id + "-submit').trigger('submit');")
 
   private lazy val html = {
 
     val submitId = nextFuncName
     var url: Option[String] = None
     lazy val rendered: List[RederedField] = fields.map(f => f.render(
-      url => runJsCmd(saveAndRedirect(url)),
       instance,
       false,
       true,
@@ -89,7 +117,7 @@ abstract class Form[E <: Editable[E]](instance: E, template: NodeSeq) {
     def submit() = {
       if (rendered forall {_.validate.isEmpty}) {
         save()
-        back
+        onSuccess
       } else {
         rendered.map(_.update).reduce(_ & _)
       }
@@ -108,8 +136,10 @@ abstract class Form[E <: Editable[E]](instance: E, template: NodeSeq) {
 
     (
       "@fields" #> rendered.map(_.html) &
-        "@cancelbtn [onclick]" #> back.toJsCmd &
+        "@cancelbtn [id]" #> (id + "-cancel") &
+        "@cancelbtn [onclick]" #> onCancel.toJsCmd &
         "@cancelbtn *" #> cancelBtnText &
+        "@submitbtn [id]" #> (id + "-submit") &
         "@submitbtn [value]" #> primaryBtnText &
         "@hidden" #> S.formGroup(10000)(SHtml.hidden(submit _, "id" -> submitId))
       )(template)

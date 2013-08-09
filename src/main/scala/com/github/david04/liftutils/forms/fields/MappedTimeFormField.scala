@@ -16,7 +16,7 @@ case class MappedTimeFormField[E <: Entity[E]](name: String, field: E => MappedF
 
   def fieldType = "Time"
 
-  def render(saveAndRedirect: String => JsCmd, instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedFieldImpl[(String, String)](setTmp, getTmp) {
+  def render( instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedFieldImpl[(String, String)](setTmp, getTmp) {
 
     value = ("" + field(instance).get / 60, "" + field(instance).get % 60)
 

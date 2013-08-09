@@ -23,7 +23,7 @@ abstract class MappedForeignKeyFormField[K, E <: Entity[ E], O <: KeyedMapper[K,
 
   def fieldType = "ForeignKey"
 
-  def render(saveAndRedirect: String => JsCmd, instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedField() {
+  def render( instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedField() {
 
     def validate = field(instance).validate.map(_.msg)
 
