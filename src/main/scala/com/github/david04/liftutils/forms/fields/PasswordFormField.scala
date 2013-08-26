@@ -9,13 +9,16 @@ import com.github.david04.liftutils.entity.Entity
 /**
  * Created by david at 5:33 PM
  */
-case class MappedPasswordFormField[E <: Entity[E]](name: String, field: E => MappedField[String, E], placeholder: String = "") extends FormField[E] {
+class PasswordFormField(
+                         val name: String,
+                         set: String => Unit
+                         , placeholder: String = "") extends FormField {
 
   def fieldType = "Password"
 
-  def render( instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedField {
+  def render(row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedField {
 
-    def validate = field(instance).validate.map(_.msg)
+    def validate = field.validate
 
     val html = {
       bind("f", (
@@ -23,7 +26,10 @@ case class MappedPasswordFormField[E <: Entity[E]](name: String, field: E => Map
           "@name *" #> (name.capitalize) &
           "@help [id]" #> (id + "help")
         )(template(row)),
-        "input" -%> SHtml.password("", field(instance).apply _, "id" -> (id + "input"), "placeholder" -> placeholder))
+        "input" -%> SHtml.password("", set, "id" -> (id + "input"), "placeholder" -> placeholder))
     }
   }
 }
+
+
+

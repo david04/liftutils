@@ -1,13 +1,14 @@
 package com.github.david04.liftutils.other
 
 import net.liftweb.http.SHtml.ElemAttr
-import scala.xml.NodeSeq
+import scala.xml.{Text, NodeSeq}
 import java.util.UUID
 import net.liftweb.http.SHtml
 import net.liftweb.http.js.JE.{JsNull, JsRaw}
 import net.liftweb.json._
 import net.liftweb.http.js.JsCmds.{Replace, SetHtml}
 import net.liftweb.http.js.JsCmd
+import com.github.david04.liftutils.util.Util
 
 
 object InstantEdit {
@@ -50,6 +51,24 @@ object InstantEdit {
         </option>
       )}
     </select>)(_ % _)
+  }
+
+  def enumNav[ENUM <: Enumeration](e: ENUM, get: () => ENUM#Value, set: (ENUM#Value) => JsCmd, attrs: ElemAttr*): NodeSeq = {
+    val id = UUID.randomUUID().toString
+    <ul class="nav" id={id}>
+      <li class="dropdown">
+        <a data-toggle="dropdown" class="dropdown-toggle" href="#" id={id + "head"}>
+          {get().toString}
+        </a>
+        <ul class="dropdown-menu">
+          {e.values.map(v => <li>
+          <a href="#" onclick={Util.run({set(v) & SetHtml(id + "head", Text(v.toString))})}>
+            {v.toString}
+          </a>
+        </li>)}
+        </ul>
+      </li>
+    </ul>
   }
 
   def checkbox(caption: () => String, get: () => Boolean, set: (Boolean) => JsCmd, attrs: ElemAttr*): NodeSeq = {

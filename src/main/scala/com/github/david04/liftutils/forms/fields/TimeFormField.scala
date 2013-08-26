@@ -12,24 +12,28 @@ import com.github.david04.liftutils.entity.Entity
 /**
  * Created by david at 5:33 PM
  */
-case class MappedTimeFormField[E <: Entity[E]](name: String, field: E => MappedField[Int, E], placeholder: String = "") extends FormField[E] {
+class TimeFormField(
+                                val name: String,
+                                get: () => Int,
+                                set: Int => Unit,
+                                placeholder: String = "") extends FormField {
 
   def fieldType = "Time"
 
-  def render( instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedFieldImpl[(String, String)](setTmp, getTmp) {
+  def render( row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedFieldImpl[(String, String)](setTmp, getTmp) {
 
-    value = ("" + field(instance).get / 60, "" + field(instance).get % 60)
+    value = ("" + get() / 60, "" + get() % 60)
 
-    def set() = field(instance).apply(value.get._1.toInt * 60 + value.get._2.toInt)
+    def _set() = set(value.get._1.toInt * 60 + value.get._2.toInt)
 
-    def validate = if (!(
+    def validate = (if (!(
       value.get match {
         case (hrValue, minValue) =>
           hrValue.matches("\\d+") && minValue.matches("\\d+") &&
             hrValue.size < 3 && hrValue.toLong < 24 &&
             minValue.size < 3 && minValue.toLong < 60
       })) Text("Invalid time") :: Nil
-    else {set(); field(instance).validate.map(_.msg)}
+    else {_set(); Nil}) ::: field.validate
 
     val html = {
       val hours = SHtml.text(value.get._1, v => value = (v, value.get._2), "id" -> (id + "hr"))
@@ -44,3 +48,7 @@ case class MappedTimeFormField[E <: Entity[E]](name: String, field: E => MappedF
     }
   }
 }
+
+
+
+

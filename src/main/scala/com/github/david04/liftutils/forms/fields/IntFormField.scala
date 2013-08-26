@@ -11,18 +11,23 @@ import net.liftweb.http.js.JsCmd
 /**
  * Created by david at 5:33 PM
  */
-case class MappedIntFormField[E <: Entity[E]](name: String, field: E => MappedField[Int, E], placeholder: String = "") extends FormField[E] {
+class IntFormField(
+                               val name: String,
+                               get: () => Int,
+                               set: Int => Unit,
+                               placeholder: String = "") extends FormField {
 
   def fieldType = "Int"
 
-  def render( instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedFieldImpl[String](setTmp, getTmp) {
+  def render(row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedFieldImpl[String](setTmp, getTmp) {
 
-    value = "" + field(instance).get
+    value = "" + get()
 
-    def set() = field(instance).apply(value.get.toInt)
+    def _set() = set(value.get.toInt)
 
-    def validate = if (!(value.get.matches("\\d+") && value.get.size < 7)) Text("Invalid value") :: Nil
-    else {set(); field(instance).validate.map(_.msg)}
+    def validate =
+      (if (!(value.get.matches("\\d+") && value.get.size < 7)) Text("Invalid value") :: Nil
+      else {_set(); Nil}) ::: field.validate
 
     val html = {
 
@@ -35,3 +40,6 @@ case class MappedIntFormField[E <: Entity[E]](name: String, field: E => MappedFi
     }
   }
 }
+
+
+

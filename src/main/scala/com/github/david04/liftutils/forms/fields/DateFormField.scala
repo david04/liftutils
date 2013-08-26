@@ -11,16 +11,15 @@ import scala.xml.Text
 import java.text.SimpleDateFormat
 import com.github.david04.liftutils.entity.Entity
 import net.liftweb.http.js.JsCmd
-import com.github.david04.liftutils.crud.Crudable
 
-/**
- * Created by david at 5:33 PM
- */
-case class MappedDateFormField[E <: Entity[E]](name: String, field: E => MappedField[Date, E]) extends FormField[E] {
+class DateFormField(
+                          val name: String,
+                          get: () => Date,
+                          set: Date => Unit) extends FormField {
 
   def fieldType = "Date"
 
-  def render( instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedFieldImpl[String](setTmp, getTmp) {
+  def render(row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) = new RederedFieldImpl[String](setTmp, getTmp) {
 
     def dpFormat = "yyyy-mm-dd"
 
@@ -28,11 +27,11 @@ case class MappedDateFormField[E <: Entity[E]](name: String, field: E => MappedF
 
     val format = new SimpleDateFormat(simpleDateFormat)
 
-    value = Option(field(instance).get).map(format.format _).getOrElse(null)
+    value = Option(get()).map(format.format _).getOrElse(null)
 
-    def set() { field(instance).set(format.parse(value.get)) }
+    //    def set() { set(format.parse(value.get)) }
 
-    def validate = try {format.parse(value.get); Nil} catch {case _: Exception => Text("Invalid date") :: Nil}
+    def validate = (try {format.parse(value.get); Nil} catch {case _: Exception => Text("Invalid date") :: Nil}) ::: field.validate
 
     val html = {
       S.appendJs(OnLoad(Run("$('#" + id + "input').datepicker({format: " + dpFormat.encJs + "})" +
@@ -47,3 +46,6 @@ case class MappedDateFormField[E <: Entity[E]](name: String, field: E => MappedF
     }
   }
 }
+
+
+

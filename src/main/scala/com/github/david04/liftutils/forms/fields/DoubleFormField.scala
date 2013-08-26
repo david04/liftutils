@@ -11,19 +11,24 @@ import net.liftweb.http.js.JsCmd
 /**
  * Created by david at 5:33 PM
  */
-case class MappedDoubleFormField[E <: Entity[E]](name: String, field: E => MappedField[Double, E], placeholder: String = "") extends FormField[E] {
+class DoubleFormField(
+                                  val name: String,
+                                  get: () => Double,
+                                  set: Double => Unit,
+                                  placeholder: String = "") extends FormField {
 
   def fieldType = "Double"
 
-  def render( instance: E, row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) =
+  def render(row: Boolean, edit: Boolean, setTmp: Any => Unit, getTmp: () => Option[Any]) =
     new RederedFieldImpl[String](setTmp, getTmp) {
 
-      value = "" + field(instance).get
+      value = "" + get()
 
-      def set() = field(instance).apply(value.get.toDouble)
+      private def _set() = set(value.get.toDouble)
 
-      def validate = if (!(value.get.matches("-?(\\d+\\.\\d*|\\d*\\.\\d+|\\d+)") && value.get.size < 8)) Text("Invalid value") :: Nil
-      else {set(); field(instance).validate.map(_.msg)}
+      def validate =
+        (if (!(value.get.matches("-?(\\d+\\.\\d*|\\d*\\.\\d+|\\d+)") && value.get.size < 8)) Text("Invalid value") :: Nil
+        else {_set(); Nil}) ::: field.validate
 
       val html = {
 
@@ -36,3 +41,6 @@ case class MappedDoubleFormField[E <: Entity[E]](name: String, field: E => Mappe
       }
     }
 }
+
+
+

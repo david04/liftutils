@@ -9,6 +9,7 @@ import net.liftweb.json.JsonDSL._
 import net.liftweb.json._
 import net.liftweb.util.StringHelpers.encJs
 import com.github.david04.liftutils.util.Util.___printable
+import scala.collection.mutable.ListBuffer
 
 case class OLanguage(
                       sEmptyTable: String = "No data available in table",
@@ -59,6 +60,7 @@ abstract class Table[T](
   val sPaginationType = "bootstrap"
   val id: String = ## + ""
   val bJQueryUI = false
+  val deferRender = true
 
   val refreshEveryMillis: Option[Int] = None
   val infiniteScrollHeight: Option[String] = None
@@ -79,24 +81,34 @@ abstract class Table[T](
 
   var initialized = false
 
-  var currentRendered: Seq[T] = null.asInstanceOf[Seq[T]]
+  val currentRendered: ListBuffer[T] = null.asInstanceOf[ListBuffer[T]]
 
-  val f = (_: String) => JsonResponse("aaData" -> JArray({
-    currentRendered = values()
+  def f(s: String) = JsonResponse("aaData" -> JArray({
+    val nw = values()
+    currentRendered.synchronized({
+      currentRendered.clear()
+      currentRendered.insertAll(nw)
+    })
     currentRendered.map(e => JArray(columns.map(_.value(e)))).toList
   }))
 
-  def update(v: T, col: Col[T]) =
+  def update(old: T, nw: T, col: Col[T]) = {
+    val idx = currentRendered.synchronized({
+      val _idx = currentRendered.indexOf(old)
+      currentRendered(idx) = nw
+      _idx
+    })
     Run("$('#" + id + "').dataTable({'bRetrieve': true}).fnUpdate(" +
-      (col.value(v) match {case JString(s) => s.encJs}) + ", " +
-      currentRendered.indexOf(v) + ", " +
+      (col.value(nw) match {case JString(s) => s.encJs}) + ", " +
+      idx + ", " +
       columns.indexOf(col) + "," +
       // Do not redraw:
       "false);" +
       "$('#" + id + "').dataTable({'bRetrieve': true}).fnStandingRedraw();"
     )
+  }
 
-  lazy val setUpJs = fmapFunc(SFuncHolder(f)) {
+  lazy val setUpJs = fmapFunc(SFuncHolder(f _)) {
     func =>
       val where: String = encodeURL(S.contextPath + "/" + LiftRules.ajaxPath + "?" + func + "=foo")
       val cols = columns.filter(!_.hidden).map(_.toString).mkString("[", ", ", "]")
@@ -112,6 +124,7 @@ abstract class Table[T](
         s"          'aoColumns': $cols," +
         s"          'iDisplayLength': $displayLength," +
         s"          'sAjaxSource': ${where.encJs}," +
+        s"          'bDeferRender': ${deferRender}," +
         s"          'sDom': ${sDom.encJs}," +
         s"          'sPaginationType': ${sPaginationType.encJs}," +
         s"          'fnInitComplete': function() { this.fnAdjustColumnSizing(true); }," +

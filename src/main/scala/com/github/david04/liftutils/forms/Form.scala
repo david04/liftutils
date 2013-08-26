@@ -19,7 +19,6 @@ import net.liftweb.http.S._
 import net.liftweb.http.js.JsCmds.Run
 import net.liftweb.http.js.JsCmds.SetHtml
 import scala.Some
-import com.github.david04.liftutils.crud.{Editable, Crudable}
 
 trait RederedField {
   val id = UUID.randomUUID().toString
@@ -44,6 +43,7 @@ abstract class RederedFieldImpl[E](setTmp: Any => Unit, getTmp: () => Option[Any
 
 trait FormField {
   protected def fieldType: String
+
   val field = this
 
   def validate: List[NodeSeq] = Nil
@@ -64,38 +64,22 @@ trait FormField {
 
 }
 
-trait MappedFormField[E] {
-  protected def fieldType: String
-  val field = this
+case class FormCache() {
 
-  def templateRoot = "templates-crud-hidden" :: Nil
-
-  def template(row: Boolean, name: String = "") =
-    Templates(templateRoot ::: ("edit" :: (if (row) "row" else "field") :: (fieldType + name) :: Nil)).openOrThrowException("")
-
-  def name: String
-
-  def render(
-              instance: E,
-              row: Boolean,
-              edit: Boolean,
-              setTmp: Any => Unit,
-              getTmp: () => Option[Any]
-              ): RederedField
-
+  val tmpMap = collection.mutable.Map[Int, Any]()
 }
 
-abstract class Form[E <: Entity[E]](protected val instance: E) {
+abstract class Form(protected val cache: FormCache = FormCache()) {
 
   def template: NodeSeq
 
-  val primaryBtnText: String
-  val cancelBtnText: String
-  val onCancel: JsCmd
-  val onSuccess: JsCmd
-  val fields: List[FormField[E]]
+  def primaryBtnText: String
+  def cancelBtnText: String
+  def onCancel: JsCmd
+//  def onSuccess: JsCmd
+  def fields: List[FormField]
 
-  protected def save(): Unit
+  protected def submit(): JsCmd
 
   val id = ## + ""
 
@@ -107,17 +91,15 @@ abstract class Form[E <: Entity[E]](protected val instance: E) {
     val submitId = nextFuncName
     var url: Option[String] = None
     lazy val rendered: List[RederedField] = fields.map(f => f.render(
-      instance,
       false,
       true,
-      v => instance.tmpMap(System.identityHashCode(f)) = v,
-      () => instance.tmpMap.get(System.identityHashCode(f))
+      v => cache.tmpMap(System.identityHashCode(f)) = v,
+      () => cache.tmpMap.get(System.identityHashCode(f))
     ))
 
-    def submit() = {
+    def doSubmit() = {
       if (rendered forall {_.validate.isEmpty}) {
-        save()
-        onSuccess
+        submit()
       } else {
         rendered.map(_.update).reduce(_ & _)
       }
@@ -141,7 +123,7 @@ abstract class Form[E <: Entity[E]](protected val instance: E) {
         "@cancelbtn *" #> cancelBtnText &
         "@submitbtn [id]" #> (id + "-submit") &
         "@submitbtn [value]" #> primaryBtnText &
-        "@hidden" #> S.formGroup(10000)(SHtml.hidden(submit _, "id" -> submitId))
+        "@hidden" #> S.formGroup(10000)(SHtml.hidden(doSubmit _, "id" -> submitId))
       )(template)
   }
 
