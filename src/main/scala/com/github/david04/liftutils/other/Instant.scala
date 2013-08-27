@@ -7,8 +7,11 @@ import net.liftweb.http.SHtml
 import net.liftweb.http.js.JE.{JsNull, JsRaw}
 import net.liftweb.json._
 import net.liftweb.http.js.JsCmds.{Replace, SetHtml}
-import net.liftweb.http.js.JsCmd
+import net.liftweb.http.js.{JsCmds, JsCmd}
 import com.github.david04.liftutils.util.Util
+import com.github.david04.liftutils.elem.Elem
+import scala.xml
+import com.github.david04.liftutils.util.Util.___printable
 
 
 object InstantEdit {
@@ -33,24 +36,24 @@ object InstantEdit {
     display
   }
 
-  def select[T](get: () => T, set: (T) => Unit, all: Seq[T], toStr: T => String, attrs: ElemAttr*): NodeSeq = {
-    val uid = UUID.randomUUID().toString
-    attrs.foldLeft(<select id={uid} onclick={SHtml.jsonCall(JsRaw("$(this).val()"), (v: JValue) => v match {
-      case v: JString => {
-        all.find(_.## == v.s.toInt).foreach(v => set(v))
-        SetHtml(uid, select(get, set, all , toStr, attrs: _*))
-      }
-    }).toJsCmd}>
-      {all.toSeq.map(v => if (v == get())
-        <option selected="true" value={v.## + ""}>
-          {toStr(v)} qwdqwd
-        </option>
-      else
-        <option value={v.## + ""}>
-          {toStr(v)}qwdqwd
-        </option>
-      )}
-    </select>)(_ % _)
+  def select[T](get: () => T, set: (T) => JsCmd, all: () => Seq[T], toStr: T => String, attrs: ElemAttr*): Elem = new Elem {
+
+    def render = {
+      val al = all()
+      attrs.foldLeft(<select id={id} onclick={SHtml.jsonCall(JsRaw("$(this).val()"), (v: JValue) => v match {
+        case v: JString => al.find(_.## == v.s.toInt).map(v => set(v)).getOrElse(JsCmds.Noop)
+      }).toJsCmd}>
+        {al.toSeq.map(v => if (v == get())
+          <option selected="true" value={v.## + ""}>
+            {toStr(v)}
+          </option>
+        else
+          <option value={v.## + ""}>
+            {toStr(v)}
+          </option>
+        )}
+      </select>)(_ % _)
+    }
   }
 
   def enum[ENUM <: Enumeration](e: ENUM, get: () => ENUM#Value, set: (ENUM#Value) => Unit, attrs: ElemAttr*): NodeSeq = {
