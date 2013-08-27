@@ -81,13 +81,13 @@ abstract class Table[T](
 
   var initialized = false
 
-  val currentRendered: ListBuffer[T] = null.asInstanceOf[ListBuffer[T]]
+  val currentRendered: ListBuffer[T] = ListBuffer[T]()
 
   def f(s: String) = JsonResponse("aaData" -> JArray({
     val nw = values()
     currentRendered.synchronized({
       currentRendered.clear()
-      currentRendered.insertAll(nw)
+      currentRendered.insertAll(0, nw)
     })
     currentRendered.map(e => JArray(columns.map(_.value(e)))).toList
   }))
@@ -95,7 +95,7 @@ abstract class Table[T](
   def update(old: T, nw: T, col: Col[T]) = {
     val idx = currentRendered.synchronized({
       val _idx = currentRendered.indexOf(old)
-      currentRendered(idx) = nw
+      currentRendered(_idx) = nw
       _idx
     })
     Run("$('#" + id + "').dataTable({'bRetrieve': true}).fnUpdate(" +
