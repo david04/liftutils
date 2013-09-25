@@ -18,16 +18,15 @@ resolvers ++= Seq(
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
 libraryDependencies ++= {
-  val liftVersion = "2.5-RC5"
+  val liftVersion = "2.5.1"
   Seq(
     "net.liftweb"       %% "lift-webkit"        % liftVersion        % "compile",
     "net.liftweb"       %% "lift-mapper"        % liftVersion        % "compile",
-    "net.liftweb"       %% "lift-util"        % liftVersion        % "compile",
-    "net.liftmodules"   %% "lift-jquery-module" % "2.5-RC4-2.3",
+    "net.liftweb"       %% "lift-util"          % liftVersion        % "compile",
+    "net.liftmodules"   % "lift-jquery-module_2.5_2.10" % "2.4",
     "com.googlecode.json-simple" % "json-simple" % "1.1.1",
     "javax.servlet" % "javax.servlet-api" % "3.0.1",
     "ch.qos.logback"    % "logback-classic"     % "1.0.6",
-    "com.h2database"    % "h2"                  % "1.3.167",
     "postgresql" % "postgresql" % "9.1-901.jdbc3",
     "log4j" % "log4j" % "1.2.17"
   )
@@ -36,3 +35,5 @@ libraryDependencies ++= {
 publishMavenStyle := true
 
 publishTo := Some(Resolver.file("file",  new File( "/home/david/Dropbox/Public/maven" )) )
+
+

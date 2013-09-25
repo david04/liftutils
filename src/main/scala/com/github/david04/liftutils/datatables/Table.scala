@@ -141,8 +141,7 @@ abstract class Table[T](
 
   def setUpOrReload() = if (!initialized) {initialized = true; setUpJs} else {reload()}
 
-  def render = {
-    setUpOnLoad()
-    <table id={id} class={tableClass}></table>
-  }
+  def render =
+    <table id={id} class={tableClass}></table> ++
+      Script(setUpOnLoad())
 }
