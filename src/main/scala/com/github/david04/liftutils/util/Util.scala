@@ -5,9 +5,6 @@ import net.liftweb.http.SHtml
 import net.liftweb.http.js.JE.JsNull
 import net.liftweb.json.JsonAST.JValue
 import net.liftweb.http.js.JsCmd
-import net.liftweb.util.Helpers
-import net.liftweb.http.S._
-import scala.Some
 import scala.Some
 
 
@@ -21,8 +18,10 @@ object Util {
                           |
                           | """.stripMargin)
 
-  implicit def ___printable[T](o: T) = new Object() {
-    def p(s: String = "", fmt: (T) => String = _.toString) = { println(s + fmt(o)); o }
+  implicit def __print[T](v: T) = new {
+    def p(s: String = "", t: T => String = _.toString): T = { println(s + t(v)); v }
+
+    def p: T = p("")
   }
 
   def run(b: => JsCmd) = SHtml.jsonCall(JsNull, (_: JValue) => b).toJsCmd + ";"

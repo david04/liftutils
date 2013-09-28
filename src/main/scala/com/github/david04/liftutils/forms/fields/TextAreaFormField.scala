@@ -1,20 +1,17 @@
 package com.github.david04.liftutils.forms.fields
 
 import com.github.david04.liftutils.forms.{FormField, RederedField}
-import net.liftweb.mapper._
 import net.liftweb.http.SHtml
 import net.liftweb.util.Helpers._
-import com.github.david04.liftutils.entity.Entity
-import net.liftweb.http.js.JsCmd
 
 /**
  * Created by david at 5:33 PM
  */
 class TextAreaFormField(
-                                    val name: String,
-                                    get: () => String,
-                                    set: String => Unit,
-                                    placeholder: String = "") extends FormField {
+                         val name: String,
+                         get: () => String,
+                         set: String => Unit,
+                         placeholder: String = "") extends FormField {
 
   def fieldType = "TextArea"
 

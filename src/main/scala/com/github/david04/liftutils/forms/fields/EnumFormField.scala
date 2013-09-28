@@ -5,8 +5,6 @@ import net.liftweb.common._
 import net.liftweb.http.{S, SHtml}
 import net.liftweb.http.js.JsCmds.Run
 import net.liftweb.util.Helpers._
-import net.liftweb.mapper.MappedEnum
-import com.github.david04.liftutils.util.Util.___printable
 
 /**
  * Created by david at 5:33 PM

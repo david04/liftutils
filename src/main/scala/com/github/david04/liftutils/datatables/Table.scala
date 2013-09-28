@@ -1,25 +1,44 @@
 package com.github.david04.liftutils.datatables
 
 import net.liftweb.http._
+import net.liftweb.http.S
 import net.liftweb.util.Helpers._
-import net.liftweb.http.js._
-import JsCmds._
-import S._
-import net.liftweb.json.JsonDSL._
+import net.liftweb.http.js.JsCmds._
 import net.liftweb.json._
-import net.liftweb.util.StringHelpers.encJs
-import com.github.david04.liftutils.util.Util.___printable
+import net.liftweb.json.JsonDSL._
+import net.liftweb.json.Serialization.write
+
+import com.github.david04.liftutils.util.Util.__print
 import scala.collection.mutable.ListBuffer
 
-case class OLanguage(
-                      sEmptyTable: String = "No data available in table",
-                      sLengthMenu: String = "<span class='lenghtMenu'> _MENU_</span><span class='lengthLabel'>Entries per page:</span>"
-                      ) {
-  def js = s""" "oLanguage": {
-    "sEmptyTable": "$sEmptyTable",
-    "sLengthMenu": "$sLengthMenu"
-  }"""
-}
+case class oAria(
+                  sSortAscending: Option[String] = None,
+                  sSortDescending: Option[String] = None
+                  )
+
+case class oPaginate(
+                      sFirst: Option[String] = None,
+                      sLast: Option[String] = None,
+                      sNext: Option[String] = None,
+                      sPrevious: Option[String] = None
+                      )
+
+case class oLanguage(
+                      sEmptyTable: Option[String] = None,
+                      sInfo: Option[String] = None,
+                      sInfoEmpty: Option[String] = None,
+                      sInfoFiltered: Option[String] = None,
+                      sInfoPostFix: Option[String] = None,
+                      sInfoThousands: Option[String] = None,
+                      sLengthMenu: Option[String] = None,
+                      sLoadingRecords: Option[String] = None,
+                      sProcessing: Option[String] = None,
+                      sSearch: Option[String] = None,
+                      sUrl: Option[String] = None,
+                      sZeroRecords: Option[String] = None,
+                      oAria: Option[oAria] = None,
+                      oPaginate: Option[oPaginate] = None
+                      )
 
 case class Col[T](
                    title: String = "",
@@ -36,7 +55,7 @@ case class Col[T](
   def center(b: Boolean, s: String) = if (b) s"<center>$s</center>" else s
 
   override def toString = s"{ " +
-    s"'sTitle': ${encJs(center(centerH, title))}, " +
+    s"'sTitle': ${(center(centerH, title)).encJs}, " +
     s"'bSortable': ${"" + bSortable}, " +
     s"'sClass': ${sClass.encJs}, " +
     s"}"
@@ -47,16 +66,9 @@ case class Col[T](
   }
 }
 
-abstract class Table[T](
-                         values: () => Seq[T],
-                         showRow: Option[T => Boolean] = None,
-                         displayLength: Int = 30,
-                         defaultCenterH: Boolean = false,
-                         defaultCenterR: Boolean = false,
-                         tableClass: String = "table table-bordered table-condensed table-hover table-striped"
-                         ) {
+trait TableBase {
 
-  val sDom = """<'pull-right'>t<'row-fluid'<'span6'><'span6'p>>"""
+  val sDom: String
   val sPaginationType = "bootstrap"
   val id: String = ## + ""
   val bJQueryUI = false
@@ -65,7 +77,19 @@ abstract class Table[T](
   val refreshEveryMillis: Option[Int] = None
   val infiniteScrollHeight: Option[String] = None
 
-  def defaultOLanguage = OLanguage()
+  def reload() = Run("$('#" + id + "').dataTable().fnReloadAjax(null, null, true);")
+
+  val oLanguage = new oLanguage()
+}
+
+abstract class Table[T](
+                         values: () => Seq[T],
+                         showRow: Option[T => Boolean] = None,
+                         displayLength: Int = 30,
+                         defaultCenterH: Boolean = false,
+                         defaultCenterR: Boolean = false,
+                         tableClass: String = "table table-bordered table-condensed table-hover table-striped"
+                         ) extends TableBase {
 
   val columns: List[Col[T]]
 
@@ -77,9 +101,7 @@ abstract class Table[T](
     data.indexWhere(e => selector(e._1))
   })
 
-  def reload() = Run("$('#" + id + "').dataTable().fnReloadAjax(null, null, true);")
-
-  var initialized = false
+  private var initialized = false
 
   val currentRendered: ListBuffer[T] = ListBuffer[T]()
 
@@ -108,16 +130,19 @@ abstract class Table[T](
     )
   }
 
-  lazy val setUpJs = fmapFunc(SFuncHolder(f _)) {
+  lazy val setUpJs = S.fmapFunc(S.SFuncHolder(f _)) {
     func =>
-      val where: String = encodeURL(S.contextPath + "/" + LiftRules.ajaxPath + "?" + func + "=foo")
+      val where: String = S.encodeURL(S.contextPath + "/" + LiftRules.ajaxPath + "?" + func + "=foo")
       val cols = columns.filter(!_.hidden).map(_.toString).mkString("[", ", ", "]")
       val sorting = columns.zipWithIndex.find(_._1.defaultSort).map(c => s"  'aaSorting': [[ ${c._2}, '${if (c._1.defaultSortAscending) "asc" else "desc"}' ]],").getOrElse("")
 
+      implicit val formats = Serialization.formats(NoTypeHints)
+
+      ("sPaginationType" -> "full_numbers")
       Run("" +
         "    $(" + ("#" + id).encJs + ").dataTable({" +
         "          'sPaginationType': 'full_numbers'," +
-        s"          ${defaultOLanguage.js}," +
+        s"         'oLanguage': ${write(oLanguage).p}," +
         // Must not be the last line!
         sorting +
         iDisplayStart.map(i => s" 'iDisplayStart': $i,").getOrElse("") +
