@@ -1,4 +1,4 @@
-package com.github.david04.liftutils.elem
+package com.github.david04.liftutils.util
 
 import java.util.UUID
 import scala.xml

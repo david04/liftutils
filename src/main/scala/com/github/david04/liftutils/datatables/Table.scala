@@ -142,7 +142,7 @@ abstract class Table[T](
       Run("" +
         "    $(" + ("#" + id).encJs + ").dataTable({" +
         "          'sPaginationType': 'full_numbers'," +
-        s"         'oLanguage': ${write(oLanguage).p}," +
+        s"         'oLanguage': ${write(oLanguage)}," +
         // Must not be the last line!
         sorting +
         iDisplayStart.map(i => s" 'iDisplayStart': $i,").getOrElse("") +
