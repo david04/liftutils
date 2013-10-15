@@ -56,7 +56,7 @@ trait EditableElem extends ValidatableElem {
           sel('error) + ".html(''); " +
             sel('wrapper) + ".removeClass(" + framework.errorClass.encJs + "); ")))
     else
-      Run(sel('wrapper) + ".fadeOut(300);")
+      Run(sel('wrapper) + ".fadeOut();")
 
   protected def templateLoc: List[String] = "templates-hidden" :: "elem-edit-dflt" :: Nil
 
