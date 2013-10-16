@@ -9,7 +9,7 @@ import net.liftweb.http.{AjaxHelpers, SHtml}
 
 trait Editor extends ID {
 
-  def buildElems(): Seq[EditableElem]
+  def buildElems(): Seq[HTMLEditableElem]
 
   val elems = buildElems()
 
@@ -21,7 +21,7 @@ trait Editor extends ID {
 
   protected def saved(): JsCmd
 
-  private[elem] def elemChanged(elem: EditableElem): JsCmd = (elems.map(_.update()) :+ Noop).reduce(_ & _)
+  private[elem] def elemChanged(elem: HTMLEditableElem): JsCmd = (elems.map(_.update()) :+ Noop).reduce(_ & _)
 
   def renderSubmitBtn =
     AjaxHelpers.ajaxOnSubmitTo(id('form))(() => {
@@ -34,7 +34,7 @@ trait Editor extends ID {
     })
 }
 
-trait EditableElem2EditorBridge extends EditableElem {
+trait EditableElem2EditorBridge extends HTMLEditableElem {
 
   protected def editor: Editor
 

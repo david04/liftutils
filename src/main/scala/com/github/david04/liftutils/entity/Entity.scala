@@ -23,7 +23,7 @@ trait StdEntity[T <: StdEntity[T]] extends StdEntityBase {
 
   def delete(): Unit
 
-  def elems(implicit editor: Editor): List[com.github.david04.liftutils.elem.EditableElem]
+  def elems(implicit editor: Editor): List[com.github.david04.liftutils.elem.HTMLEditableElem]
 
   def columns: List[Col[T]]
 

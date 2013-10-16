@@ -14,6 +14,7 @@ import java.util.regex.Pattern
 import net.liftweb.http.SHtml.ElemAttr
 import scala.util.Try
 import net.liftweb.http.js.JE.JsRaw
+import net.liftweb.json.JsonAST.JValue
 
 trait ID {
   private val _id = UUID.randomUUID().toString
@@ -38,13 +39,28 @@ trait ValidatableElem extends Elem {
   private[elem] def error: Option[NodeSeq] = None
 }
 
+trait ViewableElem extends Elem {
+
+}
+
+trait NodeSeqViewableElem extends ViewableElem {def renderNodeSeqView: NodeSeq}
+
+trait NamedElem extends ViewableElem {def name: String}
+
 trait EditableElem extends ValidatableElem {
+
+  protected def framework: Framework
+
+  private[elem] val enabled: () => Boolean
+
+  private[elem] def save(): Unit
+}
+
+trait HTMLEditableElem extends EditableElem {
 
   protected def onChangeServerSide(): JsCmd
 
   protected def wrapName(name: String) = name + ": "
-
-  protected def framework: Framework
 
   private[elem] def update() =
     if (enabled())
@@ -61,10 +77,6 @@ trait EditableElem extends ValidatableElem {
   protected def templateLoc: List[String] = "templates-hidden" :: "elem-edit-dflt" :: Nil
 
   protected lazy val template = Templates(templateLoc).get
-
-  private[elem] val enabled: () => Boolean
-
-  private[elem] def save(): Unit
 
   private[elem] def edit: NodeSeq
 }
@@ -133,9 +145,7 @@ abstract class GenEnum2GenOneOfMany extends GenEditableEnumValueElem with GenEdi
   def getAllOneOfManyValues() = enum.values.map(EnumValue(_)).toSeq.sortBy(_.v.id)
 }
 
-trait TextInputElem extends GenEditableStringValueElem with EditableElem {
-
-  protected def name: String
+trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem with NamedElem {
 
   protected def placeholder: Option[String]
 
@@ -163,9 +173,7 @@ trait TextInputElem extends GenEditableStringValueElem with EditableElem {
   }
 }
 
-trait SelectInputElem extends GenOneOfManyValueElem with EditableElem {
-
-  protected def name: String
+trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with NamedElem {
 
   private var value = getOneOfManyValue()
 
@@ -190,9 +198,7 @@ trait SelectInputElem extends GenOneOfManyValueElem with EditableElem {
   }
 }
 
-trait CheckboxInputElem extends GenEditableBooleanValueElem with EditableElem {
-
-  protected def name: String
+trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableElem with NamedElem {
 
   override protected def wrapName(name: String) = name
 

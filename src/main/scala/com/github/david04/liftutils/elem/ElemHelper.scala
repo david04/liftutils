@@ -29,7 +29,7 @@ trait EditableHelper {
   def fw: Framework
 
   class Text(
-              protected val name: String,
+              val name: String,
               get: => String,
               set: String => Unit,
               protected val placeholder: Option[String],
@@ -45,7 +45,7 @@ trait EditableHelper {
   }
 
   class Real(
-              protected val name: String,
+              val name: String,
               get: => Double,
               set: Double => Unit,
               protected val placeholder: Option[String] = None,
@@ -61,12 +61,12 @@ trait EditableHelper {
   }
 
   class Bool(
-                 protected val name: String,
-                 get: => Boolean,
-                 set: Boolean => Unit,
-                 private[elem] val enabled: () => Boolean = () => true,
-                 protected val checkboxInputAttrs: Seq[ElemAttr] = Seq()
-                 )(implicit protected val editor: Editor) extends GenEditableBooleanValueElem with CheckboxInputElem with EditableElem2EditorBridge {
+              val name: String,
+              get: => Boolean,
+              set: Boolean => Unit,
+              private[elem] val enabled: () => Boolean = () => true,
+              protected val checkboxInputAttrs: Seq[ElemAttr] = Seq()
+              )(implicit protected val editor: Editor) extends GenEditableBooleanValueElem with CheckboxInputElem with EditableElem2EditorBridge {
 
     protected def framework = fw
 
@@ -76,7 +76,7 @@ trait EditableHelper {
   }
 
   class Enum[E <: Enumeration](
-                                protected val name: String,
+                                val name: String,
                                 get: => E#Value,
                                 set: E#Value => Unit,
                                 protected val enum: E,
@@ -97,4 +97,5 @@ trait EditableHelper {
 }
 
 object BS2EditableHelper extends EditableHelper with Bootstrap2
+
 object BS3EditableHelper extends EditableHelper with Bootstrap3
