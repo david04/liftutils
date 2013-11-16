@@ -155,6 +155,8 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
 
   protected def textInputAttrs: Seq[ElemAttr]
 
+  protected def classes: List[String] = Nil
+
   import ElemAttr._
 
   private[elem] def edit = {
@@ -166,6 +168,7 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
       )(template),
       "input" -%> SHtml.text(value, value = _,
         textInputAttrs ++ Seq[ElemAttr](
+          ("class" -> classes.distinct.mkString(" ")),
           ("id" -> id('input)),
           ("placeholder" -> placeholder.getOrElse("")),
           ("onblur" -> SHtml.onEvent(v => {value = v; onChangeServerSide()}).toJsCmd)

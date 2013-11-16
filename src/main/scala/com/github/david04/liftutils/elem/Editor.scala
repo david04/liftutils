@@ -15,7 +15,6 @@ trait Editor extends ID {
 
   def renderElems =
     ".editor .editor-elems" #> elems.map(elem => elem.edit).reduceOption(_ ++ _).getOrElse(NodeSeq.Empty) &
-      ".editor [id]" #> id('editor) &
       ".editor-form [id]" #> id('form) andThen
       SHtml.makeFormsAjax
 
