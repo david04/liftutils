@@ -15,7 +15,6 @@ import java.util.regex.Pattern
 import net.liftweb.http.SHtml.ElemAttr
 import scala.util.Try
 import net.liftweb.http.js.JE.JsRaw
-import net.liftweb.json.JsonAST.JValue
 import com.github.david04.liftutils.util.Util.__print
 
 trait ID {
@@ -217,6 +216,7 @@ trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with N
         )): _*))
   }
 }
+
 
 trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableElem with NamedElem {
 
