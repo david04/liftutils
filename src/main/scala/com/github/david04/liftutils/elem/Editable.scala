@@ -3,6 +3,7 @@ package com.github.david04.liftutils.elem
 import scala.xml.NodeSeq
 import scala.xml.Text
 import net.liftweb.common._
+import net.liftweb.http.S
 import net.liftweb.http.js.JsCmd
 import net.liftweb.http.js.JsCmds._
 import net.liftweb.util.Helpers._
@@ -15,6 +16,7 @@ import net.liftweb.http.SHtml.ElemAttr
 import scala.util.Try
 import net.liftweb.http.js.JE.JsRaw
 import net.liftweb.json.JsonAST.JValue
+import com.github.david04.liftutils.util.Util.__print
 
 trait ID {
   private val _id = UUID.randomUUID().toString
@@ -45,9 +47,9 @@ trait ViewableElem extends Elem {
 
 trait NodeSeqViewableElem extends ViewableElem {def renderNodeSeqView: NodeSeq}
 
-trait NamedElem extends ViewableElem {def name: String}
+trait NamedElem extends ViewableElem {def elemName: String}
 
-trait EditableElem extends ValidatableElem {
+trait EditableElem extends ValidatableElem with NamedElem {
 
   protected def framework: Framework
 
@@ -56,7 +58,12 @@ trait EditableElem extends ValidatableElem {
   private[elem] def save(): Unit
 }
 
-trait HTMLEditableElem extends EditableElem {
+trait HTMLElem {
+
+  protected def transform(ns: NodeSeq) = ns
+}
+
+trait HTMLEditableElem extends EditableElem with HTMLElem {
 
   protected def onChangeServerSide(): JsCmd
 
@@ -78,8 +85,12 @@ trait HTMLEditableElem extends EditableElem {
 
   protected lazy val template = Templates(templateLoc).get
 
-  private[elem] def edit: NodeSeq
+  private[elem] def _edit: NodeSeq
+  private[elem] def edit: NodeSeq = transform(_edit)
 }
+
+// get***Value: in the server
+// getCurrent***Value: in the client
 
 trait GenDoubleValueElem extends Elem {def getDoubleValue(): Double}
 
@@ -145,6 +156,11 @@ abstract class GenEnum2GenOneOfMany extends GenEditableEnumValueElem with GenEdi
   def getAllOneOfManyValues() = enum.values.map(EnumValue(_)).toSeq.sortBy(_.v.id)
 }
 
+trait PasswordInputElem extends TextInputElem {
+
+  override protected def inputElem: NodeSeq = ("input [type]" #> "password").apply(super.inputElem).p("RESULT:")
+}
+
 trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem with NamedElem {
 
   protected def placeholder: Option[String]
@@ -159,20 +175,21 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
 
   import ElemAttr._
 
-  private[elem] def edit = {
+  protected def inputElem: NodeSeq = SHtml.text(value, value = _,
+    textInputAttrs ++ Seq[ElemAttr](
+      ("id" -> id('input)),
+      ("placeholder" -> placeholder.getOrElse("")),
+      ("onblur" -> SHtml.onEvent(v => {value = v; onChangeServerSide()}).toJsCmd)
+    ): _*)
+
+  private[elem] def _edit = {
     bind("elem", (
       ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
         ".elem-wrap [id]" #> id('wrapper) &
-        ".elem-lbl *" #> wrapName(name) &
+        ".elem-lbl *" #> wrapName(S.?(s"elem-lbl-$elemName")) &
         ".elem-error [id]" #> id('error)
       )(template),
-      "input" -%> SHtml.text(value, value = _,
-        textInputAttrs ++ Seq[ElemAttr](
-          ("class" -> classes.distinct.mkString(" ")),
-          ("id" -> id('input)),
-          ("placeholder" -> placeholder.getOrElse("")),
-          ("onblur" -> SHtml.onEvent(v => {value = v; onChangeServerSide()}).toJsCmd)
-        ): _*))
+      "input" -%> inputElem.p("HERE: ")).p("HERE2: ")
   }
 }
 
@@ -184,11 +201,11 @@ trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with N
 
   protected def selectInputAttrs: Seq[ElemAttr]
 
-  private[elem] def edit = {
+  private[elem] def _edit = {
     bind("elem", (
       ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
         ".elem-wrap [id]" #> id('wrapper) &
-        ".elem-lbl *" #> wrapName(name) &
+        ".elem-lbl *" #> wrapName(S.?(s"elem-lbl-$elemName")) &
         ".elem-error [id]" #> id('error)
       )(template),
       "input" -%> SHtml.select(
@@ -211,11 +228,11 @@ trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableEle
 
   protected def checkboxInputAttrs: Seq[ElemAttr]
 
-  private[elem] def edit = {
+  private[elem] def _edit = {
     bind("elem", (
       ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
         ".elem-wrap [id]" #> id('wrapper) &
-        ".elem-lbl *" #> wrapName(name) &
+        ".elem-lbl *" #> wrapName(S.?(s"elem-lbl-$elemName")) &
         ".elem-error [id]" #> id('error)
       )(template),
       "input" -%> SHtml.checkbox(value, value = _,
@@ -227,6 +244,12 @@ trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableEle
   }
 }
 
+trait IconElem extends HTMLElem {def icon: String}
+
+trait HTMLIIconElem extends IconElem  {
+  override def transform(ns: NodeSeq) =
+    ("i [class]" #> s"icon-$icon").apply(super.transform(ns).p("INPUT:\n"))
+}
 
 object Validation {
 
