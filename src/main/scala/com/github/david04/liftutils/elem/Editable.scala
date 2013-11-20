@@ -217,7 +217,6 @@ trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with N
   }
 }
 
-
 trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableElem with NamedElem {
 
   override protected def wrapName(name: String) = name
