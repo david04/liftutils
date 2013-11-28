@@ -35,7 +35,7 @@ trait EditableHelper {
               protected val placeholder: Option[String],
               private[elem] val enabled: () => Boolean = () => true,
               protected val textInputAttrs: Seq[ElemAttr] = Seq()
-              )(implicit protected val editor: HTMLEditor) extends TextInputElem with EditableElem2EditorBridge {
+              )(implicit protected val editor: DefaultHTMLEditor) extends TextInputElem with EditableElem2DefaultEditorBridge {
 
     protected def framework = fw
 
@@ -51,7 +51,7 @@ trait EditableHelper {
                   protected val placeholder: Option[String],
                   private[elem] val enabled: () => Boolean = () => true,
                   protected val textInputAttrs: Seq[ElemAttr] = Seq()
-                  )(implicit protected val editor: HTMLEditor) extends PasswordInputElem with EditableElem2EditorBridge {
+                  )(implicit protected val editor: DefaultHTMLEditor) extends PasswordInputElem with EditableElem2DefaultEditorBridge {
 
     protected def framework = fw
 
@@ -67,7 +67,7 @@ trait EditableHelper {
               protected val placeholder: Option[String] = None,
               private[elem] val enabled: () => Boolean = () => true,
               protected val textInputAttrs: Seq[ElemAttr] = Seq()
-              )(implicit protected val editor: HTMLEditor) extends GenDouble2GenString with TextInputElem with EditableElem2EditorBridge {
+              )(implicit protected val editor: DefaultHTMLEditor) extends GenDouble2GenString with TextInputElem with EditableElem2DefaultEditorBridge {
 
     protected def framework = fw
 
@@ -82,7 +82,7 @@ trait EditableHelper {
               set: Boolean => Unit,
               private[elem] val enabled: () => Boolean = () => true,
               protected val checkboxInputAttrs: Seq[ElemAttr] = Seq()
-              )(implicit protected val editor: HTMLEditor) extends GenEditableBooleanValueElem with CheckboxInputElem with EditableElem2EditorBridge {
+              )(implicit protected val editor: DefaultHTMLEditor) extends GenEditableBooleanValueElem with CheckboxInputElem with EditableElem2DefaultEditorBridge {
 
     protected def framework = fw
 
@@ -97,7 +97,7 @@ trait EditableHelper {
                                 set: E#Value => Unit,
                                 protected val enum: E,
                                 private[elem] val enabled: () => Boolean = () => true,
-                                protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: HTMLEditor) extends GenEnum2GenOneOfMany with SelectInputElem with EditableElem2EditorBridge {
+                                protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenEnum2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
 
     protected type EnumType = E
 

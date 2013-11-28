@@ -157,7 +157,7 @@ abstract class GenEnum2GenOneOfMany extends GenEditableEnumValueElem with GenEdi
 
 trait PasswordInputElem extends TextInputElem {
 
-  override protected def inputElem: NodeSeq = ("input [type]" #> "password").apply(super.inputElem).p("RESULT:")
+  override protected def inputElem: NodeSeq = ("input [type]" #> "password").apply(super.inputElem)
 }
 
 trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem with NamedElem {
@@ -247,7 +247,7 @@ trait IconElem extends HTMLElem {def icon: String}
 
 trait HTMLIIconElem extends IconElem  {
   override def transform(ns: NodeSeq) =
-    ("i [class]" #> s"icon-$icon").apply(super.transform(ns).p("INPUT:\n"))
+    ("i [class]" #> s"icon-$icon").apply(super.transform(ns))
 }
 
 object Validation {
