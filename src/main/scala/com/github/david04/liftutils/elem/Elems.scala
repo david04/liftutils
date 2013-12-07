@@ -4,89 +4,14 @@ import scala.xml.NodeSeq
 import scala.xml.Text
 import net.liftweb.common._
 import net.liftweb.http.S
-import net.liftweb.http.js.JsCmd
-import net.liftweb.http.js.JsCmds._
 import net.liftweb.util.Helpers._
-import net.liftweb.http.{Templates, SHtml}
-import java.util.UUID
+import net.liftweb.http.SHtml
 import java.net.InetAddress
 import scala.concurrent.duration.Duration
 import java.util.regex.Pattern
 import net.liftweb.http.SHtml.ElemAttr
 import scala.util.Try
 import net.liftweb.http.js.JE.JsRaw
-import com.github.david04.liftutils.util.Util.__print
-
-trait ID {
-  private val _id = UUID.randomUUID().toString
-
-  def id(part: Symbol) = _id + "-" + part.name
-
-  def sel(part: Symbol) = "$('#" + id(part) + "')"
-}
-
-trait Elem extends ID {}
-
-trait Framework {
-
-  def errorClass: String
-
-  def warningClass: String
-
-  def successClass: String
-}
-
-trait ValidatableElem extends Elem {
-  private[elem] def error: Option[NodeSeq] = None
-}
-
-trait ViewableElem extends Elem {
-
-}
-
-trait NodeSeqViewableElem extends ViewableElem {def renderNodeSeqView: NodeSeq}
-
-trait NamedElem extends ViewableElem {def elemName: String}
-
-trait EditableElem extends ValidatableElem with NamedElem {
-
-  protected def framework: Framework
-
-  private[elem] val enabled: () => Boolean
-
-  private[elem] def save(): Unit
-}
-
-trait HTMLElem {
-
-  protected def transform(ns: NodeSeq) = ns
-}
-
-trait HTMLEditableElem extends EditableElem with HTMLElem {
-
-  protected def onChangeServerSide(): JsCmd
-
-  protected def wrapName(name: String) = name + ": "
-
-  private[elem] def update() =
-    if (enabled())
-      Run(sel('wrapper) + ".fadeIn(300);") &
-        (error.map(error => Run(
-          sel('error) + ".html(" + error.toString.encJs + "); " +
-            sel('wrapper) + ".addClass(" + framework.errorClass.encJs + "); "))
-          .getOrElse(Run(
-          sel('error) + ".html(''); " +
-            sel('wrapper) + ".removeClass(" + framework.errorClass.encJs + "); ")))
-    else
-      Run(sel('wrapper) + ".fadeOut();")
-
-  protected def templateLoc: List[String] = "templates-hidden" :: "elem-edit-dflt" :: Nil
-
-  protected lazy val template = Templates(templateLoc).get
-
-  private[elem] def _edit: NodeSeq
-  private[elem] def edit: NodeSeq = transform(_edit)
-}
 
 // get***Value: in the server
 // getCurrent***Value: in the client
@@ -112,7 +37,17 @@ trait GenEnumValueElem extends Elem {
   def getEnumValue(): EnumValueType
 }
 
+trait GenSeqValueElem extends Elem {
+  protected type SeqValueType
+
+  protected def seq: Seq[SeqValueType]
+
+  def getSeqValue(): SeqValueType
+}
+
 trait GenEditableEnumValueElem extends GenEnumValueElem with ValidatableElem {def getCurrentEnumValue(): EnumValueType}
+
+trait GenEditableSeqValueElem extends GenSeqValueElem with ValidatableElem {def getCurrentSeqValue(): SeqValueType}
 
 trait GenOneOfManyValueElem extends Elem {
   protected type OneOfManyValue <: Object {def name: String; def id: String}
@@ -155,6 +90,25 @@ abstract class GenEnum2GenOneOfMany extends GenEditableEnumValueElem with GenEdi
   def getAllOneOfManyValues() = enum.values.map(EnumValue(_)).toSeq.sortBy(_.v.id)
 }
 
+abstract class GenSeq2GenOneOfMany extends GenEditableSeqValueElem with GenEditableOneOfManyValueElem {
+
+  protected case class SeqValue(v: SeqValueType, idx: Int) {
+    def name = seqValue2String(v)
+
+    def id = idx + ""
+  }
+
+  protected def seqValue2String(v: SeqValueType): String = v.toString
+
+  protected type OneOfManyValue = SeqValue
+
+  def getOneOfManyValue() = SeqValue(getSeqValue(), seq.indexOf(getSeqValue()))
+
+  def getCurrentSeqValue() = getCurrentOneOfManyValue().v
+
+  def getAllOneOfManyValues() = seq.zipWithIndex.map(e => SeqValue(e._1, e._2)).sortBy(_.name)
+}
+
 trait PasswordInputElem extends TextInputElem {
 
   override protected def inputElem: NodeSeq = ("input [type]" #> "password").apply(super.inputElem)
@@ -181,15 +135,14 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
       ("onblur" -> SHtml.onEvent(v => {value = v; onChangeServerSide()}).toJsCmd)
     ): _*)
 
-  private[elem] def _edit = {
-    bind("elem", (
+  override protected def htmlEditableElemRendererTransforms =
+    super.htmlEditableElemRendererTransforms andThen (
       ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
         ".elem-wrap [id]" #> id('wrapper) &
         ".elem-lbl *" #> wrapName(S.?(s"elem-lbl-$elemName")) &
         ".elem-error [id]" #> id('error)
-      )(template),
-      "input" -%> inputElem.p("HERE: ")).p("HERE2: ")
-  }
+      ) andThen
+      ((ns: NodeSeq) => bind("elem", ns, "input" -%> inputElem))
 }
 
 trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with NamedElem {
@@ -200,21 +153,22 @@ trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with N
 
   protected def selectInputAttrs: Seq[ElemAttr]
 
-  private[elem] def _edit = {
-    bind("elem", (
+  override protected def htmlEditableElemRendererTransforms =
+    super.htmlEditableElemRendererTransforms andThen (
       ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
         ".elem-wrap [id]" #> id('wrapper) &
         ".elem-lbl *" #> wrapName(S.?(s"elem-lbl-$elemName")) &
         ".elem-error [id]" #> id('error)
-      )(template),
-      "input" -%> SHtml.select(
-        getAllOneOfManyValues().map(v => (v.id, v.name)), Full(value.id),
-        v => getAllOneOfManyValues().find(_.id == v).get,
-        (selectInputAttrs ++ Seq[ElemAttr](
-          ("id" -> id('input)),
-          ("onchange" -> SHtml.onEvent(v => {value = getAllOneOfManyValues().find(_.id == v).get; onChangeServerSide()}).toJsCmd)
-        )): _*))
-  }
+      ) andThen
+      ((ns: NodeSeq) => bind("elem", ns, "input" -%>
+        SHtml.select(
+          getAllOneOfManyValues().map(v => (v.id, v.name)), Full(value.id),
+          v => value = getAllOneOfManyValues().find(_.id == v).get,
+          (selectInputAttrs ++ Seq[ElemAttr](
+            ("id" -> id('input)),
+            ("onchange" -> SHtml.onEvent(v => {value = getAllOneOfManyValues().find(_.id == v).get; onChangeServerSide()}).toJsCmd)
+          )): _*)
+      ))
 }
 
 trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableElem with NamedElem {
@@ -227,27 +181,29 @@ trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableEle
 
   protected def checkboxInputAttrs: Seq[ElemAttr]
 
-  private[elem] def _edit = {
-    bind("elem", (
+  override protected def htmlEditableElemRendererTransforms =
+    super.htmlEditableElemRendererTransforms andThen (
       ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
         ".elem-wrap [id]" #> id('wrapper) &
         ".elem-lbl *" #> wrapName(S.?(s"elem-lbl-$elemName")) &
         ".elem-error [id]" #> id('error)
-      )(template),
-      "input" -%> SHtml.checkbox(value, value = _,
-        (checkboxInputAttrs ++ Seq[ElemAttr](
-          ("id" -> id('input)),
-          ("onchange" -> SHtml.ajaxCall(JsRaw(sel('input) + ".is(':checked')"),
-            v => {value = v.toBoolean; onChangeServerSide()}).toJsCmd)
-        )): _*))
-  }
+      ) andThen
+      ((ns: NodeSeq) => bind("elem", ns, "input" -%>
+        SHtml.checkbox(value, value = _,
+          (checkboxInputAttrs ++ Seq[ElemAttr](
+            ("id" -> id('input)),
+            ("onchange" -> SHtml.ajaxCall(JsRaw(sel('input) + ".is(':checked')"),
+              v => {value = v.toBoolean; onChangeServerSide()}).toJsCmd)
+          )): _*)
+      ))
 }
 
-trait IconElem extends HTMLElem {def icon: String}
+trait IconElem extends HTMLEditableElem {def icon: String}
 
-trait HTMLIIconElem extends IconElem  {
-  override def transform(ns: NodeSeq) =
-    ("i [class]" #> s"icon-$icon").apply(super.transform(ns))
+trait HTMLIIconElem extends IconElem {
+  override def htmlEditableElemRendererTransforms =
+    super.htmlEditableElemRendererTransforms andThen
+      "i [class]" #> s"icon-$icon"
 }
 
 object Validation {

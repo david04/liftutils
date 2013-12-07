@@ -30,7 +30,7 @@ trait HTMLEditor extends ID {
   def renderEditor =
     ".editor-all" #> editorAllTemplate andThen
       ".editor-elems" #> elems.map(elem => <div class={s"editor-elem-${elem.elemName}"}></div>) andThen
-      elems.map(elem => s".editor-elem-${elem.elemName}" #> elem.edit).reduceOption(_ & _).getOrElse(PassThru) andThen
+      elems.map(elem => s".editor-elem-${elem.elemName}" #> elem.renderElemEditor).reduceOption(_ & _).getOrElse(PassThru) andThen
       ".editor-form [id]" #> id('form) andThen
       ".editor-btn-submit" #> AjaxHelpers.ajaxOnSubmitTo(id('form))(() => onSubmit()) andThen
       SHtml.makeFormsAjax
@@ -67,6 +67,6 @@ trait EditableElem2DefaultEditorBridge extends HTMLEditableElem {
 
   protected def editor: DefaultHTMLEditor
 
-  protected def onChangeServerSide(): JsCmd = editor.elemChanged(this)
+  override protected def onChangeServerSide(): JsCmd = super.onChangeServerSide() & editor.elemChanged(this)
 
 }

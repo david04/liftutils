@@ -24,7 +24,7 @@ trait Bootstrap2 extends Framework {
   def successClass: String = ???
 }
 
-trait EditableHelper {
+trait DefaultElems {
 
   def fw: Framework
 
@@ -32,7 +32,7 @@ trait EditableHelper {
               val elemName: String,
               get: => String,
               set: String => Unit,
-              protected val placeholder: Option[String],
+              protected val placeholder: Option[String] = None,
               private[elem] val enabled: () => Boolean = () => true,
               protected val textInputAttrs: Seq[ElemAttr] = Seq()
               )(implicit protected val editor: DefaultHTMLEditor) extends TextInputElem with EditableElem2DefaultEditorBridge {
@@ -110,8 +110,29 @@ trait EditableHelper {
     private[elem] def save(): Unit = set(getCurrentEnumValue())
   }
 
+  class Select[T](
+                   val elemName: String,
+                   get: => T,
+                   set: T => Unit,
+                   all: => Seq[T],
+                   private[elem] val enabled: () => Boolean = () => true,
+                   protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenSeq2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
+
+    type SeqValueType = T
+
+    protected def framework = fw
+
+    protected def errorClass = fw.errorClass
+
+    protected def seq: Seq[SeqValueType] = all
+
+    def getSeqValue() = get
+
+    private[elem] def save(): Unit = set(getCurrentSeqValue())
+  }
+
 }
 
-object BS2EditableHelper extends EditableHelper with Bootstrap2
+object BS2DefaultEditableElems extends DefaultElems with Bootstrap2
 
-object BS3EditableHelper extends EditableHelper with Bootstrap3
+object BS3DefaultEditableElems extends DefaultElems with Bootstrap3
