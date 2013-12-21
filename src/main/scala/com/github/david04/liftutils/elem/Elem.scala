@@ -19,7 +19,7 @@ import com.github.david04.liftutils.util.Util.__print
 import net.liftweb.util.PassThru
 
 trait ID {
-  private val _id = UUID.randomUUID().toString
+  private val _id = S.formFuncName
 
   def id(part: Symbol) = _id + "-" + part.name
 
@@ -47,6 +47,10 @@ trait NodeSeqViewableElem extends ViewableElem {def renderNodeSeqView: NodeSeq}
 
 trait NamedElem extends ViewableElem {def elemName: String}
 
+trait LocPrefixedElem extends Elem {protected def locPrefix: String}
+
+trait LabeledElem extends NamedElem with LocPrefixedElem {def labelStr: String = S.?(s"$locPrefix-elem-lbl-$elemName")}
+
 trait EditableElem extends ValidatableElem with NamedElem {
 
   protected def framework: Framework
@@ -56,7 +60,7 @@ trait EditableElem extends ValidatableElem with NamedElem {
   private[elem] def save(): Unit
 }
 
-trait HTMLEditableElem extends EditableElem {
+trait HTMLEditableElem extends EditableElem with LocPrefixedElem {
 
   protected def htmlEditableElemTemplatePath: List[String] = "templates-hidden" :: "elem-edit-dflt" :: Nil
 

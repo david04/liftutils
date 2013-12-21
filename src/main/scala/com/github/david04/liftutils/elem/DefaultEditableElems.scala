@@ -131,6 +131,20 @@ trait DefaultElems {
     private[elem] def save(): Unit = set(getCurrentSeqValue())
   }
 
+  class Tree(
+              val elemName: String,
+              _get: => String,
+              val set: String => Unit,
+              _all: => Array[String],
+              private[elem] val enabled: () => Boolean = () => true
+              )(implicit protected val editor: DefaultHTMLEditor) extends FuelUXTree with EditableElem2DefaultEditorBridge {
+    def get = () => _get
+
+    def all: Array[String] = _all
+
+    protected def framework = fw
+  }
+
 }
 
 object BS2DefaultEditableElems extends DefaultElems with Bootstrap2

@@ -19,6 +19,8 @@ trait HTMLEditor extends ID {
 
   protected val elems = buildElems()
 
+  def locPrefix: String
+
   protected def onSubmit() =
     if (elems.exists(_.error.isDefined)) {
       elems.map(_.update()).reduceOption[JsCmd](_ & _).getOrElse(Noop)
@@ -66,6 +68,8 @@ trait DefaultHTMLEditor extends GlobalValidatableHTMLEditor {
 trait EditableElem2DefaultEditorBridge extends HTMLEditableElem {
 
   protected def editor: DefaultHTMLEditor
+
+  protected def locPrefix = editor.locPrefix
 
   override protected def onChangeServerSide(): JsCmd = super.onChangeServerSide() & editor.elemChanged(this)
 

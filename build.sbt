@@ -23,14 +23,15 @@ libraryDependencies ++= {
     "net.liftweb"       %% "lift-webkit"        % liftVersion        % "compile",
     "net.liftweb"       %% "lift-mapper"        % liftVersion        % "compile",
     "net.liftweb"       %% "lift-util"          % liftVersion        % "compile",
-    "net.liftmodules"   % "lift-jquery-module_2.5_2.10" % "2.4",
-    "com.googlecode.json-simple" % "json-simple" % "1.1.1",
-    "javax.servlet" % "javax.servlet-api" % "3.0.1",
-    "ch.qos.logback"    % "logback-classic"     % "1.0.6",
-    "postgresql" % "postgresql" % "9.1-901.jdbc3",
-    "log4j" % "log4j" % "1.2.17",
-    "com.typesafe.akka"         % "akka-actor_2.10"     % "2.2.1",
-    "joda-time" % "joda-time" % "2.3"
+    "net.liftmodules"             % "lift-jquery-module_2.5_2.10"   % "2.4",
+    "com.googlecode.json-simple"  % "json-simple"                   % "1.1.1",
+    "javax.servlet"               % "javax.servlet-api"             % "3.0.1",
+    "ch.qos.logback"              % "logback-classic"               % "1.0.6",
+    "postgresql"                  % "postgresql"                    % "9.1-901.jdbc3",
+    "log4j"                       % "log4j"                         % "1.2.17",
+    "com.typesafe.akka"           % "akka-actor_2.10"               % "2.2.1",
+    "joda-time"                   % "joda-time"                     % "2.3",
+    "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.1.3"
   )
 }
 
