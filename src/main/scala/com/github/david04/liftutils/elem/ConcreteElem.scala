@@ -1,8 +1,7 @@
 package com.github.david04.liftutils.elem
 
 
-import scala.xml.NodeSeq
-import scala.xml.Text
+import scala.xml.{UnprefixedAttribute, NodeSeq, Text}
 import net.liftweb.common._
 import net.liftweb.http.S
 import net.liftweb.util.Helpers._
@@ -13,6 +12,7 @@ import java.util.regex.Pattern
 import net.liftweb.http.SHtml.ElemAttr
 import scala.util.Try
 import net.liftweb.http.js.JE.JsRaw
+import net.liftweb.http.S.{SFuncHolder, LFuncHolder, AFuncHolder}
 
 trait PasswordInputElem extends TextInputElem {
 
@@ -37,7 +37,7 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
     textInputAttrs ++ Seq[ElemAttr](
       ("id" -> id('input)),
       ("placeholder" -> placeholder.getOrElse("")),
-      ("onblur" -> SHtml.onEvent(v => {value = v; onChangeServerSide()}).toJsCmd)
+      ("onblur" -> SHtml.onEvent(v => {println("onblur"); value = v; onChangeServerSide()}).toJsCmd)
     ): _*)
 
   override protected def htmlEditableElemRendererTransforms =
@@ -51,6 +51,24 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
 }
 
 trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with LabeledElem {
+
+  def select(opts: Seq[(String, NodeSeq)], deflt: Box[String],
+             _func: String => Any, attrs: ElemAttr*): scala.xml.Elem = {
+    def selected(in: Boolean) =
+      if (in) new UnprefixedAttribute("selected", "selected", scala.xml.Null) else scala.xml.Null
+
+    val func = SFuncHolder(_func)
+    val vals = opts.map(_._1)
+    val testFunc = LFuncHolder(in => in.filter(v => vals.contains(v)) match {case Nil => false case xs => func(xs)}, func.owner)
+
+    attrs.foldLeft(S.fmapFunc(testFunc)(fn => <select name={fn}>
+      {opts.flatMap {
+        case (value, text) => (<option value={value}>
+          {text}
+        </option>) % selected(deflt.exists(_ == value))
+      }}
+    </select>))(_ % _)
+  }
 
   private var value = getOneOfManyValue()
 
@@ -66,7 +84,7 @@ trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with L
         ".elem-error [id]" #> id('error)
       ) andThen
       ((ns: NodeSeq) => bind("elem", ns, "input" -%>
-        SHtml.select(
+        select(
           getAllOneOfManyValues().map(v => (v.id, v.name)), Full(value.id),
           v => getAllOneOfManyValues().find(_.id == v).foreach(value = _),
           (selectInputAttrs ++ Seq[ElemAttr](

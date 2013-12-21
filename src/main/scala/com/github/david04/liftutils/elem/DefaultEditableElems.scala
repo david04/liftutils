@@ -7,10 +7,16 @@ trait Bootstrap3 extends Framework {
   def fw: Framework = this
 
   def errorClass = "has-error"
-
   def warningClass = "has-warning"
-
   def successClass = "has-success"
+
+  def btnDefault: String = "btn-default"
+  def btnMute: String = "btn-default"
+  def btnPrimary: String = "btn-primary"
+  def btnSuccess: String = "btn-success"
+  def btnInfo: String = "btn-info"
+  def btnWarning: String = "btn-warning"
+  def btnDanger: String = "btn-danger"
 }
 
 trait Bootstrap2 extends Framework {
@@ -18,15 +24,19 @@ trait Bootstrap2 extends Framework {
   def fw: Framework = this
 
   def errorClass = "error"
-
   def warningClass: String = ???
-
   def successClass: String = ???
+
+  def btnDefault: String = ???
+  def btnMute: String = ???
+  def btnPrimary: String = ???
+  def btnSuccess: String = ???
+  def btnInfo: String = ???
+  def btnWarning: String = ???
+  def btnDanger: String = ???
 }
 
 trait DefaultElems {
-
-  def fw: Framework
 
   class Text(
               val elemName: String,
@@ -36,8 +46,6 @@ trait DefaultElems {
               private[elem] val enabled: () => Boolean = () => true,
               protected val textInputAttrs: Seq[ElemAttr] = Seq()
               )(implicit protected val editor: DefaultHTMLEditor) extends TextInputElem with EditableElem2DefaultEditorBridge {
-
-    protected def framework = fw
 
     def getStringValue(): String = get
 
@@ -53,8 +61,6 @@ trait DefaultElems {
                   protected val textInputAttrs: Seq[ElemAttr] = Seq()
                   )(implicit protected val editor: DefaultHTMLEditor) extends PasswordInputElem with EditableElem2DefaultEditorBridge {
 
-    protected def framework = fw
-
     def getStringValue(): String = get
 
     private[elem] def save(): Unit = set(getCurrentStringValue())
@@ -69,7 +75,6 @@ trait DefaultElems {
               protected val textInputAttrs: Seq[ElemAttr] = Seq()
               )(implicit protected val editor: DefaultHTMLEditor) extends GenDouble2GenString with TextInputElem with EditableElem2DefaultEditorBridge {
 
-    protected def framework = fw
 
     def getDoubleValue(): Double = get
 
@@ -83,8 +88,6 @@ trait DefaultElems {
               private[elem] val enabled: () => Boolean = () => true,
               protected val checkboxInputAttrs: Seq[ElemAttr] = Seq()
               )(implicit protected val editor: DefaultHTMLEditor) extends GenEditableBooleanValueElem with CheckboxInputElem with EditableElem2DefaultEditorBridge {
-
-    protected def framework = fw
 
     def getBooleanValue(): Boolean = get
 
@@ -101,9 +104,7 @@ trait DefaultElems {
 
     protected type EnumType = E
 
-    protected def framework = fw
-
-    protected def errorClass = fw.errorClass
+    protected def errorClass = framework.errorClass
 
     def getEnumValue: E#Value = get
 
@@ -120,9 +121,7 @@ trait DefaultElems {
 
     type SeqValueType = T
 
-    protected def framework = fw
-
-    protected def errorClass = fw.errorClass
+    protected def errorClass = framework.errorClass
 
     protected def seq: Seq[SeqValueType] = all
 
@@ -142,11 +141,8 @@ trait DefaultElems {
 
     def all: Array[String] = _all
 
-    protected def framework = fw
   }
 
 }
 
-object BS2DefaultEditableElems extends DefaultElems with Bootstrap2
-
-object BS3DefaultEditableElems extends DefaultElems with Bootstrap3
+object DefaultEditableElems extends DefaultElems

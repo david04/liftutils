@@ -51,7 +51,7 @@ trait GenEditableEnumValueElem extends GenEnumValueElem with ValidatableElem {de
 trait GenEditableSeqValueElem extends GenSeqValueElem with ValidatableElem {def getCurrentSeqValue(): SeqValueType}
 
 trait GenOneOfManyValueElem extends Elem {
-  protected type OneOfManyValue <: Object {def name: String; def id: String}
+  protected type OneOfManyValue <: Object {def name: NodeSeq; def id: String}
 
   def getOneOfManyValue(): OneOfManyValue
 
@@ -75,12 +75,12 @@ abstract class GenDouble2GenString extends GenEditableDoubleValueElem with GenEd
 abstract class GenEnum2GenOneOfMany extends GenEditableEnumValueElem with GenEditableOneOfManyValueElem {
 
   protected case class EnumValue(v: EnumValueType) {
-    def name = enumValue2String(v)
+    def name = enumValue2NodeSeq(v)
 
     def id = v.id + ""
   }
 
-  protected def enumValue2String(v: EnumValueType): String = v.toString
+  protected def enumValue2NodeSeq(v: EnumValueType): NodeSeq = Text(v.toString)
 
   protected type OneOfManyValue = EnumValue
 
@@ -94,12 +94,12 @@ abstract class GenEnum2GenOneOfMany extends GenEditableEnumValueElem with GenEdi
 abstract class GenSeq2GenOneOfMany extends GenEditableSeqValueElem with GenEditableOneOfManyValueElem {
 
   protected case class SeqValue(v: SeqValueType, idx: Int) {
-    def name = seqValue2String(v)
+    def name = seqValue2NodeSeq(v)
 
     def id = idx + ""
   }
 
-  protected def seqValue2String(v: SeqValueType): String = v.toString
+  protected def seqValue2NodeSeq(v: SeqValueType): NodeSeq = Text(v.toString)
 
   protected type OneOfManyValue = SeqValue
 
@@ -107,5 +107,5 @@ abstract class GenSeq2GenOneOfMany extends GenEditableSeqValueElem with GenEdita
 
   def getCurrentSeqValue() = getCurrentOneOfManyValue().v
 
-  def getAllOneOfManyValues() = seq.zipWithIndex.map(e => SeqValue(e._1, e._2)).sortBy(_.name)
+  def getAllOneOfManyValues() = seq.zipWithIndex.map(e => SeqValue(e._1, e._2))
 }

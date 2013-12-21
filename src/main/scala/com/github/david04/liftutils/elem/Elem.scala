@@ -31,10 +31,16 @@ trait Elem extends ID {}
 trait Framework {
 
   def errorClass: String
-
   def warningClass: String
-
   def successClass: String
+
+  def btnDefault: String
+  def btnMute: String
+  def btnPrimary: String
+  def btnSuccess: String
+  def btnInfo: String
+  def btnWarning: String
+  def btnDanger: String
 }
 
 trait ValidatableElem extends Elem {
