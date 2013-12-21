@@ -6,7 +6,7 @@ import net.liftweb.http._
 import net.liftweb.http.js.JsCmd
 import net.liftweb.http.js.JsCmds._
 import scala.xml.NodeSeq
-import net.liftweb.http.{AjaxHelpers, SHtml}
+import net.liftweb.http.{SHtml}
 import net.liftweb.util.{ClearNodes, PassThru}
 import com.github.david04.liftutils.util.Util.__print
 
