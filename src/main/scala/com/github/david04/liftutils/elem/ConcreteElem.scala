@@ -11,8 +11,9 @@ import scala.concurrent.duration.Duration
 import java.util.regex.Pattern
 import net.liftweb.http.SHtml.ElemAttr
 import scala.util.Try
-import net.liftweb.http.js.JE.JsRaw
+import net.liftweb.http.js.JE.{ValById, JsVal, JsRaw}
 import net.liftweb.http.S.{SFuncHolder, LFuncHolder, AFuncHolder}
+import net.liftweb.http.js.JsCmds.{Run, OnLoad, Script}
 
 trait PasswordInputElem extends TextInputElem {
 
@@ -37,7 +38,8 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
     textInputAttrs ++ Seq[ElemAttr](
       ("id" -> id('input)),
       ("placeholder" -> placeholder.getOrElse("")),
-      ("onblur" -> SHtml.onEvent(v => {println("onblur"); value = v; onChangeServerSide()}).toJsCmd)
+      ("onchange" -> ("{" + SHtml.onEvent(v => {value = v; onChangeServerSide()}).toJsCmd + "; return true; }")),
+      ("onkeyup" -> ("{if (window.event.keyCode == 13) {" + SHtml.ajaxCall(ValById(id('input)), v => {value = v; onChangeServerSide() & submit()}).toJsCmd + "; }}"))
     ): _*)
 
   override protected def htmlEditableElemRendererTransforms =
@@ -89,7 +91,7 @@ trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with L
           v => getAllOneOfManyValues().find(_.id == v).foreach(value = _),
           (selectInputAttrs ++ Seq[ElemAttr](
             ("id" -> id('input)),
-            ("onchange" -> SHtml.onEvent(v => {getAllOneOfManyValues().find(_.id == v).foreach(value = _); onChangeServerSide()}).toJsCmd)
+            ("onchange" -> ("{" + SHtml.onEvent(v => {getAllOneOfManyValues().find(_.id == v).foreach(value = _); onChangeServerSide()}).toJsCmd + "; return true; }"))
           )): _*)
       ))
 }
@@ -115,8 +117,8 @@ trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableEle
         SHtml.checkbox(value, value = _,
           (checkboxInputAttrs ++ Seq[ElemAttr](
             ("id" -> id('input)),
-            ("onchange" -> SHtml.ajaxCall(JsRaw(sel('input) + ".is(':checked')"),
-              v => {value = v.toBoolean; onChangeServerSide()}).toJsCmd)
+            ("onchange" -> ("{" + SHtml.ajaxCall(JsRaw(sel('input) + ".is(':checked')"),
+              v => {value = v.toBoolean; onChangeServerSide()}).toJsCmd + "; return true; }"))
           )): _*)
       ))
 }

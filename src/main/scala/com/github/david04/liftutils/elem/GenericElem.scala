@@ -67,7 +67,7 @@ abstract class GenDouble2GenString extends GenEditableDoubleValueElem with GenEd
   override private[elem] def error: Option[NodeSeq] =
     Try(getCurrentStringValue().toDouble).map(_ => super.error).getOrElse(Some(Text("Invalid value.")))
 
-  def getCurrentDoubleValue() = getCurrentStringValue().toDouble
+  def getCurrentDoubleValue(): Double = getCurrentStringValue().toDouble
 
   def getStringValue() = double2StringFormat.format(getDoubleValue())
 }
@@ -80,7 +80,7 @@ abstract class GenEnum2GenOneOfMany extends GenEditableEnumValueElem with GenEdi
     def id = v.id + ""
   }
 
-  protected def enumValue2NodeSeq(v: EnumValueType): NodeSeq = Text(v.toString)
+  protected def enumValue2NodeSeq(v: EnumValueType): NodeSeq
 
   protected type OneOfManyValue = EnumValue
 
@@ -99,7 +99,7 @@ abstract class GenSeq2GenOneOfMany extends GenEditableSeqValueElem with GenEdita
     def id = idx + ""
   }
 
-  protected def seqValue2NodeSeq(v: SeqValueType): NodeSeq = Text(v.toString)
+  protected def seqValue2NodeSeq(v: SeqValueType): NodeSeq
 
   protected type OneOfManyValue = SeqValue
 

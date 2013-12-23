@@ -44,7 +44,7 @@ trait Framework {
 }
 
 trait ValidatableElem extends Elem {
-  private[elem] def error: Option[NodeSeq] = None
+  private[elem] def error(): Option[NodeSeq] = None
 }
 
 trait ViewableElem extends Elem {}
@@ -55,7 +55,11 @@ trait NamedElem extends ViewableElem {def elemName: String}
 
 trait LocPrefixedElem extends Elem {protected def locPrefix: String}
 
-trait LabeledElem extends NamedElem with LocPrefixedElem {def labelStr: String = S.?(s"$locPrefix-elem-lbl-$elemName")}
+trait LabeledElem extends NamedElem with LocPrefixedElem {
+  def labelStr: String = S.?(s"$locPrefix-elem-lbl-$elemName")
+  def labelStr(suffix: String): String = S.?(s"$locPrefix-elem-lbl-$elemName-$suffix")
+  def glabelStr(suffix: String): String = S.?(s"$locPrefix-elem-lbl-$suffix")
+}
 
 trait EditableElem extends ValidatableElem with NamedElem {
 
@@ -81,6 +85,8 @@ trait HTMLEditableElem extends EditableElem with LocPrefixedElem {
   private[elem] def renderElemEditor: NodeSeq = htmlEditableElemRenderer.apply(htmlEditableElemTemplate)
 
   protected def onChangeServerSide(): JsCmd = Noop
+
+  protected def submit(): JsCmd = Noop
 
   protected def wrapName(name: String) = name + ": "
 

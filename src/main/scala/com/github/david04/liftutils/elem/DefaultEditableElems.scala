@@ -1,6 +1,8 @@
 package com.github.david04.liftutils.elem
 
 import net.liftweb.http.SHtml.ElemAttr
+import scala.xml.NodeSeq
+import net.liftweb.http.S
 
 trait Bootstrap3 extends Framework {
 
@@ -100,7 +102,9 @@ trait DefaultElems {
                                 set: E#Value => Unit,
                                 protected val enum: E,
                                 private[elem] val enabled: () => Boolean = () => true,
-                                protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenEnum2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
+                                protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenEnum2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge with LocPrefixedElem {
+
+    protected def enumValue2NodeSeq(v: EnumValueType): NodeSeq = scala.xml.Text(S.?(labelStr(v.toString)))
 
     protected type EnumType = E
 
@@ -120,6 +124,8 @@ trait DefaultElems {
                    protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenSeq2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
 
     type SeqValueType = T
+
+    protected def seqValue2NodeSeq(v: SeqValueType): NodeSeq = scala.xml.Text(labelStr(v.toString))
 
     protected def errorClass = framework.errorClass
 

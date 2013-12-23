@@ -11,8 +11,18 @@ import net.liftweb.json.JsonAST.JValue
 import net.liftweb.http.js.JsCmds.Run
 import net.liftweb.common.Full
 import net.liftweb.http.js.JE.JsRaw
+import net.liftweb.http.js.JsCmd
 
 case class FuelUXNode(id: String, name: String, `type`: String)
+
+object FuelUXTreeValidation {
+
+  trait Req extends FuelUXTree {
+    override private[elem] def error() =
+      (if (getCurrentValue() == "") Some(Text(labelStr("errorReq"))) else None) orElse super.error()
+  }
+
+}
 
 trait FuelUXTree extends HTMLEditableElem with LabeledElem {
 
@@ -64,7 +74,7 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
     val root = recur("", all.map(_.split("\\.")))
 
     val currentSelectionRenderer = SHtml.idMemoize(_ => (_: NodeSeq) =>
-      Text(S.?(s"elem-$elemName-currentLbl").replaceAllLiterally("{value}", getCurrentValue())))
+      Text(labelStr("current").replaceAllLiterally("{value}", getCurrentValue())))
 
     val script =
       Script(OnLoad(Run(
@@ -100,4 +110,14 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
         {script}
       </tail>)
   }
+}
+
+trait FuelUXModalEditTree extends FuelUXTree with ModalEditElem {
+  override protected def htmlModalEditableElemViewTemplatePath: List[String] =
+    "templates-hidden" :: "elem-modaledit-tree-view-dflt" :: Nil
+
+  protected def getCurrentViewString(): String = value
+
+  override protected def onChangeServerSide(): JsCmd = super.onChangeServerSide() & setCurrentViewString(value)
+
 }

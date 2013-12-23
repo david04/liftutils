@@ -95,7 +95,6 @@ trait SemanticSubmitButtonHTMLEditor extends HTMLEditor {
   override def submitBtnTransforms: NodeSeq => NodeSeq =
     super.submitBtnTransforms andThen
       ".editor-btn-submit [class+]" #> {
-        println("Updating")
         if (!isValid) framework.btnDanger
         else if (modified) framework.btnSuccess
         else framework.btnMute
@@ -123,6 +122,8 @@ trait EditableElem2DefaultEditorBridge extends HTMLEditableElem {
   protected def editor: DefaultHTMLEditor
 
   protected def locPrefix = editor.locPrefix
+
+  override protected def submit(): JsCmd = super.submit() & editor.submitForm()
 
   override protected def onChangeServerSide(): JsCmd = super.onChangeServerSide() & editor.elemChanged(this)
 

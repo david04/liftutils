@@ -37,7 +37,7 @@ case class DateRangePicker(
       ).apply(template) ++
       <tail>
         {Script(OnLoad(Run("$('#" + id + "').daterangepicker(" +
-        JSON.writeValueAsString(options).p("options:\n") + ",\n" +
+        JSON.writeValueAsString(options) + ",\n" +
         "function (start, end) {" +
         "$('#" + id + " .daterangepicker-lbl').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));" +
         SHtml.jsonCall(
