@@ -44,7 +44,7 @@ trait Framework {
 }
 
 trait ValidatableElem extends Elem {
-  private[elem] def error(): Option[NodeSeq] = None
+  def error(): Option[NodeSeq] = None
 }
 
 trait ViewableElem extends Elem {}

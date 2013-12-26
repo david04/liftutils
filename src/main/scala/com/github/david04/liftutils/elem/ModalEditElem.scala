@@ -42,7 +42,7 @@ trait ModalEditElem extends HTMLEditableElem with Modal with LabeledElem {
   protected def action: Option[(String, net.liftweb.http.js.JsCmd)] = Some((glabelStr("done"), hide()))
   protected def cancel: Option[(String, net.liftweb.http.js.JsCmd)] = None
   protected def content: scala.xml.NodeSeq = super.renderElemEditor
-  protected def height: Int = 300
+  protected def height: Option[Int] = None
   protected def title: String = labelStr("modalTitle")
 
   override private[elem] def update() =

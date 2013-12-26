@@ -62,9 +62,9 @@ trait GenEditableOneOfManyValueElem extends GenOneOfManyValueElem with Validatab
 
 abstract class GenDouble2GenString extends GenEditableDoubleValueElem with GenEditableStringValueElem {
 
-  protected def double2StringFormat = "%.2f"
+  protected def double2StringFormat = "%f"
 
-  override private[elem] def error: Option[NodeSeq] =
+  override def error: Option[NodeSeq] =
     Try(getCurrentStringValue().toDouble).map(_ => super.error).getOrElse(Some(Text("Invalid value.")))
 
   def getCurrentDoubleValue(): Double = getCurrentStringValue().toDouble

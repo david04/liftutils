@@ -10,6 +10,8 @@ import scala.Some
 
 object Util {
 
+  var enableProfiling = true
+
   def iefix = Unparsed( """
                           | <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
                           | <!--[if lt IE 9]>
@@ -34,33 +36,35 @@ object Util {
   /**
    * Profile
    */
-  def %?[T](s: String)(b: => T) = {
-    val space = (0 until idx).map(_ => "  ").mkString
+  def %?[T](s: String)(b: => T) =
+    if (!enableProfiling) b
+    else {
+      val space = (0 until idx).map(_ => "  ").mkString
 
-    if (lastOpen) println()
-    print(space + s"Starting '$s'...")
+      if (lastOpen) println()
+      print(space + s"Starting '$s'...")
 
-    lastOpen = true
-    idx = idx + 2
-    val start = System.currentTimeMillis()
-    val (ret, ex) = try {
-      val ret = b
-      (Some(ret), None)
-    } catch {
-      case t: Throwable => (None, Some(t))
+      lastOpen = true
+      idx = idx + 2
+      val start = System.currentTimeMillis()
+      val (ret, ex) = try {
+        val ret = b
+        (Some(ret), None)
+      } catch {
+        case t: Throwable => (None, Some(t))
+      }
+      val took = System.currentTimeMillis() - start
+      idx = idx - 2
+
+      val exception = ex match {case Some(t) => s" ! {Exception: '${t.getMessage}'}" case None => ""}
+
+      println(
+        if (lastOpen) s" [${took}ms]$exception" else s"${space}Finished '$s' [${took}ms]$exception"
+      )
+      lastOpen = false
+      (ret, ex) match {
+        case (Some(ret), _) => ret
+        case (_, Some(t)) => throw t
+      }
     }
-    val took = System.currentTimeMillis() - start
-    idx = idx - 2
-
-    val exception = ex match {case Some(t) => s" ! {Exception: '${t.getMessage}'}" case None => ""}
-
-    println(
-      if (lastOpen) s" [${took}ms]$exception" else s"${space}Finished '$s' [${took}ms]$exception"
-    )
-    lastOpen = false
-    (ret, ex) match {
-      case (Some(ret), _) => ret
-      case (_, Some(t)) => throw t
-    }
-  }
 }

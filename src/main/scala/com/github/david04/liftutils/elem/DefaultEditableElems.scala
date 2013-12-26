@@ -3,6 +3,7 @@ package com.github.david04.liftutils.elem
 import net.liftweb.http.SHtml.ElemAttr
 import scala.xml.NodeSeq
 import net.liftweb.http.S
+import scala.util.parsing.combinator.RegexParsers
 
 trait Bootstrap3 extends Framework {
 
@@ -48,6 +49,20 @@ trait DefaultElems {
               private[elem] val enabled: () => Boolean = () => true,
               protected val textInputAttrs: Seq[ElemAttr] = Seq()
               )(implicit protected val editor: DefaultHTMLEditor) extends TextInputElem with EditableElem2DefaultEditorBridge {
+
+    def getStringValue(): String = get
+
+    private[elem] def save(): Unit = set(getCurrentStringValue())
+  }
+
+  class Formula(
+                 val elemName: String,
+                 get: => String,
+                 set: String => Unit,
+                 protected val placeholder: Option[String] = None,
+                 private[elem] val enabled: () => Boolean = () => true,
+                 protected val textInputAttrs: Seq[ElemAttr] = Seq()
+                 )(implicit protected val editor: DefaultHTMLEditor) extends TextInputElem with EditableElem2DefaultEditorBridge {
 
     def getStringValue(): String = get
 
@@ -138,8 +153,8 @@ trait DefaultElems {
 
   class Tree(
               val elemName: String,
-              _get: => String,
-              val set: String => Unit,
+              _get: => Option[String],
+              val set: Option[String] => Unit,
               _all: => Array[String],
               private[elem] val enabled: () => Boolean = () => true
               )(implicit protected val editor: DefaultHTMLEditor) extends FuelUXTree with EditableElem2DefaultEditorBridge {

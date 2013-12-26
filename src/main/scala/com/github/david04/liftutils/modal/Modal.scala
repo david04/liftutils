@@ -17,7 +17,7 @@ trait Modal {
   protected def content: NodeSeq
   protected def cancel: Option[(String, JsCmd)]
   protected def action: Option[(String, JsCmd)]
-  protected def height: Int
+  protected def height: Option[Int]
 
   def modalActionBtnTransforms: NodeSeq => NodeSeq =
     action.map({
@@ -39,7 +39,7 @@ trait Modal {
       ".modal-contents" #> content &
       ".modal-cancel" #> modalCancelBtnTransforms andThen
       ".modal-action" #> modalActionBtnTransforms andThen
-      ".modal-body .scroller [style]" #> s"height:${height}px"
+      ".modal-body .scroller [style]" #> height.map(h => s"height:${h}px").getOrElse("")
 
   def show() =
     Run(s"if(document.getElementById('$id') == null) " +
@@ -54,7 +54,7 @@ case class DefaultModal(
                          protected val content: NodeSeq,
                          protected val cancelLbl: String,
                          protected val action: Option[(String, JsCmd)],
-                         protected val height: Int = 300
+                         protected val height: Option[Int] = None
                          ) extends Modal {
 
   def cancel = Some(cancelLbl, hide())

@@ -7,24 +7,31 @@ import net.liftweb.http._
 import net.liftweb.common._
 import net.liftweb.util.Helpers._
 import net.liftweb.json._
+import net.liftweb.json.JsonDSL._
 import net.liftweb.json.JsonAST.JValue
 import net.liftweb.http.js.JsCmds.Run
 import net.liftweb.common.Full
 import net.liftweb.http.js.JE.JsRaw
 import net.liftweb.http.js.JsCmd
-
-case class FuelUXNode(id: String, name: String, `type`: String)
+import com.github.david04.liftutils.util.Util.__print
 
 object FuelUXTreeValidation {
 
   trait Req extends FuelUXTree {
-    override private[elem] def error() =
-      (if (getCurrentValue() == "") Some(Text(labelStr("errorReq"))) else None) orElse super.error()
+    override def error() =
+      (if (getCurrentValue() == None) Some(Text(labelStr("errorReq"))) else None) orElse super.error()
   }
 
 }
 
+case class DataAttributes(id: String = S.formFuncName)
+
+case class FuelUXNode(id: String, name: String, `type`: String, isSelected: Boolean, dataAttributes: DataAttributes = DataAttributes())(implicit val tree: FuelUXTree) {
+  def selectNode() = Run("$('#" + tree.id('tree) + "').tree('selectItem', $('#" + dataAttributes.id + "'));")
+}
+
 trait FuelUXTree extends HTMLEditableElem with LabeledElem {
+  implicit def self = this
 
   override protected def htmlEditableElemTemplatePath: List[String] = "templates-hidden" :: "elem-edit-tree-dflt" :: Nil
 
@@ -32,19 +39,21 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
   type Type = String
 
   def all: Array[String]
-  def get: () => String
-  def set: String => Unit
-  var value = get()
+  def get: () => Option[String]
+  def set: Option[String] => Unit
+  val initialValue = get()
+  var inited = false
+  var selected: Option[Node] = None
 
   private[elem] def save(): Unit = set(getCurrentValue())
 
-  def getCurrentValue(): String = value
+  def getCurrentValue(): Option[String] = if (inited) selected.map(_.value) else initialValue
 
   case class Node(id: ID, value: String, name: String, `type`: Type, children: () => Array[Node])
 
   private def lazyF[T](f: => T) = { lazy val v = f; () => v }
 
-  def toFuelUX(node: Node) = FuelUXNode(node.id, node.name, node.`type`)
+  def toFuelUX(node: Node) = new FuelUXNode(node.id, node.name, node.`type`, getCurrentValue() == Some(node.value))
 
   override protected def htmlEditableElemRendererTransforms = {
 
@@ -54,61 +63,76 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
 
     def recur(pre: String, all: Array[Array[String]]): Array[Node] =
       (Array("*") +: all)
-        .groupBy(_.head).mapValues(_.map(_.tail).filterNot(_.isEmpty))
+        .groupBy(_.head).mapValues(children => {
+        val tail = children.map(_.tail)
+        (tail.filterNot(_.isEmpty), tail.exists(_.isEmpty))
+      })
         .toArray
         .sortWith((s1, s2) => {
         if (s1._1.startsWith("*")) false
         else if (s2._1.startsWith("*")) true
         else s1._1.compareTo(s2._1) < 0
       })
-        .map({
-        case (cur, children) =>
-          val id = S.formFuncName
-          val node =
-            if (children.isEmpty) Node(id, pre + cur, cur, "item", () => Array())
-            else Node(id, pre, cur, "folder", lazyF[Array[Node]](recur(s"$pre$cur.", children)))
-          map(id) = node
-          node
+        .flatMap({
+        case (cur, (children, includeSelf)) =>
+          lazy val selfNode = {
+            val node = Node(S.formFuncName, pre + cur, cur, "item", () => Array())
+            map(node.id) = node
+            node
+          }
+          lazy val childrenNode = {
+            val node = Node(S.formFuncName, pre, cur + ".", "folder", lazyF[Array[Node]](recur(s"$pre$cur.", children)))
+            map(node.id) = node
+            node
+          }
+
+          if (children.isEmpty) Array(selfNode)
+          else if (!children.isEmpty && includeSelf) Array(selfNode, childrenNode)
+          else Array(childrenNode)
       })
 
     val root = recur("", all.map(_.split("\\.")))
 
     val currentSelectionRenderer = SHtml.idMemoize(_ => (_: NodeSeq) =>
-      Text(labelStr("current").replaceAllLiterally("{value}", getCurrentValue())))
+      Text(labelStr("current").replaceAllLiterally("{value}", getCurrentValue().getOrElse(labelStr("none")))))
 
     val script =
       Script(OnLoad(Run(
         "$('#" + id('tree) + "').tree({dataSource: { data: function(opt, cb) { " +
           SHtml.jsonCall(JsRaw("opt"),
-            new JsonContext(Full("function(v){cb({data: v});}"), Empty),
-            (v: JValue) =>
-              (for {
+            new JsonContext(Full("function(v){cb({data: v.nodes}); eval(v.init);}"), Empty),
+            (v: JValue) => {
+
+              val nodes = (for {
                 obj <- Box.asA[JObject](v)
                 idValue <- obj.values.get("id")
                 id <- Box.asA[String](idValue)
               } yield {
-                Extraction.decompose(map(id).children().map(toFuelUX(_)))
-              }) openOr Extraction.decompose(root.map(toFuelUX(_)))
+                map(id).children().map(toFuelUX(_))
+              }) openOr root.map(toFuelUX(_))
+
+              (("nodes", Extraction.decompose(nodes)) ~
+                ("init", nodes.filter(_.isSelected).map(_.selectNode()).foldLeft[JsCmd](Noop)(_ & _).toJsCmd.toString))
+            }
           ).toJsCmd +
-          "}}}).on('selected', function(sel) {" +
-          SHtml.ajaxCall(JsRaw("$('#" + id('tree) + "').tree('selectedItems').map(function(i) {return i.id;})[0]"),
-            (s: String) => {
-              value = map(s).value
-              currentSelectionRenderer.setHtml() & onChangeServerSide()
+          "}}}).on('updated', function(sel) {" +
+          SHtml.jsonCall(JsRaw("$('#" + id('tree) + "').tree('selectedItems').map(function(i) {return i.id;})"),
+            (v: JValue) => v match {
+              case JArray(selectedLst: List[JString]) =>
+                inited = true
+                selected = selectedLst.map(s => map(s.s)).headOption
+                currentSelectionRenderer.setHtml() & onChangeServerSide()
             }).toJsCmd +
           "});")))
-    super.htmlEditableElemRendererTransforms andThen (
-      ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
+
+    super.htmlEditableElemRendererTransforms andThen
+      (".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
         ".elem-wrap [id]" #> id('wrapper) &
         ".elem-lbl *" #> wrapName(labelStr) &
         ".elem-error [id]" #> id('error) &
-        ".tree-title-lbl" #> currentSelectionRenderer
-      ) andThen (
-      ".tree [id]" #> id('tree)
-      ) andThen ((ns: NodeSeq) =>
-      ns ++ <tail>
-        {script}
-      </tail>)
+        ".tree-title-lbl" #> currentSelectionRenderer) andThen
+      (".tree [id]" #> id('tree)) andThen
+      ((ns: NodeSeq) => ns ++ <tail>{script}</tail>)
   }
 }
 
@@ -116,8 +140,9 @@ trait FuelUXModalEditTree extends FuelUXTree with ModalEditElem {
   override protected def htmlModalEditableElemViewTemplatePath: List[String] =
     "templates-hidden" :: "elem-modaledit-tree-view-dflt" :: Nil
 
-  protected def getCurrentViewString(): String = value
+  protected def getCurrentViewString(): String = getCurrentValue().getOrElse(labelStr("none"))
 
-  override protected def onChangeServerSide(): JsCmd = super.onChangeServerSide() & setCurrentViewString(value)
+  override protected def onChangeServerSide(): JsCmd =
+    super.onChangeServerSide() & setCurrentViewString(getCurrentValue().getOrElse(labelStr("none")))
 
 }

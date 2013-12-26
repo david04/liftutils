@@ -3,750 +3,739 @@ package com.github.david04.liftutils.fontawesome
 import scala.xml.Unparsed
 
 
+/**
+ * 3.2.1
+ */
 object Icon extends Enumeration {
   type Icon = Value
 
-  val adjust = Value("fa-adjust")
-  val adn = Value("fa-adn")
-  val align_center = Value("fa-align-center")
-  val align_justify = Value("fa-align-justify")
-  val align_left = Value("fa-align-left")
-  val align_right = Value("fa-align-right")
-  val ambulance = Value("fa-ambulance")
-  val anchor = Value("fa-anchor")
-  val android = Value("fa-android")
-  val angle_double_down = Value("fa-angle-double-down")
-  val angle_double_left = Value("fa-angle-double-left")
-  val angle_double_right = Value("fa-angle-double-right")
-  val angle_double_up = Value("fa-angle-double-up")
-  val angle_down = Value("fa-angle-down")
-  val angle_left = Value("fa-angle-left")
-  val angle_right = Value("fa-angle-right")
-  val angle_up = Value("fa-angle-up")
-  val apple = Value("fa-apple")
-  val archive = Value("fa-archive")
-  val arrow_circle_down = Value("fa-arrow-circle-down")
-  val arrow_circle_left = Value("fa-arrow-circle-left")
-  val arrow_circle_o_down = Value("fa-arrow-circle-o-down")
-  val arrow_circle_o_left = Value("fa-arrow-circle-o-left")
-  val arrow_circle_o_right = Value("fa-arrow-circle-o-right")
-  val arrow_circle_o_up = Value("fa-arrow-circle-o-up")
-  val arrow_circle_right = Value("fa-arrow-circle-right")
-  val arrow_circle_up = Value("fa-arrow-circle-up")
-  val arrow_down = Value("fa-arrow-down")
-  val arrow_left = Value("fa-arrow-left")
-  val arrow_right = Value("fa-arrow-right")
-  val arrows_alt = Value("fa-arrows-alt")
-  val arrows_h = Value("fa-arrows-h")
-  val arrows = Value("fa-arrows")
-  val arrows_v = Value("fa-arrows-v")
-  val arrow_up = Value("fa-arrow-up")
-  val asterisk = Value("fa-asterisk")
-  val backward = Value("fa-backward")
-  val ban = Value("fa-ban")
-  val bar_chart_o = Value("fa-bar-chart-o")
-  val barcode = Value("fa-barcode")
-  val bars = Value("fa-bars")
-  val beer = Value("fa-beer")
-  val bell_o = Value("fa-bell-o")
-  val bell = Value("fa-bell")
-  val bitbucket_square = Value("fa-bitbucket-square")
-  val bitbucket = Value("fa-bitbucket")
-  val bold = Value("fa-bold")
-  val bolt = Value("fa-bolt")
-  val bookmark_o = Value("fa-bookmark-o")
-  val bookmark = Value("fa-bookmark")
-  val book = Value("fa-book")
-  val briefcase = Value("fa-briefcase")
-  val btc = Value("fa-btc")
-  val bug = Value("fa-bug")
-  val building_o = Value("fa-building-o")
-  val bullhorn = Value("fa-bullhorn")
-  val bullseye = Value("fa-bullseye")
-  val calendar_o = Value("fa-calendar-o")
-  val calendar = Value("fa-calendar")
-  val camera_retro = Value("fa-camera-retro")
-  val camera = Value("fa-camera")
-  val caret_down = Value("fa-caret-down")
-  val caret_left = Value("fa-caret-left")
-  val caret_right = Value("fa-caret-right")
-  val caret_square_o_down = Value("fa-caret-square-o-down")
-  val caret_square_o_left = Value("fa-caret-square-o-left")
-  val caret_square_o_right = Value("fa-caret-square-o-right")
-  val caret_square_o_up = Value("fa-caret-square-o-up")
-  val caret_up = Value("fa-caret-up")
-  val certificate = Value("fa-certificate")
-  val chain_broken = Value("fa-chain-broken")
-  val check_circle_o = Value("fa-check-circle-o")
-  val check_circle = Value("fa-check-circle")
-  val check_square_o = Value("fa-check-square-o")
-  val check_square = Value("fa-check-square")
-  val check = Value("fa-check")
-  val chevron_circle_down = Value("fa-chevron-circle-down")
-  val chevron_circle_left = Value("fa-chevron-circle-left")
-  val chevron_circle_right = Value("fa-chevron-circle-right")
-  val chevron_circle_up = Value("fa-chevron-circle-up")
-  val chevron_down = Value("fa-chevron-down")
-  val chevron_left = Value("fa-chevron-left")
-  val chevron_right = Value("fa-chevron-right")
-  val chevron_up = Value("fa-chevron-up")
-  val circle_o = Value("fa-circle-o")
-  val circle = Value("fa-circle")
-  val clipboard = Value("fa-clipboard")
-  val clock_o = Value("fa-clock-o")
-  val cloud_download = Value("fa-cloud-download")
-  val cloud_upload = Value("fa-cloud-upload")
-  val cloud = Value("fa-cloud")
-  val code_fork = Value("fa-code-fork")
-  val code = Value("fa-code")
-  val coffee = Value("fa-coffee")
-  val cogs = Value("fa-cogs")
-  val cog = Value("fa-cog")
-  val columns = Value("fa-columns")
-  val comment_o = Value("fa-comment-o")
-  val comments_o = Value("fa-comments-o")
-  val comments = Value("fa-comments")
-  val comment = Value("fa-comment")
-  val compass = Value("fa-compass")
-  val compress = Value("fa-compress")
-  val credit_card = Value("fa-credit-card")
-  val crop = Value("fa-crop")
-  val crosshairs = Value("fa-crosshairs")
-  val css3 = Value("fa-css3")
-  val cutlery = Value("fa-cutlery")
-  val desktop = Value("fa-desktop")
-  val dot_circle_o = Value("fa-dot-circle-o")
-  val download = Value("fa-download")
-  val dribbble = Value("fa-dribbble")
-  val dropbox = Value("fa-dropbox")
-  val eject = Value("fa-eject")
-  val ellipsis_h = Value("fa-ellipsis-h")
-  val ellipsis_v = Value("fa-ellipsis-v")
-  val envelope_o = Value("fa-envelope-o")
-  val envelope = Value("fa-envelope")
-  val eraser = Value("fa-eraser")
-  val eur = Value("fa-eur")
-  val exchange = Value("fa-exchange")
-  val exclamation_circle = Value("fa-exclamation-circle")
-  val exclamation_triangle = Value("fa-exclamation-triangle")
-  val exclamation = Value("fa-exclamation")
-  val expand = Value("fa-expand")
-  val external_link_square = Value("fa-external-link-square")
-  val external_link = Value("fa-external-link")
-  val eye_slash = Value("fa-eye-slash")
-  val eye = Value("fa-eye")
-  val facebook_square = Value("fa-facebook-square")
-  val facebook = Value("fa-facebook")
-  val fast_backward = Value("fa-fast-backward")
-  val fast_forward = Value("fa-fast-forward")
-  val female = Value("fa-female")
-  val fighter_jet = Value("fa-fighter-jet")
-  val file_o = Value("fa-file-o")
-  val files_o = Value("fa-files-o")
-  val file_text_o = Value("fa-file-text-o")
-  val file_text = Value("fa-file-text")
-  val file = Value("fa-file")
-  val film = Value("fa-film")
-  val filter = Value("fa-filter")
-  val fire_extinguisher = Value("fa-fire-extinguisher")
-  val fire = Value("fa-fire")
-  val flag_checkered = Value("fa-flag-checkered")
-  val flag_o = Value("fa-flag-o")
-  val flag = Value("fa-flag")
-  val flask = Value("fa-flask")
-  val flickr = Value("fa-flickr")
-  val floppy_o = Value("fa-floppy-o")
-  val folder_open_o = Value("fa-folder-open-o")
-  val folder_open = Value("fa-folder-open")
-  val folder_o = Value("fa-folder-o")
-  val folder = Value("fa-folder")
-  val font = Value("fa-font")
-  val forward = Value("fa-forward")
-  val foursquare = Value("fa-foursquare")
-  val frown_o = Value("fa-frown-o")
-  val gamepad = Value("fa-gamepad")
-  val gavel = Value("fa-gavel")
-  val gbp = Value("fa-gbp")
-  val gift = Value("fa-gift")
-  val github_alt = Value("fa-github-alt")
-  val github_square = Value("fa-github-square")
-  val github = Value("fa-github")
-  val gittip = Value("fa-gittip")
-  val glass = Value("fa-glass")
-  val globe = Value("fa-globe")
-  val google_plus_square = Value("fa-google-plus-square")
-  val google_plus = Value("fa-google-plus")
-  val hand_o_down = Value("fa-hand-o-down")
-  val hand_o_left = Value("fa-hand-o-left")
-  val hand_o_right = Value("fa-hand-o-right")
-  val hand_o_up = Value("fa-hand-o-up")
-  val hdd_o = Value("fa-hdd-o")
-  val headphones = Value("fa-headphones")
-  val heart_o = Value("fa-heart-o")
-  val heart = Value("fa-heart")
-  val home = Value("fa-home")
-  val hospital_o = Value("fa-hospital-o")
-  val h_square = Value("fa-h-square")
-  val html5 = Value("fa-html5")
-  val inbox = Value("fa-inbox")
-  val indent = Value("fa-indent")
-  val info_circle = Value("fa-info-circle")
-  val info = Value("fa-info")
-  val inr = Value("fa-inr")
-  val instagram = Value("fa-instagram")
-  val italic = Value("fa-italic")
-  val jpy = Value("fa-jpy")
-  val keyboard_o = Value("fa-keyboard-o")
-  val key = Value("fa-key")
-  val krw = Value("fa-krw")
-  val laptop = Value("fa-laptop")
-  val leaf = Value("fa-leaf")
-  val lemon_o = Value("fa-lemon-o")
-  val level_down = Value("fa-level-down")
-  val level_up = Value("fa-level-up")
-  val lightbulb_o = Value("fa-lightbulb-o")
-  val linkedin_square = Value("fa-linkedin-square")
-  val linkedin = Value("fa-linkedin")
-  val link = Value("fa-link")
-  val linux = Value("fa-linux")
-  val list_alt = Value("fa-list-alt")
-  val list_ol = Value("fa-list-ol")
-  val list_ul = Value("fa-list-ul")
-  val list = Value("fa-list")
-  val location_arrow = Value("fa-location-arrow")
-  val lock = Value("fa-lock")
-  val long_arrow_down = Value("fa-long-arrow-down")
-  val long_arrow_left = Value("fa-long-arrow-left")
-  val long_arrow_right = Value("fa-long-arrow-right")
-  val long_arrow_up = Value("fa-long-arrow-up")
-  val magic = Value("fa-magic")
-  val magnet = Value("fa-magnet")
-  val mail_reply_all = Value("fa-mail-reply-all")
-  val male = Value("fa-male")
-  val map_marker = Value("fa-map-marker")
-  val maxcdn = Value("fa-maxcdn")
-  val medkit = Value("fa-medkit")
-  val meh_o = Value("fa-meh-o")
-  val microphone_slash = Value("fa-microphone-slash")
-  val microphone = Value("fa-microphone")
-  val minus_circle = Value("fa-minus-circle")
-  val minus_square_o = Value("fa-minus-square-o")
-  val minus_square = Value("fa-minus-square")
-  val minus = Value("fa-minus")
-  val mobile = Value("fa-mobile")
-  val money = Value("fa-money")
-  val moon_o = Value("fa-moon-o")
-  val music = Value("fa-music")
-  val outdent = Value("fa-outdent")
-  val pagelines = Value("fa-pagelines")
-  val paperclip = Value("fa-paperclip")
-  val pause = Value("fa-pause")
-  val pencil_square_o = Value("fa-pencil-square-o")
-  val pencil_square = Value("fa-pencil-square")
-  val pencil = Value("fa-pencil")
-  val phone_square = Value("fa-phone-square")
-  val phone = Value("fa-phone")
-  val picture_o = Value("fa-picture-o")
-  val pinterest_square = Value("fa-pinterest-square")
-  val pinterest = Value("fa-pinterest")
-  val plane = Value("fa-plane")
-  val play_circle_o = Value("fa-play-circle-o")
-  val play_circle = Value("fa-play-circle")
-  val play = Value("fa-play")
-  val plus_circle = Value("fa-plus-circle")
-  val plus_square_o = Value("fa-plus-square-o")
-  val plus_square = Value("fa-plus-square")
-  val plus = Value("fa-plus")
-  val power_off = Value("fa-power-off")
-  val print = Value("fa-print")
-  val puzzle_piece = Value("fa-puzzle-piece")
-  val qrcode = Value("fa-qrcode")
-  val question_circle = Value("fa-question-circle")
-  val question = Value("fa-question")
-  val quote_left = Value("fa-quote-left")
-  val quote_right = Value("fa-quote-right")
-  val random = Value("fa-random")
-  val refresh = Value("fa-refresh")
-  val renren = Value("fa-renren")
-  val repeat = Value("fa-repeat")
-  val reply_all = Value("fa-reply-all")
-  val reply = Value("fa-reply")
-  val retweet = Value("fa-retweet")
-  val road = Value("fa-road")
-  val rocket = Value("fa-rocket")
-  val rss_square = Value("fa-rss-square")
-  val rss = Value("fa-rss")
-  val rub = Value("fa-rub")
-  val scissors = Value("fa-scissors")
-  val search_minus = Value("fa-search-minus")
-  val search_plus = Value("fa-search-plus")
-  val search = Value("fa-search")
-  val share_square_o = Value("fa-share-square-o")
-  val share_square = Value("fa-share-square")
-  val share = Value("fa-share")
-  val shield = Value("fa-shield")
-  val shopping_cart = Value("fa-shopping-cart")
-  val signal = Value("fa-signal")
-  val sign_in = Value("fa-sign-in")
-  val sign_out = Value("fa-sign-out")
-  val sitemap = Value("fa-sitemap")
-  val skype = Value("fa-skype")
-  val smile_o = Value("fa-smile-o")
-  val sort_alpha_asc = Value("fa-sort-alpha-asc")
-  val sort_alpha_desc = Value("fa-sort-alpha-desc")
-  val sort_amount_asc = Value("fa-sort-amount-asc")
-  val sort_amount_desc = Value("fa-sort-amount-desc")
-  val sort_asc = Value("fa-sort-asc")
-  val sort_desc = Value("fa-sort-desc")
-  val sort_numeric_asc = Value("fa-sort-numeric-asc")
-  val sort_numeric_desc = Value("fa-sort-numeric-desc")
-  val sort = Value("fa-sort")
-  val spinner = Value("fa-spinner")
-  val square_o = Value("fa-square-o")
-  val square = Value("fa-square")
-  val stack_exchange = Value("fa-stack-exchange")
-  val stack_overflow = Value("fa-stack-overflow")
-  val star_half_o = Value("fa-star-half-o")
-  val star_half = Value("fa-star-half")
-  val star_o = Value("fa-star-o")
-  val star = Value("fa-star")
-  val step_backward = Value("fa-step-backward")
-  val step_forward = Value("fa-step-forward")
-  val stethoscope = Value("fa-stethoscope")
-  val stop = Value("fa-stop")
-  val strikethrough = Value("fa-strikethrough")
-  val subscript = Value("fa-subscript")
-  val suitcase = Value("fa-suitcase")
-  val sun_o = Value("fa-sun-o")
-  val superscript = Value("fa-superscript")
-  val tablet = Value("fa-tablet")
-  val table = Value("fa-table")
-  val tachometer = Value("fa-tachometer")
-  val tags = Value("fa-tags")
-  val tag = Value("fa-tag")
-  val tasks = Value("fa-tasks")
-  val terminal = Value("fa-terminal")
-  val text_height = Value("fa-text-height")
-  val text_width = Value("fa-text-width")
-  val th_large = Value("fa-th-large")
-  val th_list = Value("fa-th-list")
-  val thumbs_down = Value("fa-thumbs-down")
-  val thumbs_o_down = Value("fa-thumbs-o-down")
-  val thumbs_o_up = Value("fa-thumbs-o-up")
-  val thumbs_up = Value("fa-thumbs-up")
-  val thumb_tack = Value("fa-thumb-tack")
-  val th = Value("fa-th")
-  val ticket = Value("fa-ticket")
-  val times_circle_o = Value("fa-times-circle-o")
-  val times_circle = Value("fa-times-circle")
-  val times = Value("fa-times")
-  val tint = Value("fa-tint")
-  val trash_o = Value("fa-trash-o")
-  val trello = Value("fa-trello")
-  val trophy = Value("fa-trophy")
-  val truck = Value("fa-truck")
-  val try_ = Value("fa-try")
-  val tumblr_square = Value("fa-tumblr-square")
-  val tumblr = Value("fa-tumblr")
-  val twitter_square = Value("fa-twitter-square")
-  val twitter = Value("fa-twitter")
-  val umbrella = Value("fa-umbrella")
-  val underline = Value("fa-underline")
-  val undo = Value("fa-undo")
-  val unlock_alt = Value("fa-unlock-alt")
-  val unlock = Value("fa-unlock")
-  val upload = Value("fa-upload")
-  val usd = Value("fa-usd")
-  val user_md = Value("fa-user-md")
-  val users = Value("fa-users")
-  val user = Value("fa-user")
-  val video_camera = Value("fa-video-camera")
-  val vimeo_square = Value("fa-vimeo-square")
-  val vk = Value("fa-vk")
-  val volume_down = Value("fa-volume-down")
-  val volume_off = Value("fa-volume-off")
-  val volume_up = Value("fa-volume-up")
-  val weibo = Value("fa-weibo")
-  val wheelchair = Value("fa-wheelchair")
-  val windows = Value("fa-windows")
-  val wrench = Value("fa-wrench")
-  val xing_square = Value("fa-xing-square")
-  val xing = Value("fa-xing")
-  val youtube_play = Value("fa-youtube-play")
-  val youtube_square = Value("fa-youtube-square")
-  val youtube = Value("fa-youtube")
+  //cat /tmp/icon | cut -d " " -f 1|while read i ; do echo "val $(echo "$i"|sed 's/icon-//g'|sed 's/-/_/g') = Value(\"$i\")"; done|sort
+  val adjust = Value("icon-adjust")
+  val adn = Value("icon-adn")
+  val align_center = Value("icon-align-center")
+  val align_justify = Value("icon-align-justify")
+  val align_left = Value("icon-align-left")
+  val align_right = Value("icon-align-right")
+  val ambulance = Value("icon-ambulance")
+  val anchor = Value("icon-anchor")
+  val android = Value("icon-android")
+  val angle_down = Value("icon-angle-down")
+  val angle_left = Value("icon-angle-left")
+  val angle_right = Value("icon-angle-right")
+  val angle_up = Value("icon-angle-up")
+  val apple = Value("icon-apple")
+  val archive = Value("icon-archive")
+  val arrow_down = Value("icon-arrow-down")
+  val arrow_left = Value("icon-arrow-left")
+  val arrow_right = Value("icon-arrow-right")
+  val arrow_up = Value("icon-arrow-up")
+  val asterisk = Value("icon-asterisk")
+  val backward = Value("icon-backward")
+  val ban_circle = Value("icon-ban-circle")
+  val bar_chart = Value("icon-bar-chart")
+  val barcode = Value("icon-barcode")
+  val beaker = Value("icon-beaker")
+  val beer = Value("icon-beer")
+  val bell_alt = Value("icon-bell-alt")
+  val bell = Value("icon-bell")
+  val bitbucket_sign = Value("icon-bitbucket-sign")
+  val bitbucket = Value("icon-bitbucket")
+  val bold = Value("icon-bold")
+  val bolt = Value("icon-bolt")
+  val bookmark_empty = Value("icon-bookmark-empty")
+  val bookmark = Value("icon-bookmark")
+  val book = Value("icon-book")
+  val briefcase = Value("icon-briefcase")
+  val btc = Value("icon-btc")
+  val bug = Value("icon-bug")
+  val building = Value("icon-building")
+  val bullhorn = Value("icon-bullhorn")
+  val bullseye = Value("icon-bullseye")
+  val calendar_empty = Value("icon-calendar-empty")
+  val calendar = Value("icon-calendar")
+  val camera_retro = Value("icon-camera-retro")
+  val camera = Value("icon-camera")
+  val caret_down = Value("icon-caret-down")
+  val caret_left = Value("icon-caret-left")
+  val caret_right = Value("icon-caret-right")
+  val caret_up = Value("icon-caret-up")
+  val certificate = Value("icon-certificate")
+  val check_empty = Value("icon-check-empty")
+  val check_minus = Value("icon-check-minus")
+  val check_sign = Value("icon-check-sign")
+  val check = Value("icon-check")
+  val chevron_down = Value("icon-chevron-down")
+  val chevron_left = Value("icon-chevron-left")
+  val chevron_right = Value("icon-chevron-right")
+  val chevron_sign_down = Value("icon-chevron-sign-down")
+  val chevron_sign_left = Value("icon-chevron-sign-left")
+  val chevron_sign_right = Value("icon-chevron-sign-right")
+  val chevron_sign_up = Value("icon-chevron-sign-up")
+  val chevron_up = Value("icon-chevron-up")
+  val circle_arrow_down = Value("icon-circle-arrow-down")
+  val circle_arrow_left = Value("icon-circle-arrow-left")
+  val circle_arrow_right = Value("icon-circle-arrow-right")
+  val circle_arrow_up = Value("icon-circle-arrow-up")
+  val circle_blank = Value("icon-circle-blank")
+  val circle = Value("icon-circle")
+  val cloud_download = Value("icon-cloud-download")
+  val cloud_upload = Value("icon-cloud-upload")
+  val cloud = Value("icon-cloud")
+  val cny = Value("icon-cny")
+  val code_fork = Value("icon-code-fork")
+  val code = Value("icon-code")
+  val coffee = Value("icon-coffee")
+  val cogs = Value("icon-cogs")
+  val cog = Value("icon-cog")
+  val collapse_alt = Value("icon-collapse-alt")
+  val collapse_top = Value("icon-collapse-top")
+  val collapse = Value("icon-collapse")
+  val columns = Value("icon-columns")
+  val comment_alt = Value("icon-comment-alt")
+  val comments_alt = Value("icon-comments-alt")
+  val comments = Value("icon-comments")
+  val comment = Value("icon-comment")
+  val compass = Value("icon-compass")
+  val copy = Value("icon-copy")
+  val credit_card = Value("icon-credit-card")
+  val crop = Value("icon-crop")
+  val css3 = Value("icon-css3")
+  val cut = Value("icon-cut")
+  val dashboard = Value("icon-dashboard")
+  val desktop = Value("icon-desktop")
+  val double_angle_down = Value("icon-double-angle-down")
+  val double_angle_left = Value("icon-double-angle-left")
+  val double_angle_right = Value("icon-double-angle-right")
+  val double_angle_up = Value("icon-double-angle-up")
+  val download_alt = Value("icon-download-alt")
+  val download = Value("icon-download")
+  val dribbble = Value("icon-dribbble")
+  val dropbox = Value("icon-dropbox")
+  val edit_sign = Value("icon-edit-sign")
+  val edit = Value("icon-edit")
+  val eject = Value("icon-eject")
+  val ellipsis_horizontal = Value("icon-ellipsis-horizontal")
+  val ellipsis_vertical = Value("icon-ellipsis-vertical")
+  val envelope_alt = Value("icon-envelope-alt")
+  val envelope = Value("icon-envelope")
+  val eraser = Value("icon-eraser")
+  val eur = Value("icon-eur")
+  val exchange = Value("icon-exchange")
+  val exclamation_sign = Value("icon-exclamation-sign")
+  val exclamation = Value("icon-exclamation")
+  val expand_alt = Value("icon-expand-alt")
+  val expand = Value("icon-expand")
+  val external_link_sign = Value("icon-external-link-sign")
+  val external_link = Value("icon-external-link")
+  val eye_close = Value("icon-eye-close")
+  val eye_open = Value("icon-eye-open")
+  val facebook_sign = Value("icon-facebook-sign")
+  val facebook = Value("icon-facebook")
+  val facetime_video = Value("icon-facetime-video")
+  val fast_backward = Value("icon-fast-backward")
+  val fast_forward = Value("icon-fast-forward")
+  val female = Value("icon-female")
+  val fighter_jet = Value("icon-fighter-jet")
+  val file_alt = Value("icon-file-alt")
+  val file_text_alt = Value("icon-file-text-alt")
+  val file_text = Value("icon-file-text")
+  val file = Value("icon-file")
+  val film = Value("icon-film")
+  val filter = Value("icon-filter")
+  val fire_extinguisher = Value("icon-fire-extinguisher")
+  val fire = Value("icon-fire")
+  val flag_alt = Value("icon-flag-alt")
+  val flag_checkered = Value("icon-flag-checkered")
+  val flag = Value("icon-flag")
+  val flickr = Value("icon-flickr")
+  val folder_close_alt = Value("icon-folder-close-alt")
+  val folder_close = Value("icon-folder-close")
+  val folder_open_alt = Value("icon-folder-open-alt")
+  val folder_open = Value("icon-folder-open")
+  val font = Value("icon-font")
+  val food = Value("icon-food")
+  val forward = Value("icon-forward")
+  val foursquare = Value("icon-foursquare")
+  val frown = Value("icon-frown")
+  val fullscreen = Value("icon-fullscreen")
+  val gamepad = Value("icon-gamepad")
+  val gbp = Value("icon-gbp")
+  val gift = Value("icon-gift")
+  val github_alt = Value("icon-github-alt")
+  val github_sign = Value("icon-github-sign")
+  val github = Value("icon-github")
+  val gittip = Value("icon-gittip")
+  val glass = Value("icon-glass")
+  val globe = Value("icon-globe")
+  val google_plus_sign = Value("icon-google-plus-sign")
+  val google_plus = Value("icon-google-plus")
+  val group = Value("icon-group")
+  val hand_down = Value("icon-hand-down")
+  val hand_left = Value("icon-hand-left")
+  val hand_right = Value("icon-hand-right")
+  val hand_up = Value("icon-hand-up")
+  val hdd = Value("icon-hdd")
+  val headphones = Value("icon-headphones")
+  val heart_empty = Value("icon-heart-empty")
+  val heart = Value("icon-heart")
+  val home = Value("icon-home")
+  val hospital = Value("icon-hospital")
+  val h_sign = Value("icon-h-sign")
+  val html5 = Value("icon-html5")
+  val inbox = Value("icon-inbox")
+  val indent_left = Value("icon-indent-left")
+  val indent_right = Value("icon-indent-right")
+  val info_sign = Value("icon-info-sign")
+  val info = Value("icon-info")
+  val inr = Value("icon-inr")
+  val instagram = Value("icon-instagram")
+  val italic = Value("icon-italic")
+  val jpy = Value("icon-jpy")
+  val keyboard = Value("icon-keyboard")
+  val key = Value("icon-key")
+  val krw = Value("icon-krw")
+  val laptop = Value("icon-laptop")
+  val leaf = Value("icon-leaf")
+  val legal = Value("icon-legal")
+  val lemon = Value("icon-lemon")
+  val level_down = Value("icon-level-down")
+  val level_up = Value("icon-level-up")
+  val lightbulb = Value("icon-lightbulb")
+  val linkedin_sign = Value("icon-linkedin-sign")
+  val linkedin = Value("icon-linkedin")
+  val link = Value("icon-link")
+  val linux = Value("icon-linux")
+  val list_alt = Value("icon-list-alt")
+  val list_ol = Value("icon-list-ol")
+  val list_ul = Value("icon-list-ul")
+  val list = Value("icon-list")
+  val location_arrow = Value("icon-location-arrow")
+  val lock = Value("icon-lock")
+  val long_arrow_down = Value("icon-long-arrow-down")
+  val long_arrow_left = Value("icon-long-arrow-left")
+  val long_arrow_right = Value("icon-long-arrow-right")
+  val long_arrow_up = Value("icon-long-arrow-up")
+  val magic = Value("icon-magic")
+  val magnet = Value("icon-magnet")
+  val mail_reply_all = Value("icon-mail-reply-all")
+  val male = Value("icon-male")
+  val map_marker = Value("icon-map-marker")
+  val maxcdn = Value("icon-maxcdn")
+  val medkit = Value("icon-medkit")
+  val meh = Value("icon-meh")
+  val microphone_off = Value("icon-microphone-off")
+  val microphone = Value("icon-microphone")
+  val minus_sign_alt = Value("icon-minus-sign-alt")
+  val minus_sign = Value("icon-minus-sign")
+  val minus = Value("icon-minus")
+  val mobile_phone = Value("icon-mobile-phone")
+  val money = Value("icon-money")
+  val moon = Value("icon-moon")
+  val move = Value("icon-move")
+  val music = Value("icon-music")
+  val off = Value("icon-off")
+  val ok_circle = Value("icon-ok-circle")
+  val ok_sign = Value("icon-ok-sign")
+  val ok = Value("icon-ok")
+  val paper_clip = Value("icon-paper-clip")
+  val paste = Value("icon-paste")
+  val pause = Value("icon-pause")
+  val pencil = Value("icon-pencil")
+  val phone_sign = Value("icon-phone-sign")
+  val phone = Value("icon-phone")
+  val picture = Value("icon-picture")
+  val pinterest_sign = Value("icon-pinterest-sign")
+  val pinterest = Value("icon-pinterest")
+  val plane = Value("icon-plane")
+  val play_circle = Value("icon-play-circle")
+  val play_sign = Value("icon-play-sign")
+  val play = Value("icon-play")
+  val plus_sign_alt = Value("icon-plus-sign-alt")
+  val plus_sign = Value("icon-plus-sign")
+  val plus = Value("icon-plus")
+  val print = Value("icon-print")
+  val pushpin = Value("icon-pushpin")
+  val puzzle_piece = Value("icon-puzzle-piece")
+  val qrcode = Value("icon-qrcode")
+  val question_sign = Value("icon-question-sign")
+  val question = Value("icon-question")
+  val quote_left = Value("icon-quote-left")
+  val quote_right = Value("icon-quote-right")
+  val random = Value("icon-random")
+  val refresh = Value("icon-refresh")
+  val remove_circle = Value("icon-remove-circle")
+  val remove_sign = Value("icon-remove-sign")
+  val remove = Value("icon-remove")
+  val renren = Value("icon-renren")
+  val reorder = Value("icon-reorder")
+  val repeat = Value("icon-repeat")
+  val reply_all = Value("icon-reply-all")
+  val reply = Value("icon-reply")
+  val resize_full = Value("icon-resize-full")
+  val resize_horizontal = Value("icon-resize-horizontal")
+  val resize_small = Value("icon-resize-small")
+  val resize_vertical = Value("icon-resize-vertical")
+  val retweet = Value("icon-retweet")
+  val road = Value("icon-road")
+  val rocket = Value("icon-rocket")
+  val rss_sign = Value("icon-rss-sign")
+  val rss = Value("icon-rss")
+  val save = Value("icon-save")
+  val screenshot = Value("icon-screenshot")
+  val search = Value("icon-search")
+  val share_alt = Value("icon-share-alt")
+  val share_sign = Value("icon-share-sign")
+  val share = Value("icon-share")
+  val shield = Value("icon-shield")
+  val shopping_cart = Value("icon-shopping-cart")
+  val signal = Value("icon-signal")
+  val sign_blank = Value("icon-sign-blank")
+  val signin = Value("icon-signin")
+  val signout = Value("icon-signout")
+  val sitemap = Value("icon-sitemap")
+  val skype = Value("icon-skype")
+  val smile = Value("icon-smile")
+  val sort_by_alphabet_alt = Value("icon-sort-by-alphabet-alt")
+  val sort_by_alphabet = Value("icon-sort-by-alphabet")
+  val sort_by_attributes_alt = Value("icon-sort-by-attributes-alt")
+  val sort_by_attributes = Value("icon-sort-by-attributes")
+  val sort_by_order_alt = Value("icon-sort-by-order-alt")
+  val sort_by_order = Value("icon-sort-by-order")
+  val sort_down = Value("icon-sort-down")
+  val sort_up = Value("icon-sort-up")
+  val sort = Value("icon-sort")
+  val spinner = Value("icon-spinner")
+  val stackexchange = Value("icon-stackexchange")
+  val star_empty = Value("icon-star-empty")
+  val star_half_empty = Value("icon-star-half-empty")
+  val star_half = Value("icon-star-half")
+  val star = Value("icon-star")
+  val step_backward = Value("icon-step-backward")
+  val step_forward = Value("icon-step-forward")
+  val stethoscope = Value("icon-stethoscope")
+  val stop = Value("icon-stop")
+  val strikethrough = Value("icon-strikethrough")
+  val subscript = Value("icon-subscript")
+  val suitcase = Value("icon-suitcase")
+  val sun = Value("icon-sun")
+  val superscript = Value("icon-superscript")
+  val tablet = Value("icon-tablet")
+  val table = Value("icon-table")
+  val tags = Value("icon-tags")
+  val tag = Value("icon-tag")
+  val tasks = Value("icon-tasks")
+  val terminal = Value("icon-terminal")
+  val text_height = Value("icon-text-height")
+  val text_width = Value("icon-text-width")
+  val th_large = Value("icon-th-large")
+  val th_list = Value("icon-th-list")
+  val thumbs_down_alt = Value("icon-thumbs-down-alt")
+  val thumbs_down = Value("icon-thumbs-down")
+  val thumbs_up_alt = Value("icon-thumbs-up-alt")
+  val thumbs_up = Value("icon-thumbs-up")
+  val th = Value("icon-th")
+  val ticket = Value("icon-ticket")
+  val time = Value("icon-time")
+  val tint = Value("icon-tint")
+  val trash = Value("icon-trash")
+  val trello = Value("icon-trello")
+  val trophy = Value("icon-trophy")
+  val truck = Value("icon-truck")
+  val tumblr_sign = Value("icon-tumblr-sign")
+  val tumblr = Value("icon-tumblr")
+  val twitter_sign = Value("icon-twitter-sign")
+  val twitter = Value("icon-twitter")
+  val umbrella = Value("icon-umbrella")
+  val underline = Value("icon-underline")
+  val undo = Value("icon-undo")
+  val unlink = Value("icon-unlink")
+  val unlock_alt = Value("icon-unlock-alt")
+  val unlock = Value("icon-unlock")
+  val upload_alt = Value("icon-upload-alt")
+  val upload = Value("icon-upload")
+  val usd = Value("icon-usd")
+  val user_md = Value("icon-user-md")
+  val user = Value("icon-user")
+  val vk = Value("icon-vk")
+  val volume_down = Value("icon-volume-down")
+  val volume_off = Value("icon-volume-off")
+  val volume_up = Value("icon-volume-up")
+  val warning_sign = Value("icon-warning-sign")
+  val weibo = Value("icon-weibo")
+  val windows = Value("icon-windows")
+  val wrench = Value("icon-wrench")
+  val xing_sign = Value("icon-xing-sign")
+  val xing = Value("icon-xing")
+  val youtube_play = Value("icon-youtube-play")
+  val youtube_sign = Value("icon-youtube-sign")
+  val youtube = Value("icon-youtube")
+  val zoom_in = Value("icon-zoom-in")
+  val zoom_out = Value("icon-zoom-out")
 
+  //cat /tmp/icon |while read i; do echo "\"$(echo $i|cut -d " " -f 1)\" -> \"$(echo $i | replace "#x" "|" | cut -d "|" -f 2 | cut -d ";" -f 1)\","; done|sort
   val unicode =
     Map(
-      "fa-adjust" -> "f042",
-      "fa-adn" -> "f170",
-      "fa-align-center" -> "f037",
-      "fa-align-justify" -> "f039",
-      "fa-align-left" -> "f036",
-      "fa-align-right" -> "f038",
-      "fa-ambulance" -> "f0f9",
-      "fa-anchor" -> "f13d",
-      "fa-android" -> "f17b",
-      "fa-angle-double-down" -> "f103",
-      "fa-angle-double-left" -> "f100",
-      "fa-angle-double-right" -> "f101",
-      "fa-angle-double-up" -> "f102",
-      "fa-angle-down" -> "f107",
-      "fa-angle-left" -> "f104",
-      "fa-angle-right" -> "f105",
-      "fa-angle-up" -> "f106",
-      "fa-apple" -> "f179",
-      "fa-archive" -> "f187",
-      "fa-arrow-circle-down" -> "f0ab",
-      "fa-arrow-circle-left" -> "f0a8",
-      "fa-arrow-circle-o-down" -> "f01a",
-      "fa-arrow-circle-o-left" -> "f190",
-      "fa-arrow-circle-o-right" -> "f18e",
-      "fa-arrow-circle-o-up" -> "f01b",
-      "fa-arrow-circle-right" -> "f0a9",
-      "fa-arrow-circle-up" -> "f0aa",
-      "fa-arrow-down" -> "f063",
-      "fa-arrow-left" -> "f060",
-      "fa-arrow-right" -> "f061",
-      "fa-arrows-alt" -> "f0b2",
-      "fa-arrows" -> "f047",
-      "fa-arrows-h" -> "f07e",
-      "fa-arrows-v" -> "f07d",
-      "fa-arrow-up" -> "f062",
-      "fa-asterisk" -> "f069",
-      "fa-backward" -> "f04a",
-      "fa-ban" -> "f05e",
-      "fa-bar-chart-o" -> "f080",
-      "fa-barcode" -> "f02a",
-      "fa-bars" -> "f0c9",
-      "fa-beer" -> "f0fc",
-      "fa-bell" -> "f0f3",
-      "fa-bell-o" -> "f0a2",
-      "fa-bitbucket" -> "f171",
-      "fa-bitbucket-square" -> "f172",
-      "fa-bold" -> "f032",
-      "fa-bolt" -> "f0e7",
-      "fa-book" -> "f02d",
-      "fa-bookmark" -> "f02e",
-      "fa-bookmark-o" -> "f097",
-      "fa-briefcase" -> "f0b1",
-      "fa-btc" -> "f15a",
-      "fa-bug" -> "f188",
-      "fa-building-o" -> "f0f7",
-      "fa-bullhorn" -> "f0a1",
-      "fa-bullseye" -> "f140",
-      "fa-calendar" -> "f073",
-      "fa-calendar-o" -> "f133",
-      "fa-camera" -> "f030",
-      "fa-camera-retro" -> "f083",
-      "fa-caret-down" -> "f0d7",
-      "fa-caret-left" -> "f0d9",
-      "fa-caret-right" -> "f0da",
-      "fa-caret-square-o-down" -> "f150",
-      "fa-caret-square-o-left" -> "f191",
-      "fa-caret-square-o-right" -> "f152",
-      "fa-caret-square-o-up" -> "f151",
-      "fa-caret-up" -> "f0d8",
-      "fa-certificate" -> "f0a3",
-      "fa-chain-broken" -> "f127",
-      "fa-check-circle" -> "f058",
-      "fa-check-circle-o" -> "f05d",
-      "fa-check" -> "f00c",
-      "fa-check-square" -> "f14a",
-      "fa-check-square-o" -> "f046",
-      "fa-chevron-circle-down" -> "f13a",
-      "fa-chevron-circle-left" -> "f137",
-      "fa-chevron-circle-right" -> "f138",
-      "fa-chevron-circle-up" -> "f139",
-      "fa-chevron-down" -> "f078",
-      "fa-chevron-left" -> "f053",
-      "fa-chevron-right" -> "f054",
-      "fa-chevron-up" -> "f077",
-      "fa-circle" -> "f111",
-      "fa-circle-o" -> "f10c",
-      "fa-clipboard" -> "f0ea",
-      "fa-clock-o" -> "f017",
-      "fa-cloud-download" -> "f0ed",
-      "fa-cloud" -> "f0c2",
-      "fa-cloud-upload" -> "f0ee",
-      "fa-code" -> "f121",
-      "fa-code-fork" -> "f126",
-      "fa-coffee" -> "f0f4",
-      "fa-cog" -> "f013",
-      "fa-cogs" -> "f085",
-      "fa-columns" -> "f0db",
-      "fa-comment" -> "f075",
-      "fa-comment-o" -> "f0e5",
-      "fa-comments" -> "f086",
-      "fa-comments-o" -> "f0e6",
-      "fa-compass" -> "f14e",
-      "fa-compress" -> "f066",
-      "fa-credit-card" -> "f09d",
-      "fa-crop" -> "f125",
-      "fa-crosshairs" -> "f05b",
-      "fa-css3" -> "f13c",
-      "fa-cutlery" -> "f0f5",
-      "fa-desktop" -> "f108",
-      "fa-dot-circle-o" -> "f192",
-      "fa-download" -> "f019",
-      "fa-dribbble" -> "f17d",
-      "fa-dropbox" -> "f16b",
-      "fa-eject" -> "f052",
-      "fa-ellipsis-h" -> "f141",
-      "fa-ellipsis-v" -> "f142",
-      "fa-envelope" -> "f0e0",
-      "fa-envelope-o" -> "f003",
-      "fa-eraser" -> "f12d",
-      "fa-eur" -> "f153",
-      "fa-exchange" -> "f0ec",
-      "fa-exclamation-circle" -> "f06a",
-      "fa-exclamation" -> "f12a",
-      "fa-exclamation-triangle" -> "f071",
-      "fa-expand" -> "f065",
-      "fa-external-link" -> "f08e",
-      "fa-external-link-square" -> "f14c",
-      "fa-eye" -> "f06e",
-      "fa-eye-slash" -> "f070",
-      "fa-facebook" -> "f09a",
-      "fa-facebook-square" -> "f082",
-      "fa-fast-backward" -> "f049",
-      "fa-fast-forward" -> "f050",
-      "fa-female" -> "f182",
-      "fa-fighter-jet" -> "f0fb",
-      "fa-file" -> "f15b",
-      "fa-file-o" -> "f016",
-      "fa-files-o" -> "f0c5",
-      "fa-file-text" -> "f15c",
-      "fa-file-text-o" -> "f0f6",
-      "fa-film" -> "f008",
-      "fa-filter" -> "f0b0",
-      "fa-fire-extinguisher" -> "f134",
-      "fa-fire" -> "f06d",
-      "fa-flag-checkered" -> "f11e",
-      "fa-flag" -> "f024",
-      "fa-flag-o" -> "f11d",
-      "fa-flask" -> "f0c3",
-      "fa-flickr" -> "f16e",
-      "fa-floppy-o" -> "f0c7",
-      "fa-folder" -> "f07b",
-      "fa-folder-o" -> "f114",
-      "fa-folder-open" -> "f07c",
-      "fa-folder-open-o" -> "f115",
-      "fa-font" -> "f031",
-      "fa-forward" -> "f04e",
-      "fa-foursquare" -> "f180",
-      "fa-frown-o" -> "f119",
-      "fa-gamepad" -> "f11b",
-      "fa-gavel" -> "f0e3",
-      "fa-gbp" -> "f154",
-      "fa-gift" -> "f06b",
-      "fa-github-alt" -> "f113",
-      "fa-github" -> "f09b",
-      "fa-github-square" -> "f092",
-      "fa-gittip" -> "f184",
-      "fa-glass" -> "f000",
-      "fa-globe" -> "f0ac",
-      "fa-google-plus" -> "f0d5",
-      "fa-google-plus-square" -> "f0d4",
-      "fa-hand-o-down" -> "f0a7",
-      "fa-hand-o-left" -> "f0a5",
-      "fa-hand-o-right" -> "f0a4",
-      "fa-hand-o-up" -> "f0a6",
-      "fa-hdd-o" -> "f0a0",
-      "fa-headphones" -> "f025",
-      "fa-heart" -> "f004",
-      "fa-heart-o" -> "f08a",
-      "fa-home" -> "f015",
-      "fa-hospital-o" -> "f0f8",
-      "fa-h-square" -> "f0fd",
-      "fa-html5" -> "f13b",
-      "fa-inbox" -> "f01c",
-      "fa-indent" -> "f03c",
-      "fa-info-circle" -> "f05a",
-      "fa-info" -> "f129",
-      "fa-inr" -> "f156",
-      "fa-instagram" -> "f16d",
-      "fa-italic" -> "f033",
-      "fa-jpy" -> "f157",
-      "fa-keyboard-o" -> "f11c",
-      "fa-key" -> "f084",
-      "fa-krw" -> "f159",
-      "fa-laptop" -> "f109",
-      "fa-leaf" -> "f06c",
-      "fa-lemon-o" -> "f094",
-      "fa-level-down" -> "f149",
-      "fa-level-up" -> "f148",
-      "fa-lightbulb-o" -> "f0eb",
-      "fa-linkedin" -> "f0e1",
-      "fa-linkedin-square" -> "f08c",
-      "fa-link" -> "f0c1",
-      "fa-linux" -> "f17c",
-      "fa-list-alt" -> "f022",
-      "fa-list" -> "f03a",
-      "fa-list-ol" -> "f0cb",
-      "fa-list-ul" -> "f0ca",
-      "fa-location-arrow" -> "f124",
-      "fa-lock" -> "f023",
-      "fa-long-arrow-down" -> "f175",
-      "fa-long-arrow-left" -> "f177",
-      "fa-long-arrow-right" -> "f178",
-      "fa-long-arrow-up" -> "f176",
-      "fa-magic" -> "f0d0",
-      "fa-magnet" -> "f076",
-      "fa-mail-reply-all" -> "f122",
-      "fa-male" -> "f183",
-      "fa-map-marker" -> "f041",
-      "fa-maxcdn" -> "f136",
-      "fa-medkit" -> "f0fa",
-      "fa-meh-o" -> "f11a",
-      "fa-microphone" -> "f130",
-      "fa-microphone-slash" -> "f131",
-      "fa-minus-circle" -> "f056",
-      "fa-minus" -> "f068",
-      "fa-minus-square" -> "f146",
-      "fa-minus-square-o" -> "f147",
-      "fa-mobile" -> "f10b",
-      "fa-money" -> "f0d6",
-      "fa-moon-o" -> "f186",
-      "fa-music" -> "f001",
-      "fa-outdent" -> "f03b",
-      "fa-pagelines" -> "f18c",
-      "fa-paperclip" -> "f0c6",
-      "fa-pause" -> "f04c",
-      "fa-pencil" -> "f040",
-      "fa-pencil-square" -> "f14b",
-      "fa-pencil-square-o" -> "f044",
-      "fa-phone" -> "f095",
-      "fa-phone-square" -> "f098",
-      "fa-picture-o" -> "f03e",
-      "fa-pinterest" -> "f0d2",
-      "fa-pinterest-square" -> "f0d3",
-      "fa-plane" -> "f072",
-      "fa-play-circle" -> "f144",
-      "fa-play-circle-o" -> "f01d",
-      "fa-play" -> "f04b",
-      "fa-plus-circle" -> "f055",
-      "fa-plus" -> "f067",
-      "fa-plus-square" -> "f0fe",
-      "fa-plus-square-o" -> "f196",
-      "fa-power-off" -> "f011",
-      "fa-print" -> "f02f",
-      "fa-puzzle-piece" -> "f12e",
-      "fa-qrcode" -> "f029",
-      "fa-question-circle" -> "f059",
-      "fa-question" -> "f128",
-      "fa-quote-left" -> "f10d",
-      "fa-quote-right" -> "f10e",
-      "fa-random" -> "f074",
-      "fa-refresh" -> "f021",
-      "fa-renren" -> "f18b",
-      "fa-repeat" -> "f01e",
-      "fa-reply-all" -> "f122",
-      "fa-reply" -> "f112",
-      "fa-retweet" -> "f079",
-      "fa-road" -> "f018",
-      "fa-rocket" -> "f135",
-      "fa-rss" -> "f09e",
-      "fa-rss-square" -> "f143",
-      "fa-rub" -> "f158",
-      "fa-scissors" -> "f0c4",
-      "fa-search" -> "f002",
-      "fa-search-minus" -> "f010",
-      "fa-search-plus" -> "f00e",
-      "fa-share" -> "f064",
-      "fa-share-square" -> "f14d",
-      "fa-share-square-o" -> "f045",
-      "fa-shield" -> "f132",
-      "fa-shopping-cart" -> "f07a",
-      "fa-signal" -> "f012",
-      "fa-sign-in" -> "f090",
-      "fa-sign-out" -> "f08b",
-      "fa-sitemap" -> "f0e8",
-      "fa-skype" -> "f17e",
-      "fa-smile-o" -> "f118",
-      "fa-sort-alpha-asc" -> "f15d",
-      "fa-sort-alpha-desc" -> "f15e",
-      "fa-sort-amount-asc" -> "f160",
-      "fa-sort-amount-desc" -> "f161",
-      "fa-sort-asc" -> "f0dd",
-      "fa-sort-desc" -> "f0de",
-      "fa-sort" -> "f0dc",
-      "fa-sort-numeric-asc" -> "f162",
-      "fa-sort-numeric-desc" -> "f163",
-      "fa-spinner" -> "f110",
-      "fa-square" -> "f0c8",
-      "fa-square-o" -> "f096",
-      "fa-stack-exchange" -> "f18d",
-      "fa-stack-overflow" -> "f16c",
-      "fa-star" -> "f005",
-      "fa-star-half" -> "f089",
-      "fa-star-half-o" -> "f123",
-      "fa-star-o" -> "f006",
-      "fa-step-backward" -> "f048",
-      "fa-step-forward" -> "f051",
-      "fa-stethoscope" -> "f0f1",
-      "fa-stop" -> "f04d",
-      "fa-strikethrough" -> "f0cc",
-      "fa-subscript" -> "f12c",
-      "fa-suitcase" -> "f0f2",
-      "fa-sun-o" -> "f185",
-      "fa-superscript" -> "f12b",
-      "fa-table" -> "f0ce",
-      "fa-tablet" -> "f10a",
-      "fa-tachometer" -> "f0e4",
-      "fa-tag" -> "f02b",
-      "fa-tags" -> "f02c",
-      "fa-tasks" -> "f0ae",
-      "fa-terminal" -> "f120",
-      "fa-text-height" -> "f034",
-      "fa-text-width" -> "f035",
-      "fa-th" -> "f00a",
-      "fa-th-large" -> "f009",
-      "fa-th-list" -> "f00b",
-      "fa-thumbs-down" -> "f165",
-      "fa-thumbs-o-down" -> "f088",
-      "fa-thumbs-o-up" -> "f087",
-      "fa-thumbs-up" -> "f164",
-      "fa-thumb-tack" -> "f08d",
-      "fa-ticket" -> "f145",
-      "fa-times-circle" -> "f057",
-      "fa-times-circle-o" -> "f05c",
-      "fa-times" -> "f00d",
-      "fa-tint" -> "f043",
-      "fa-trash-o" -> "f014",
-      "fa-trello" -> "f181",
-      "fa-trophy" -> "f091",
-      "fa-truck" -> "f0d1",
-      "fa-try" -> "f195",
-      "fa-tumblr" -> "f173",
-      "fa-tumblr-square" -> "f174",
-      "fa-twitter" -> "f099",
-      "fa-twitter-square" -> "f081",
-      "fa-umbrella" -> "f0e9",
-      "fa-underline" -> "f0cd",
-      "fa-undo" -> "f0e2",
-      "fa-unlock-alt" -> "f13e",
-      "fa-unlock" -> "f09c",
-      "fa-upload" -> "f093",
-      "fa-usd" -> "f155",
-      "fa-user" -> "f007",
-      "fa-user-md" -> "f0f0",
-      "fa-users" -> "f0c0",
-      "fa-video-camera" -> "f03d",
-      "fa-vimeo-square" -> "f194",
-      "fa-vk" -> "f189",
-      "fa-volume-down" -> "f027",
-      "fa-volume-off" -> "f026",
-      "fa-volume-up" -> "f028",
-      "fa-weibo" -> "f18a",
-      "fa-wheelchair" -> "f193",
-      "fa-windows" -> "f17a",
-      "fa-wrench" -> "f0ad",
-      "fa-xing" -> "f168",
-      "fa-xing-square" -> "f169",
-      "fa-youtube" -> "f167",
-      "fa-youtube-play" -> "f16a",
-      "fa-youtube-square" -> "f166"
+      "icon-adjust" -> "f042",
+      "icon-adn" -> "f170",
+      "icon-align-center" -> "f037",
+      "icon-align-justify" -> "f039",
+      "icon-align-left" -> "f036",
+      "icon-align-right" -> "f038",
+      "icon-ambulance" -> "f0f9",
+      "icon-anchor" -> "f13d",
+      "icon-android" -> "f17b",
+      "icon-angle-down" -> "f107",
+      "icon-angle-left" -> "f104",
+      "icon-angle-right" -> "f105",
+      "icon-angle-up" -> "f106",
+      "icon-apple" -> "f179",
+      "icon-archive" -> "f187",
+      "icon-arrow-down" -> "f063",
+      "icon-arrow-left" -> "f060",
+      "icon-arrow-right" -> "f061",
+      "icon-arrow-up" -> "f062",
+      "icon-asterisk" -> "f069",
+      "icon-backward" -> "f04a",
+      "icon-ban-circle" -> "f05e",
+      "icon-bar-chart" -> "f080",
+      "icon-barcode" -> "f02a",
+      "icon-beaker" -> "f0c3",
+      "icon-beer" -> "f0fc",
+      "icon-bell-alt" -> "f0f3",
+      "icon-bell" -> "f0a2",
+      "icon-bitbucket" -> "f171",
+      "icon-bitbucket-sign" -> "f172",
+      "icon-bold" -> "f032",
+      "icon-bolt" -> "f0e7",
+      "icon-book" -> "f02d",
+      "icon-bookmark-empty" -> "f097",
+      "icon-bookmark" -> "f02e",
+      "icon-briefcase" -> "f0b1",
+      "icon-btc" -> "f15a",
+      "icon-bug" -> "f188",
+      "icon-building" -> "f0f7",
+      "icon-bullhorn" -> "f0a1",
+      "icon-bullseye" -> "f140",
+      "icon-calendar-empty" -> "f133",
+      "icon-calendar" -> "f073",
+      "icon-camera" -> "f030",
+      "icon-camera-retro" -> "f083",
+      "icon-caret-down" -> "f0d7",
+      "icon-caret-left" -> "f0d9",
+      "icon-caret-right" -> "f0da",
+      "icon-caret-up" -> "f0d8",
+      "icon-certificate" -> "f0a3",
+      "icon-check-empty" -> "f096",
+      "icon-check" -> "f046",
+      "icon-check-minus" -> "f147",
+      "icon-check-sign" -> "f14a",
+      "icon-chevron-down" -> "f078",
+      "icon-chevron-left" -> "f053",
+      "icon-chevron-right" -> "f054",
+      "icon-chevron-sign-down" -> "f13a",
+      "icon-chevron-sign-left" -> "f137",
+      "icon-chevron-sign-right" -> "f138",
+      "icon-chevron-sign-up" -> "f139",
+      "icon-chevron-up" -> "f077",
+      "icon-circle-arrow-down" -> "f0ab",
+      "icon-circle-arrow-left" -> "f0a8",
+      "icon-circle-arrow-right" -> "f0a9",
+      "icon-circle-arrow-up" -> "f0aa",
+      "icon-circle-blank" -> "f10c",
+      "icon-circle" -> "f111",
+      "icon-cloud-download" -> "f0ed",
+      "icon-cloud" -> "f0c2",
+      "icon-cloud-upload" -> "f0ee",
+      "icon-cny" -> "f158",
+      "icon-code" -> "f121",
+      "icon-code-fork" -> "f126",
+      "icon-coffee" -> "f0f4",
+      "icon-cog" -> "f013",
+      "icon-cogs" -> "f085",
+      "icon-collapse-alt" -> "f117",
+      "icon-collapse" -> "f150",
+      "icon-collapse-top" -> "f151",
+      "icon-columns" -> "f0db",
+      "icon-comment-alt" -> "f0e5",
+      "icon-comment" -> "f075",
+      "icon-comments-alt" -> "f0e6",
+      "icon-comments" -> "f086",
+      "icon-compass" -> "f14e",
+      "icon-copy" -> "f0c5",
+      "icon-credit-card" -> "f09d",
+      "icon-crop" -> "f125",
+      "icon-css3" -> "f13c",
+      "icon-cut" -> "f0c4",
+      "icon-dashboard" -> "f0e4",
+      "icon-desktop" -> "f108",
+      "icon-double-angle-down" -> "f103",
+      "icon-double-angle-left" -> "f100",
+      "icon-double-angle-right" -> "f101",
+      "icon-double-angle-up" -> "f102",
+      "icon-download-alt" -> "f019",
+      "icon-download" -> "f01a",
+      "icon-dribbble" -> "f17d",
+      "icon-dropbox" -> "f16b",
+      "icon-edit" -> "f044",
+      "icon-edit-sign" -> "f14b",
+      "icon-eject" -> "f052",
+      "icon-ellipsis-horizontal" -> "f141",
+      "icon-ellipsis-vertical" -> "f142",
+      "icon-envelope-alt" -> "f003",
+      "icon-envelope" -> "f0e0",
+      "icon-eraser" -> "f12d",
+      "icon-eur" -> "f153",
+      "icon-exchange" -> "f0ec",
+      "icon-exclamation" -> "f12a",
+      "icon-exclamation-sign" -> "f06a",
+      "icon-expand-alt" -> "f116",
+      "icon-expand" -> "f152",
+      "icon-external-link" -> "f08e",
+      "icon-external-link-sign" -> "f14c",
+      "icon-eye-close" -> "f070",
+      "icon-eye-open" -> "f06e",
+      "icon-facebook" -> "f09a",
+      "icon-facebook-sign" -> "f082",
+      "icon-facetime-video" -> "f03d",
+      "icon-fast-backward" -> "f049",
+      "icon-fast-forward" -> "f050",
+      "icon-female" -> "f182",
+      "icon-fighter-jet" -> "f0fb",
+      "icon-file-alt" -> "f016",
+      "icon-file" -> "f15b",
+      "icon-file-text-alt" -> "f0f6",
+      "icon-file-text" -> "f15c",
+      "icon-film" -> "f008",
+      "icon-filter" -> "f0b0",
+      "icon-fire-extinguisher" -> "f134",
+      "icon-fire" -> "f06d",
+      "icon-flag-alt" -> "f11d",
+      "icon-flag-checkered" -> "f11e",
+      "icon-flag" -> "f024",
+      "icon-flickr" -> "f16e",
+      "icon-folder-close-alt" -> "f114",
+      "icon-folder-close" -> "f07b",
+      "icon-folder-open-alt" -> "f115",
+      "icon-folder-open" -> "f07c",
+      "icon-font" -> "f031",
+      "icon-food" -> "f0f5",
+      "icon-forward" -> "f04e",
+      "icon-foursquare" -> "f180",
+      "icon-frown" -> "f119",
+      "icon-fullscreen" -> "f0b2",
+      "icon-gamepad" -> "f11b",
+      "icon-gbp" -> "f154",
+      "icon-gift" -> "f06b",
+      "icon-github-alt" -> "f113",
+      "icon-github" -> "f09b",
+      "icon-github-sign" -> "f092",
+      "icon-gittip" -> "f184",
+      "icon-glass" -> "f000",
+      "icon-globe" -> "f0ac",
+      "icon-google-plus" -> "f0d5",
+      "icon-google-plus-sign" -> "f0d4",
+      "icon-group" -> "f0c0",
+      "icon-hand-down" -> "f0a7",
+      "icon-hand-left" -> "f0a5",
+      "icon-hand-right" -> "f0a4",
+      "icon-hand-up" -> "f0a6",
+      "icon-hdd" -> "f0a0",
+      "icon-headphones" -> "f025",
+      "icon-heart-empty" -> "f08a",
+      "icon-heart" -> "f004",
+      "icon-home" -> "f015",
+      "icon-hospital" -> "f0f8",
+      "icon-h-sign" -> "f0fd",
+      "icon-html5" -> "f13b",
+      "icon-inbox" -> "f01c",
+      "icon-indent-left" -> "f03b",
+      "icon-indent-right" -> "f03c",
+      "icon-info" -> "f129",
+      "icon-info-sign" -> "f05a",
+      "icon-inr" -> "f156",
+      "icon-instagram" -> "f16d",
+      "icon-italic" -> "f033",
+      "icon-jpy" -> "f157",
+      "icon-keyboard" -> "f11c",
+      "icon-key" -> "f084",
+      "icon-krw" -> "f159",
+      "icon-laptop" -> "f109",
+      "icon-leaf" -> "f06c",
+      "icon-legal" -> "f0e3",
+      "icon-lemon" -> "f094",
+      "icon-level-down" -> "f149",
+      "icon-level-up" -> "f148",
+      "icon-lightbulb" -> "f0eb",
+      "icon-linkedin" -> "f0e1",
+      "icon-linkedin-sign" -> "f08c",
+      "icon-link" -> "f0c1",
+      "icon-linux" -> "f17c",
+      "icon-list-alt" -> "f022",
+      "icon-list" -> "f03a",
+      "icon-list-ol" -> "f0cb",
+      "icon-list-ul" -> "f0ca",
+      "icon-location-arrow" -> "f124",
+      "icon-lock" -> "f023",
+      "icon-long-arrow-down" -> "f175",
+      "icon-long-arrow-left" -> "f177",
+      "icon-long-arrow-right" -> "f178",
+      "icon-long-arrow-up" -> "f176",
+      "icon-magic" -> "f0d0",
+      "icon-magnet" -> "f076",
+      "icon-mail-reply-all" -> "f122",
+      "icon-male" -> "f183",
+      "icon-map-marker" -> "f041",
+      "icon-maxcdn" -> "f136",
+      "icon-medkit" -> "f0fa",
+      "icon-meh" -> "f11a",
+      "icon-microphone" -> "f130",
+      "icon-microphone-off" -> "f131",
+      "icon-minus" -> "f068",
+      "icon-minus-sign-alt" -> "f146",
+      "icon-minus-sign" -> "f056",
+      "icon-mobile-phone" -> "f10b",
+      "icon-money" -> "f0d6",
+      "icon-moon" -> "f186",
+      "icon-move" -> "f047",
+      "icon-music" -> "f001",
+      "icon-off" -> "f011",
+      "icon-ok-circle" -> "f05d",
+      "icon-ok" -> "f00c",
+      "icon-ok-sign" -> "f058",
+      "icon-paper-clip" -> "f0c6",
+      "icon-paste" -> "f0ea",
+      "icon-pause" -> "f04c",
+      "icon-pencil" -> "f040",
+      "icon-phone" -> "f095",
+      "icon-phone-sign" -> "f098",
+      "icon-picture" -> "f03e",
+      "icon-pinterest" -> "f0d2",
+      "icon-pinterest-sign" -> "f0d3",
+      "icon-plane" -> "f072",
+      "icon-play-circle" -> "f01d",
+      "icon-play" -> "f04b",
+      "icon-play-sign" -> "f144",
+      "icon-plus" -> "f067",
+      "icon-plus-sign-alt" -> "f0fe",
+      "icon-plus-sign" -> "f055",
+      "icon-print" -> "f02f",
+      "icon-pushpin" -> "f08d",
+      "icon-puzzle-piece" -> "f12e",
+      "icon-qrcode" -> "f029",
+      "icon-question" -> "f128",
+      "icon-question-sign" -> "f059",
+      "icon-quote-left" -> "f10d",
+      "icon-quote-right" -> "f10e",
+      "icon-random" -> "f074",
+      "icon-refresh" -> "f021",
+      "icon-remove-circle" -> "f05c",
+      "icon-remove" -> "f00d",
+      "icon-remove-sign" -> "f057",
+      "icon-renren" -> "f18b",
+      "icon-reorder" -> "f0c9",
+      "icon-repeat" -> "f01e",
+      "icon-reply-all" -> "f122",
+      "icon-reply" -> "f112",
+      "icon-resize-full" -> "f065",
+      "icon-resize-horizontal" -> "f07e",
+      "icon-resize-small" -> "f066",
+      "icon-resize-vertical" -> "f07d",
+      "icon-retweet" -> "f079",
+      "icon-road" -> "f018",
+      "icon-rocket" -> "f135",
+      "icon-rss" -> "f09e",
+      "icon-rss-sign" -> "f143",
+      "icon-save" -> "f0c7",
+      "icon-screenshot" -> "f05b",
+      "icon-search" -> "f002",
+      "icon-share-alt" -> "f064",
+      "icon-share" -> "f045",
+      "icon-share-sign" -> "f14d",
+      "icon-shield" -> "f132",
+      "icon-shopping-cart" -> "f07a",
+      "icon-signal" -> "f012",
+      "icon-sign-blank" -> "f0c8",
+      "icon-signin" -> "f090",
+      "icon-signout" -> "f08b",
+      "icon-sitemap" -> "f0e8",
+      "icon-skype" -> "f17e",
+      "icon-smile" -> "f118",
+      "icon-sort-by-alphabet-alt" -> "f15e",
+      "icon-sort-by-alphabet" -> "f15d",
+      "icon-sort-by-attributes-alt" -> "f161",
+      "icon-sort-by-attributes" -> "f160",
+      "icon-sort-by-order-alt" -> "f163",
+      "icon-sort-by-order" -> "f162",
+      "icon-sort-down" -> "f0dd",
+      "icon-sort" -> "f0dc",
+      "icon-sort-up" -> "f0de",
+      "icon-spinner" -> "f110",
+      "icon-stackexchange" -> "f16c",
+      "icon-star-empty" -> "f006",
+      "icon-star" -> "f005",
+      "icon-star-half-empty" -> "f123",
+      "icon-star-half" -> "f089",
+      "icon-step-backward" -> "f048",
+      "icon-step-forward" -> "f051",
+      "icon-stethoscope" -> "f0f1",
+      "icon-stop" -> "f04d",
+      "icon-strikethrough" -> "f0cc",
+      "icon-subscript" -> "f12c",
+      "icon-suitcase" -> "f0f2",
+      "icon-sun" -> "f185",
+      "icon-superscript" -> "f12b",
+      "icon-table" -> "f0ce",
+      "icon-tablet" -> "f10a",
+      "icon-tag" -> "f02b",
+      "icon-tags" -> "f02c",
+      "icon-tasks" -> "f0ae",
+      "icon-terminal" -> "f120",
+      "icon-text-height" -> "f034",
+      "icon-text-width" -> "f035",
+      "icon-th" -> "f00a",
+      "icon-th-large" -> "f009",
+      "icon-th-list" -> "f00b",
+      "icon-thumbs-down-alt" -> "f088",
+      "icon-thumbs-down" -> "f165",
+      "icon-thumbs-up-alt" -> "f087",
+      "icon-thumbs-up" -> "f164",
+      "icon-ticket" -> "f145",
+      "icon-time" -> "f017",
+      "icon-tint" -> "f043",
+      "icon-trash" -> "f014",
+      "icon-trello" -> "f181",
+      "icon-trophy" -> "f091",
+      "icon-truck" -> "f0d1",
+      "icon-tumblr" -> "f173",
+      "icon-tumblr-sign" -> "f174",
+      "icon-twitter" -> "f099",
+      "icon-twitter-sign" -> "f081",
+      "icon-umbrella" -> "f0e9",
+      "icon-underline" -> "f0cd",
+      "icon-undo" -> "f0e2",
+      "icon-unlink" -> "f127",
+      "icon-unlock-alt" -> "f13e",
+      "icon-unlock" -> "f09c",
+      "icon-upload-alt" -> "f093",
+      "icon-upload" -> "f01b",
+      "icon-usd" -> "f155",
+      "icon-user" -> "f007",
+      "icon-user-md" -> "f0f0",
+      "icon-vk" -> "f189",
+      "icon-volume-down" -> "f027",
+      "icon-volume-off" -> "f026",
+      "icon-volume-up" -> "f028",
+      "icon-warning-sign" -> "f071",
+      "icon-weibo" -> "f18a",
+      "icon-windows" -> "f17a",
+      "icon-wrench" -> "f0ad",
+      "icon-xing" -> "f168",
+      "icon-xing-sign" -> "f169",
+      "icon-youtube" -> "f167",
+      "icon-youtube-play" -> "f16a",
+      "icon-youtube-sign" -> "f166",
+      "icon-zoom-in" -> "f00e",
+      "icon-zoom-out" -> "f010"
     ).mapValues(Integer.parseInt(_, 16).toChar)
 
   case class IconExt(icon: Icon) {

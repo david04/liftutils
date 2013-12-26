@@ -37,7 +37,7 @@ object Options {
 
   implicit def toOpt[T](v: T) = Some(v)
 
-  val dashboardTimeBasedChart: Option[Options] = Options(
+  def dashboardTimeBasedChart(from: Long, to: Long): Option[Options] = Options(
     series = Series(
       lines = Lines(
         show = true,
@@ -65,7 +65,9 @@ object Options {
     xaxis = Axis(
       mode = "time",
       ticks = 11,
-      tickDecimals = 0
+      tickDecimals = 0,
+      min = from,
+      max = to
     ),
     yaxis = Axis(
       ticks = 11,
@@ -101,7 +103,9 @@ object Options {
                     */
                    mode: Option[String] = None,
                    ticks: Option[Int] = None,
-                   tickDecimals: Option[Int] = None
+                   tickDecimals: Option[Int] = None,
+                   min: Option[Long] = None,
+                   max: Option[Long] = None
                    )
 
   case class Grid(

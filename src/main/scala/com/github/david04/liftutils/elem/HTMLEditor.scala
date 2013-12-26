@@ -92,17 +92,24 @@ trait GlobalValidatableHTMLEditor extends HTMLEditor {
 
 trait SemanticSubmitButtonHTMLEditor extends HTMLEditor {
 
+  def submitBtnSemanticClass =
+    if (!isValid) framework.btnDanger
+    else if (modified) framework.btnSuccess
+    else framework.btnMute
+
+  def submitBtnSemanticUpdate(): JsCmd = Run {
+    Seq(framework.btnDanger, framework.btnSuccess, framework.btnMute)
+      .map(clas => "$('#" + submitBtnRenderer.latestId + "').removeClass('" + clas + "');").mkString +
+      "$('#" + submitBtnRenderer.latestId + "').addClass('" + submitBtnSemanticClass + "');"
+  }
+
   override def submitBtnTransforms: NodeSeq => NodeSeq =
     super.submitBtnTransforms andThen
-      ".editor-btn-submit [class+]" #> {
-        if (!isValid) framework.btnDanger
-        else if (modified) framework.btnSuccess
-        else framework.btnMute
-      }
+      ".editor-btn-submit [class+]" #> submitBtnSemanticClass
 
-  override protected def savedInternal(): JsCmd = super.savedInternal() & submitBtnRenderer.replaceHtml()
+  override protected def savedInternal(): JsCmd = super.savedInternal() & submitBtnSemanticUpdate()
 
-  override private[elem] def elemChanged(elem: E): JsCmd = super.elemChanged(elem) & submitBtnRenderer.replaceHtml()
+  override private[elem] def elemChanged(elem: E): JsCmd = super.elemChanged(elem) & submitBtnSemanticUpdate()
 
 }
 
