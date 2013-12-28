@@ -31,7 +31,8 @@ libraryDependencies ++= {
     "log4j"                       % "log4j"                         % "1.2.17",
     "com.typesafe.akka"           % "akka-actor_2.10"               % "2.2.1",
     "joda-time"                   % "joda-time"                     % "2.3",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.1.3"
+    "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.1.3",
+    "commons-lang"                % "commons-lang"                  % "2.6"
   )
 }
 

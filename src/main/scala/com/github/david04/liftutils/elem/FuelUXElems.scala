@@ -33,6 +33,8 @@ case class FuelUXNode(id: String, name: String, `type`: String, isSelected: Bool
 trait FuelUXTree extends HTMLEditableElem with LabeledElem {
   implicit def self = this
 
+  protected val allowSelectStar: Boolean
+
   override protected def htmlEditableElemTemplatePath: List[String] = "templates-hidden" :: "elem-edit-tree-dflt" :: Nil
 
   type ID = String
@@ -62,7 +64,7 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
     val map = collection.mutable.Map[ID, Node]()
 
     def recur(pre: String, all: Array[Array[String]]): Array[Node] =
-      (Array("*") +: all)
+      (if(allowSelectStar) Array("*") +: all else all)
         .groupBy(_.head).mapValues(children => {
         val tail = children.map(_.tail)
         (tail.filterNot(_.isEmpty), tail.exists(_.isEmpty))

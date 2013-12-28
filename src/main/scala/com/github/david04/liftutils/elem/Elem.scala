@@ -17,6 +17,7 @@ import scala.util.Try
 import net.liftweb.http.js.JE.JsRaw
 import com.github.david04.liftutils.util.Util.__print
 import net.liftweb.util.PassThru
+import com.github.david04.liftutils.Loc.Loc
 
 trait ID {
   private val _id = S.formFuncName
@@ -28,21 +29,6 @@ trait ID {
 
 trait Elem extends ID {}
 
-trait Framework {
-
-  def errorClass: String
-  def warningClass: String
-  def successClass: String
-
-  def btnDefault: String
-  def btnMute: String
-  def btnPrimary: String
-  def btnSuccess: String
-  def btnInfo: String
-  def btnWarning: String
-  def btnDanger: String
-}
-
 trait ValidatableElem extends Elem {
   def error(): Option[NodeSeq] = None
 }
@@ -53,12 +39,11 @@ trait NodeSeqViewableElem extends ViewableElem {def renderNodeSeqView: NodeSeq}
 
 trait NamedElem extends ViewableElem {def elemName: String}
 
-trait LocPrefixedElem extends Elem {protected def locPrefix: String}
-
-trait LabeledElem extends NamedElem with LocPrefixedElem {
-  def labelStr: String = S.?(s"$locPrefix-elem-lbl-$elemName")
-  def labelStr(suffix: String): String = S.?(s"$locPrefix-elem-lbl-$elemName-$suffix")
-  def glabelStr(suffix: String): String = S.?(s"$locPrefix-elem-lbl-$suffix")
+trait LabeledElem extends NamedElem with Loc {
+  def labelStr: String = loc(s"elem-lbl-$elemName")
+  def labelStrOpt(suffix: String): Option[String] = locOpt(s"elem-lbl-$elemName-$suffix")
+  def labelStr(suffix: String): String = loc(s"elem-lbl-$elemName-$suffix")
+  def glabelStr(suffix: String): String = loc(s"elem-lbl-$suffix")
 }
 
 trait EditableElem extends ValidatableElem with NamedElem {
@@ -70,7 +55,7 @@ trait EditableElem extends ValidatableElem with NamedElem {
   private[elem] def save(): Unit
 }
 
-trait HTMLEditableElem extends EditableElem with LocPrefixedElem {
+trait HTMLEditableElem extends EditableElem with Loc {
 
   protected def htmlEditableElemTemplatePath: List[String] = "templates-hidden" :: "elem-edit-dflt" :: Nil
 

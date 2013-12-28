@@ -77,7 +77,7 @@ abstract class GenEnum2GenOneOfMany extends GenEditableEnumValueElem with GenEdi
   protected case class EnumValue(v: EnumValueType) {
     def name = enumValue2NodeSeq(v)
 
-    def id = v.id + ""
+    def id = Option(v).map(_.id + "").getOrElse("")
   }
 
   protected def enumValue2NodeSeq(v: EnumValueType): NodeSeq

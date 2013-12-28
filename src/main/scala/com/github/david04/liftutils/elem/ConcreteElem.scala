@@ -14,6 +14,7 @@ import scala.util.Try
 import net.liftweb.http.js.JE.{ValById, JsVal, JsRaw}
 import net.liftweb.http.S.{SFuncHolder, LFuncHolder, AFuncHolder}
 import net.liftweb.http.js.JsCmds.{Run, OnLoad, Script}
+import org.apache.commons.lang.StringEscapeUtils
 
 trait PasswordInputElem extends TextInputElem {
 
@@ -66,7 +67,7 @@ trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with L
     attrs.foldLeft(S.fmapFunc(testFunc)(fn => <select name={fn}>
       {opts.flatMap {
         case (value, text) => (<option value={value}>
-          {text}
+          {StringEscapeUtils.unescapeHtml(text.text)}
         </option>) % selected(deflt.exists(_ == value))
       }}
     </select>))(_ % _)

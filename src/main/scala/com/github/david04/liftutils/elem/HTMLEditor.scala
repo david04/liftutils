@@ -29,7 +29,7 @@ trait HTMLEditor extends ID {
 
   protected def isValid: Boolean = fieldError().isEmpty
 
-  protected def fieldError(): Option[NodeSeq] = elems.flatMap(_.error).headOption
+  protected def fieldError(): Option[NodeSeq] = elems.filter(_.enabled()).flatMap(_.error).headOption
 
   protected def onSubmit() =
     if (fieldError().isDefined) {
@@ -48,8 +48,8 @@ trait HTMLEditor extends ID {
 
   def renderEditor =
     ".editor-all" #> editorAllTemplate andThen
-      ".editor-elems" #> elems.map(elem => <div class={s"editor-elem-${elem.elemName}"}></div>) andThen
-      elems.map(elem => s".editor-elem-${elem.elemName}" #> elem.renderElemEditor).reduceOption(_ & _).getOrElse(PassThru) andThen
+      ".editor-elems" #> ((_: NodeSeq) => elems.map(elem => <div class={s"editor-elem-${elem.elemName}"}></div>)) andThen
+      elems.map(elem => s".editor-elem-${elem.elemName}" #> ((_: NodeSeq) => elem.renderElemEditor)).reduceOption(_ & _).getOrElse(PassThru) andThen
       ".editor-form [id]" #> id('form) andThen
       ".editor-btn-submit" #> submitBtnRenderer andThen
       SHtml.makeFormsAjax
@@ -120,6 +120,10 @@ trait DefaultHTMLEditor extends GlobalValidatableHTMLEditor with SemanticSubmitB
 trait DefaultBS3HTMLEditor extends DefaultHTMLEditor with Bootstrap3 {
   def framework = new Bootstrap3 {}
   implicit def editor = this
+
+  protected def onSave(): JsCmd
+
+  override protected def saved() = super.saved() & onSave()
 }
 
 trait EditableElem2DefaultEditorBridge extends HTMLEditableElem {
@@ -128,7 +132,7 @@ trait EditableElem2DefaultEditorBridge extends HTMLEditableElem {
 
   protected def editor: DefaultHTMLEditor
 
-  protected def locPrefix = editor.locPrefix
+  override def locPrefix = editor.locPrefix
 
   override protected def submit(): JsCmd = super.submit() & editor.submitForm()
 

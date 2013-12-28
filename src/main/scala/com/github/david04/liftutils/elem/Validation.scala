@@ -12,15 +12,16 @@ import java.util.regex.Pattern
 import net.liftweb.http.SHtml.ElemAttr
 import scala.util.Try
 import net.liftweb.http.js.JE.JsRaw
+import com.github.david04.liftutils.Loc.Loc
 
 
 object Validation {
 
-  trait ReqString extends GenEditableStringValueElem {
+  trait ReqString extends GenEditableStringValueElem with Loc {
 
     override def error: Option[NodeSeq] =
       super.error.map(Some(_)).getOrElse(
-        if (getCurrentStringValue().isEmpty) Some(Text("Value is required")) else None)
+        if (getCurrentStringValue().isEmpty) Some(Text(loc("error-required"))) else None)
   }
 
   trait Hostname extends ReqString {
@@ -34,7 +35,7 @@ object Validation {
           Await.result(
             future(InetAddress.getByName(getCurrentStringValue())),
             Duration(3, scala.concurrent.duration.SECONDS)))
-          .map(_ => None).getOrElse(Some(Text("Invalid hostname")))))
+          .map(_ => None).getOrElse(Some(Text(loc("error-invalidHostname"))))))
   }
 
   trait Email extends ReqString {
@@ -44,7 +45,17 @@ object Validation {
 
     override def error: Option[NodeSeq] =
       super.error.map(Some(_)).getOrElse(
-        if (ptr.matcher(getCurrentStringValue()).matches()) None else Some(Text("Invalid hostname")))
+        if (ptr.matcher(getCurrentStringValue()).matches()) None else Some(Text(loc("error-invalidEmail"))))
+  }
+
+  trait Password extends GenEditableStringValueElem with Loc {
+    override def error: Option[NodeSeq] =
+      super.error.map(Some(_)).getOrElse(
+        if (getCurrentStringValue().size == 0)
+          None
+        else if (getCurrentStringValue().size < 6)
+          Some(Text(loc("error-atLeast6Chars")))
+        else None)
   }
 
 }
