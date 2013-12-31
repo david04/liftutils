@@ -11,9 +11,15 @@ import net.liftweb.util.{ClearNodes, PassThru}
 import com.github.david04.liftutils.util.Util.__print
 
 
-trait HTMLEditor extends ID {
+trait HTMLViewer extends ID {
 
-  type E <: HTMLEditableElem
+  def locPrefix: String
+
+}
+
+trait HTMLEditor extends HTMLViewer {
+
+  type E <: HTMLViewableElem
 
   protected var modified: Boolean = false
 
@@ -23,9 +29,8 @@ trait HTMLEditor extends ID {
 
   protected def editorAllTemplate = Templates("templates-hidden" :: "editor-all" :: Nil).get
 
-  protected val elems = buildElems()
-
-  def locPrefix: String
+  protected val viewableElems = buildElems()
+  protected val elems = viewableElems.collect({case e: HTMLEditableElem => e})
 
   protected def isValid: Boolean = fieldError().isEmpty
 
@@ -48,8 +53,8 @@ trait HTMLEditor extends ID {
 
   def renderEditor =
     ".editor-all" #> editorAllTemplate andThen
-      ".editor-elems" #> ((_: NodeSeq) => elems.map(elem => <div class={s"editor-elem-${elem.elemName}"}></div>)) andThen
-      elems.map(elem => s".editor-elem-${elem.elemName}" #> ((_: NodeSeq) => elem.renderElemEditor)).reduceOption(_ & _).getOrElse(PassThru) andThen
+      ".editor-elems" #> ((_: NodeSeq) => viewableElems.map(elem => <div class={s"editor-elem-${elem.elemName}"}></div>)) andThen
+      viewableElems.map(elem => s".editor-elem-${elem.elemName}" #> ((_: NodeSeq) => elem.renderElem)).reduceOption(_ & _).getOrElse(PassThru) andThen
       ".editor-form [id]" #> id('form) andThen
       ".editor-btn-submit" #> submitBtnRenderer andThen
       SHtml.makeFormsAjax
@@ -65,7 +70,7 @@ trait HTMLEditor extends ID {
 
   private[elem] def elemChanged(elem: E): JsCmd = {
     modified = true
-    (elems.map(_.update()) :+ Noop).reduce(_ & _)
+    (viewableElems.map(_.update()) :+ Noop).reduce(_ & _)
   }
 
 }
@@ -114,7 +119,7 @@ trait SemanticSubmitButtonHTMLEditor extends HTMLEditor {
 }
 
 trait DefaultHTMLEditor extends GlobalValidatableHTMLEditor with SemanticSubmitButtonHTMLEditor {
-  type E = HTMLEditableElem
+  type E = HTMLViewableElem
 }
 
 trait DefaultBS3HTMLEditor extends DefaultHTMLEditor with Bootstrap3 {

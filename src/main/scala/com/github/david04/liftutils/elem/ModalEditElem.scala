@@ -37,11 +37,11 @@ trait ModalEditElem extends HTMLEditableElem with Modal with LabeledElem {
 
   private[elem] def renderModalEditableElemView: NodeSeq = htmlModalEditableElemViewRenderer.apply(htmlModalEditableElemViewTemplate)
 
-  override private[elem] def renderElemEditor: NodeSeq = renderModalEditableElemView
+  override private[elem] def renderElem: NodeSeq = renderModalEditableElemView
 
   protected def action: Option[(String, net.liftweb.http.js.JsCmd)] = Some((glabelStr("done"), hide()))
   protected def cancel: Option[(String, net.liftweb.http.js.JsCmd)] = None
-  protected def content: scala.xml.NodeSeq = super.renderElemEditor
+  protected def content: scala.xml.NodeSeq = super.renderElem
   protected def height: Option[Int] = None
   protected def title: String = labelStr("modalTitle")
 

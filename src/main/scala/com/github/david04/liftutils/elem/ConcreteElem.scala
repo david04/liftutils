@@ -43,14 +43,28 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
       ("onkeyup" -> ("{if (window.event.keyCode == 13) {" + SHtml.ajaxCall(ValById(id('input)), v => {value = v; onChangeServerSide() & submit()}).toJsCmd + "; }}"))
     ): _*)
 
-  override protected def htmlEditableElemRendererTransforms =
-    super.htmlEditableElemRendererTransforms andThen (
+  override protected def htmlElemRendererTransforms =
+    super.htmlElemRendererTransforms andThen (
       ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
         ".elem-wrap [id]" #> id('wrapper) &
         ".elem-lbl *" #> wrapName(labelStr) &
         ".elem-error [id]" #> id('error)
       ) andThen
       ((ns: NodeSeq) => bind("elem", ns, "input" -%> inputElem))
+}
+
+trait TextViewerElem extends GenStringValueElem with HTMLViewableElem with LabeledElem {
+
+  protected def classes: List[String] = Nil
+
+  import ElemAttr._
+
+  override protected def htmlElemRendererTransforms =
+    super.htmlElemRendererTransforms andThen
+      ".elem-wrap [id]" #> id('wrapper) &
+        ".elem-lbl *" #> wrapName(labelStr) &
+        ".elem-error [id]" #> id('error) &
+        ".elem-value *" #> getStringValue()
 }
 
 trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with LabeledElem {
@@ -79,8 +93,8 @@ trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with L
 
   protected def selectInputAttrs: Seq[ElemAttr]
 
-  override protected def htmlEditableElemRendererTransforms =
-    super.htmlEditableElemRendererTransforms andThen (
+  override protected def htmlElemRendererTransforms =
+    super.htmlElemRendererTransforms andThen (
       ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
         ".elem-wrap [id]" #> id('wrapper) &
         ".elem-lbl *" #> wrapName(labelStr) &
@@ -107,8 +121,8 @@ trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableEle
 
   protected def checkboxInputAttrs: Seq[ElemAttr]
 
-  override protected def htmlEditableElemRendererTransforms =
-    super.htmlEditableElemRendererTransforms andThen (
+  override protected def htmlElemRendererTransforms =
+    super.htmlElemRendererTransforms andThen (
       ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
         ".elem-wrap [id]" #> id('wrapper) &
         ".elem-lbl *" #> wrapName(labelStr) &
@@ -127,8 +141,8 @@ trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableEle
 trait IconElem extends HTMLEditableElem {def icon: String}
 
 trait HTMLIIconElem extends IconElem {
-  override def htmlEditableElemRendererTransforms =
-    super.htmlEditableElemRendererTransforms andThen
+  override def htmlElemRendererTransforms =
+    super.htmlElemRendererTransforms andThen
       "i [class]" #> s"icon-$icon"
 }
 

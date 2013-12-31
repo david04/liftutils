@@ -35,7 +35,7 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
 
   protected val allowSelectStar: Boolean
 
-  override protected def htmlEditableElemTemplatePath: List[String] = "templates-hidden" :: "elem-edit-tree-dflt" :: Nil
+  override protected def htmlElemTemplatePath: List[String] = "templates-hidden" :: "elem-edit-tree-dflt" :: Nil
 
   type ID = String
   type Type = String
@@ -57,7 +57,7 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
 
   def toFuelUX(node: Node) = new FuelUXNode(node.id, node.name, node.`type`, getCurrentValue() == Some(node.value))
 
-  override protected def htmlEditableElemRendererTransforms = {
+  override protected def htmlElemRendererTransforms = {
 
     implicit val formats = net.liftweb.json.DefaultFormats
 
@@ -127,7 +127,7 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
             }).toJsCmd +
           "});")))
 
-    super.htmlEditableElemRendererTransforms andThen
+    super.htmlElemRendererTransforms andThen
       (".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
         ".elem-wrap [id]" #> id('wrapper) &
         ".elem-lbl *" #> wrapName(labelStr) &

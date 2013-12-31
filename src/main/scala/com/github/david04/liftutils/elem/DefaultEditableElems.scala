@@ -2,12 +2,15 @@ package com.github.david04.liftutils.elem
 
 import net.liftweb.http.SHtml.ElemAttr
 import scala.xml.NodeSeq
-import net.liftweb.http.S
+import net.liftweb.http.{SHtml, S}
 import scala.util.parsing.combinator.RegexParsers
 import com.github.david04.liftutils.Loc.Loc
+import net.liftweb.http.js.JsCmds.{Run, OnLoad, Script}
+import net.liftweb.common.Loggable
+import java.util.{Date, TimeZone}
 
 
-trait DefaultElems {
+trait DefaultElems extends Loggable {
 
   class Text(
               val elemName: String,
@@ -22,6 +25,31 @@ trait DefaultElems {
     def getStringValue(): String = get
 
     private[elem] def save(): Unit = set(getCurrentStringValue())
+  }
+
+  class Timezone(
+                  val elemName: String,
+                  set: TimeZone => Unit,
+                  private[elem] val enabled: () => Boolean = () => true
+                  )(implicit protected val editor: DefaultHTMLEditor) extends HTMLEditableElem with LabeledElem with EditableElem2DefaultEditorBridge {
+
+    //    protected def classes: List[String] = Nil
+
+    protected var value: TimeZone = TimeZone.getTimeZone("UTC")
+
+    protected val timezones =
+      TimeZone.getAvailableIDs.map(TimeZone.getTimeZone(_))
+        .map(tz => (tz.getOffset(new Date().getTime()) / 60 / 1000, tz))
+        .toMap.withDefaultValue(TimeZone.getTimeZone("UTC"))
+
+    override protected def htmlElemRendererTransforms: NodeSeq => NodeSeq =
+      (_: NodeSeq) =>
+        SHtml.hidden((s: String) => {
+          try {value = timezones(s.toInt)} catch {case e: Exception => logger.error("Could not get timezone")}
+        }, "null", Seq[ElemAttr]("id" -> id('elem)): _*) ++
+          <tail>{Script(OnLoad(Run(sel('elem, ".val((new Date().getTimezoneOffset()) + '');"))))}</tail>
+
+    private[elem] def save(): Unit = set(value)
   }
 
   class Formula(

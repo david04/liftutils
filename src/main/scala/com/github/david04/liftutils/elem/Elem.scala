@@ -24,7 +24,7 @@ trait ID {
 
   def id(part: Symbol) = _id + "-" + part.name
 
-  def sel(part: Symbol) = "$('#" + id(part) + "')"
+  def sel(part: Symbol, func: String = "") = "$('#" + id(part) + "')" + func
 }
 
 trait Elem extends ID {}
@@ -46,7 +46,7 @@ trait LabeledElem extends NamedElem with Loc {
   def glabelStr(suffix: String): String = loc(s"elem-lbl-$suffix")
 }
 
-trait EditableElem extends ValidatableElem with NamedElem {
+trait EditableElem extends ViewableElem with ValidatableElem with NamedElem {
 
   protected def framework: Framework
 
@@ -55,35 +55,48 @@ trait EditableElem extends ValidatableElem with NamedElem {
   private[elem] def save(): Unit
 }
 
-trait HTMLEditableElem extends EditableElem with Loc {
+trait UpdatableElem extends ViewableElem {
 
-  protected def htmlEditableElemTemplatePath: List[String] = "templates-hidden" :: "elem-edit-dflt" :: Nil
+  private[elem] def update(): JsCmd
+}
 
-  protected lazy val htmlEditableElemTemplate = Templates(htmlEditableElemTemplatePath).get
+trait HTMLViewableElem extends ViewableElem with NamedElem with UpdatableElem with Loc {
 
-  protected lazy val htmlEditableElemRenderer = SHtml.idMemoize(_ => htmlEditableElemRendererTransforms)
+  protected def htmlElemTemplatePath: List[String] = "templates-hidden" :: "elem-view-dflt" :: Nil
 
-  protected def htmlEditableElemRendererTransforms: NodeSeq => NodeSeq = PassThru
+  protected lazy val htmlElemTemplate = Templates(htmlElemTemplatePath).get
 
-  protected def rerenderHtmlEditableElem(): JsCmd = htmlEditableElemRenderer.setHtml()
+  protected lazy val htmlElemRenderer = SHtml.idMemoize(_ => htmlElemRendererTransforms)
 
-  private[elem] def renderElemEditor: NodeSeq = htmlEditableElemRenderer.apply(htmlEditableElemTemplate)
+  protected def htmlElemRendererTransforms: NodeSeq => NodeSeq = PassThru
+
+  protected def rerenderHtmlElem(): JsCmd = htmlElemRenderer.setHtml()
+
+  private[elem] def renderElem: NodeSeq = htmlElemRenderer.apply(htmlElemTemplate)
+
+  protected def wrapName(name: String) = name + ": "
+
+  private[elem] def update(): JsCmd = Noop
+}
+
+trait HTMLEditableElem extends HTMLViewableElem with EditableElem {
+
+  override protected def htmlElemTemplatePath: List[String] = "templates-hidden" :: "elem-edit-dflt" :: Nil
 
   protected def onChangeServerSide(): JsCmd = Noop
 
   protected def submit(): JsCmd = Noop
 
-  protected def wrapName(name: String) = name + ": "
-
-  private[elem] def update() =
-    if (enabled())
-      Run(sel('wrapper) + ".fadeIn(300);") &
-        (error.map(error => Run(
-          sel('error) + ".html(" + error.toString.encJs + "); " +
-            sel('wrapper) + ".addClass(" + framework.errorClass.encJs + "); "))
-          .getOrElse(Run(
-          sel('error) + ".html(''); " +
-            sel('wrapper) + ".removeClass(" + framework.errorClass.encJs + "); ")))
-    else
-      Run(sel('wrapper) + ".fadeOut();")
+  override private[elem] def update() =
+    super.update() &
+      (if (enabled())
+        Run(sel('wrapper) + ".fadeIn(300);") &
+          (error.map(error => Run(
+            sel('error) + ".html(" + error.toString.encJs + "); " +
+              sel('wrapper) + ".addClass(" + framework.errorClass.encJs + "); "))
+            .getOrElse(Run(
+            sel('error) + ".html(''); " +
+              sel('wrapper) + ".removeClass(" + framework.errorClass.encJs + "); ")))
+      else
+        Run(sel('wrapper) + ".fadeOut();"))
 }
