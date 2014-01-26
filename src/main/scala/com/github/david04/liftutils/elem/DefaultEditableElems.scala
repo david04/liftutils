@@ -47,7 +47,9 @@ trait DefaultElems extends Loggable {
         SHtml.hidden((s: String) => {
           try {value = timezones(s.toInt)} catch {case e: Exception => logger.error("Could not get timezone")}
         }, "null", Seq[ElemAttr]("id" -> id('elem)): _*) ++
-          <tail>{Script(OnLoad(Run(sel('elem, ".val((new Date().getTimezoneOffset()) + '');"))))}</tail>
+          <tail>
+            {Script(OnLoad(Run(sel('elem, ".val((new Date().getTimezoneOffset()) + '');"))))}
+          </tail>
 
     private[elem] def save(): Unit = set(value)
   }
@@ -154,13 +156,13 @@ trait DefaultElems extends Loggable {
               val elemName: String,
               _get: => Option[String],
               val set: Option[String] => Unit,
-              _all: => Array[String],
+              _all: => Seq[String],
               private[elem] val enabled: () => Boolean = () => true,
               protected val allowSelectStar: Boolean = true
               )(implicit protected val editor: DefaultHTMLEditor) extends FuelUXTree with EditableElem2DefaultEditorBridge {
     def get = () => _get
 
-    def all: Array[String] = _all
+    def all: Seq[String] = _all
 
   }
 

@@ -17,15 +17,16 @@ import net.liftweb.http.js.JsCmds.Run
  * Lazy Loader
  */
 
-object LLoader {
-  val defaultPoolSize = 100
-  val defaultPool: ExecutorService = Executors.newFixedThreadPool(defaultPoolSize)
+object LazyLoader {
+  val defaultInterval = 200
+  val defaultPoolSize = 6
+  def createDefaultPool(): ExecutorService = Executors.newFixedThreadPool(defaultPoolSize)
 }
 
-class LLoader(
-               loadingTemplate: NodeSeq,
-               interval: Int = 200,
-               pool: ExecutorService = LLoader.defaultPool
+class LazyLoader(
+               loadingTemplate: => NodeSeq,
+               interval: Int = LazyLoader.defaultInterval,
+               val pool: ExecutorService = LazyLoader.createDefaultPool()
                ) {
 
   def blockUI(id: String): JsCmd = Run("$('#" + id + "').block({ message: null });")
@@ -33,48 +34,33 @@ class LLoader(
 
   val left = collection.mutable.ListBuffer[Future[JsCmd]]()
 
-  def loadLazy(renderer: IdMemoizeTransform, loading: NodeSeq): NodeSeq => NodeSeq = {
-    (template: NodeSeq) => {
-      val loadingId = S.formFuncName
-
-      val rslt = renderer.apply(<div id={loadingId}>{loading}</div>)
-      left += pool.submit(new Callable[JsCmd] {def call(): JsCmd = renderer.setHtml()})
-      rslt
-    }
-  }
-
-  def loadLazy(f: NodeSeq => NodeSeq, loading: NodeSeq): NodeSeq => NodeSeq = {
-    (template: NodeSeq) => {
-      var firstPass = true
-      val renderer = SHtml.idMemoize(_ => {
-        if (firstPass) {firstPass = false; (_: NodeSeq) => loadingTemplate} else f
-      })
-      val rslt = renderer.apply(<div>{template}</div>)
-      left += pool.submit(new Callable[JsCmd] {def call(): JsCmd = renderer.setHtml()})
-      rslt
-    }
-  }
-
-  def loadLazy(f: NodeSeq => NodeSeq): NodeSeq => NodeSeq = loadLazy(f, loadingTemplate)
-
   def callback(): JsCmd = {
     val variable = S.formFuncName
-    Run(s"window.$variable = window.setInterval(function() {" +
-      SHtml.ajaxInvoke(() => {
-        val toRemove = left.filter(_.isDone)
-        val updates = left.filter(_.isDone).map(_.get()).foldLeft(JsCmds.Noop)(_ & _)
-        left --= toRemove
-        updates //& Run(if (left.isEmpty) s";window.clearTimeout(window.$variable);" else "")
-      }).toJsCmd + "}" +
-      s",$interval);")
+    val running = "window." + S.formFuncName
+    Run(
+      s"window.$variable = window.setInterval(function() {" +
+        s"if(!$running) {" +
+        s"  $running = true;" +
+        SHtml.ajaxInvoke(() => {
+          val toRemove = left.filter(_.isDone)
+          val updates = left.filter(_.isDone).map(_.get()).foldLeft(JsCmds.Noop)(_ & _)
+          left --= toRemove
+          Run(s"$running = false;") & updates
+          //& Run(if (left.isEmpty) s";window.clearTimeout(window.$variable);" else "")
+        }).toJsCmd +
+        "  }" +
+        "}" +
+        s",$interval);")
   }
 
+  def loaderScript(): JsCmd = callback()
   def loader(): NodeSeq = <tail>{Script(OnLoad(callback()))}</tail>
   def installLoader(): NodeSeq => NodeSeq = (ns: NodeSeq) => ns ++ loader()
 
   def idMemoize(f: IdMemoizeTransform => NodeSeqFuncOrSeqNodeSeqFunc): IdMemoizeTransform = {
     new IdMemoizeTransform {
       val self = this
+      var loadedOnce = false
 
       var latestElem: Elem = <span/>
 
@@ -98,7 +84,7 @@ class LLoader(
           map(ignore => applyAgain()).openOr(NodeSeq.Empty)
 
       def load() = {
-        left += pool.submit(new Callable[JsCmd] {def call(): JsCmd = SetHtml(latestId, f(self)(latestKids))})
+        left += pool.submit(new Callable[JsCmd] {def call(): JsCmd = try {SetHtml(latestId, f(self)(latestKids))} finally {loadedOnce = true}})
         <div id={latestId}>{loadingTemplate}</div>
       }
 
@@ -113,7 +99,7 @@ class LLoader(
         left += pool.submit(new Callable[JsCmd] {
           def call(): JsCmd = SetHtml(latestId, f(self)(latestKids)) & unblockUI(latestId)
         })
-        blockUI(latestId)
+        if (loadedOnce) blockUI(latestId) else Noop
       }
     }
   }

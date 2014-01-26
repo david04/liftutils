@@ -40,7 +40,7 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
   type ID = String
   type Type = String
 
-  def all: Array[String]
+  def all: Seq[String]
   def get: () => Option[String]
   def set: Option[String] => Unit
   val initialValue = get()
@@ -63,7 +63,7 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
 
     val map = collection.mutable.Map[ID, Node]()
 
-    def recur(pre: String, all: Array[Array[String]]): Array[Node] =
+    def recur(pre: String, all: Seq[Array[String]]): Array[Node] =
       (if(allowSelectStar) Array("*") +: all else all)
         .groupBy(_.head).mapValues(children => {
         val tail = children.map(_.tail)
@@ -123,7 +123,7 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
               case JArray(selectedLst: List[JString]) =>
                 inited = true
                 selected = selectedLst.map(s => map(s.s)).headOption
-                currentSelectionRenderer.setHtml() & onChangeServerSide()
+                currentSelectionRenderer.setHtml() & onChangeClientSide()
             }).toJsCmd +
           "});")))
 
@@ -144,7 +144,7 @@ trait FuelUXModalEditTree extends FuelUXTree with ModalEditElem {
 
   protected def getCurrentViewString(): String = getCurrentValue().getOrElse(labelStr("none"))
 
-  override protected def onChangeServerSide(): JsCmd =
-    super.onChangeServerSide() & setCurrentViewString(getCurrentValue().getOrElse(labelStr("none")))
+  override protected def onChangeClientSide(): JsCmd =
+    super.onChangeClientSide() & setCurrentViewString(getCurrentValue().getOrElse(labelStr("none")))
 
 }

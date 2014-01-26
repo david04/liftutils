@@ -83,20 +83,35 @@ trait HTMLEditableElem extends HTMLViewableElem with EditableElem {
 
   override protected def htmlElemTemplatePath: List[String] = "templates-hidden" :: "elem-edit-dflt" :: Nil
 
-  protected def onChangeServerSide(): JsCmd = Noop
+  protected def onChangeClientSide(): JsCmd = {
+    println("onChangeClientSide")
+    if (error().isDefined) htmlEditableElemShowValidation = true
+    else htmlEditableElemShowValidation = false
+    update()
+  }
+
+  protected var htmlEditableElemShowValidation = false
+
+  def onFailedSaveAttempt(): Unit = htmlEditableElemShowValidation = true
+  def onSucessfulSave(): Unit = htmlEditableElemShowValidation = false
 
   protected def submit(): JsCmd = Noop
+
+  protected def updateValidation(): JsCmd = error match {
+    case Some(error) if htmlEditableElemShowValidation =>
+      Run(
+        sel('error) + ".html(" + error.toString.encJs + "); " +
+          sel('wrapper) + ".addClass(" + framework.errorClass.encJs + "); ")
+    case _ =>
+      Run(
+        sel('error) + ".html(''); " +
+          sel('wrapper) + ".removeClass(" + framework.errorClass.encJs + "); ")
+  }
 
   override private[elem] def update() =
     super.update() &
       (if (enabled())
-        Run(sel('wrapper) + ".fadeIn(300);") &
-          (error.map(error => Run(
-            sel('error) + ".html(" + error.toString.encJs + "); " +
-              sel('wrapper) + ".addClass(" + framework.errorClass.encJs + "); "))
-            .getOrElse(Run(
-            sel('error) + ".html(''); " +
-              sel('wrapper) + ".removeClass(" + framework.errorClass.encJs + "); ")))
+        Run(sel('wrapper) + ".fadeIn(300);") & updateValidation()
       else
         Run(sel('wrapper) + ".fadeOut();"))
 }

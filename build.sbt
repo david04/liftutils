@@ -1,6 +1,6 @@
 name := "liftutils"
 
-version := "0.1.3"
+version := "0.1.6"
 
 organization := "com.github.david04"
 
@@ -27,7 +27,6 @@ libraryDependencies ++= {
     "com.googlecode.json-simple"  % "json-simple"                   % "1.1.1",
     "javax.servlet"               % "javax.servlet-api"             % "3.0.1",
     "ch.qos.logback"              % "logback-classic"               % "1.0.6",
-    "postgresql"                  % "postgresql"                    % "9.1-901.jdbc3",
     "log4j"                       % "log4j"                         % "1.2.17",
     "com.typesafe.akka"           % "akka-actor_2.10"               % "2.2.1",
     "joda-time"                   % "joda-time"                     % "2.3",

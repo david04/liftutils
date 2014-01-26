@@ -9,6 +9,7 @@ import scala.xml.NodeSeq
 import net.liftweb.http.{SHtml}
 import net.liftweb.util.{ClearNodes, PassThru}
 import com.github.david04.liftutils.util.Util.__print
+import com.github.david04.liftutils.Loc.Loc
 
 
 trait HTMLViewer extends ID {
@@ -29,19 +30,30 @@ trait HTMLEditor extends HTMLViewer {
 
   protected def editorAllTemplate = Templates("templates-hidden" :: "editor-all" :: Nil).get
 
-  protected val viewableElems = buildElems()
-  protected val elems = viewableElems.collect({case e: HTMLEditableElem => e})
+  protected lazy val viewableElems = buildElems()
+  protected lazy val elems = viewableElems.collect({case e: HTMLEditableElem => e})
 
   protected def isValid: Boolean = fieldError().isEmpty
 
   protected def fieldError(): Option[NodeSeq] = elems.filter(_.enabled()).flatMap(_.error).headOption
 
+  protected def onFailedSaveAttempt(): Unit = {
+    elems.foreach({case e: HTMLEditableElem => e.onFailedSaveAttempt()})
+  }
+  protected def onSucessfulSave(): Unit = {
+    elems.foreach({case e: HTMLEditableElem => e.onSucessfulSave()})
+  }
+
+  protected def update(): JsCmd = elems.foldLeft(Noop)(_ & _.update())
+
   protected def onSubmit() =
-    if (fieldError().isDefined) {
-      elems.map(_.update()).reduceOption[JsCmd](_ & _).getOrElse(Noop)
+    if (!isValid) {
+      onFailedSaveAttempt()
+      update()
     } else {
+      onSucessfulSave()
       elems.foreach(_.save())
-      savedInternal()
+      savedInternal() & update()
     }
 
   def submitBtnTransforms: NodeSeq => NodeSeq = ".editor-btn-submit [onclick]" #> {submitForm()}
@@ -81,15 +93,26 @@ trait GlobalValidatableHTMLEditor extends HTMLEditor {
 
   override protected def isValid: Boolean = fieldError().isEmpty && globalError().isEmpty
 
-  override protected def onSubmit() =
-    if (fieldError().isDefined) {
-      elems.map(_.update()).reduceOption[JsCmd](_ & _).getOrElse(Noop)
-    } else globalError() match {
-      case Some(error) =>
-        SetHtml(id('globalVal), error) & JsShowId(id('globalVal))
-      case None =>
-        elems.foreach(_.save())
-        savedInternal()
+  protected var globalValidatableHTMLEditorShowGlobalError = false
+
+  override protected def onFailedSaveAttempt(): Unit = {
+    if (fieldError().isEmpty && !globalError().isEmpty)
+      globalValidatableHTMLEditorShowGlobalError = true
+    super.onFailedSaveAttempt()
+  }
+  override protected def onSucessfulSave(): Unit = {
+    globalValidatableHTMLEditorShowGlobalError = false
+    super.onSucessfulSave()
+  }
+
+  override protected def update() =
+    super.update() & {
+      globalError() match {
+        case Some(error) if globalValidatableHTMLEditorShowGlobalError =>
+          SetHtml(id('globalVal), error) & JsShowId(id('globalVal))
+        case None => SetHtml(id('globalVal), NodeSeq.Empty) & JsHideId(id('globalVal))
+        case _ => Noop
+      }
     }
 
   override def renderEditor = super.renderEditor andThen ".editor-global-validation [id]" #> id('globalVal)
@@ -122,7 +145,7 @@ trait DefaultHTMLEditor extends GlobalValidatableHTMLEditor with SemanticSubmitB
   type E = HTMLViewableElem
 }
 
-trait DefaultBS3HTMLEditor extends DefaultHTMLEditor with Bootstrap3 {
+trait DefaultBS3HTMLEditor extends DefaultHTMLEditor with Bootstrap3 with Loc {
   def framework = new Bootstrap3 {}
   implicit def editor = this
 
@@ -141,6 +164,6 @@ trait EditableElem2DefaultEditorBridge extends HTMLEditableElem {
 
   override protected def submit(): JsCmd = super.submit() & editor.submitForm()
 
-  override protected def onChangeServerSide(): JsCmd = super.onChangeServerSide() & editor.elemChanged(this)
+  override protected def onChangeClientSide(): JsCmd = super.onChangeClientSide() & editor.elemChanged(this)
 
 }

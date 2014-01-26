@@ -39,8 +39,8 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
     textInputAttrs ++ Seq[ElemAttr](
       ("id" -> id('input)),
       ("placeholder" -> placeholder.getOrElse("")),
-      ("onchange" -> ("{" + SHtml.onEvent(v => {value = v; onChangeServerSide()}).toJsCmd + "; return true; }")),
-      ("onkeyup" -> ("{if (window.event.keyCode == 13) {" + SHtml.ajaxCall(ValById(id('input)), v => {value = v; onChangeServerSide() & submit()}).toJsCmd + "; }}"))
+      ("onchange" -> ("{" + SHtml.onEvent(v => {value = v; onChangeClientSide()}).toJsCmd + "; return true; }")),
+      ("onkeyup" -> ("{if (window.event.keyCode == 13) {" + SHtml.ajaxCall(ValById(id('input)), v => {value = v; onChangeClientSide() & submit()}).toJsCmd + "; }}"))
     ): _*)
 
   override protected def htmlElemRendererTransforms =
@@ -106,7 +106,7 @@ trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with L
           v => getAllOneOfManyValues().find(_.id == v).foreach(value = _),
           (selectInputAttrs ++ Seq[ElemAttr](
             ("id" -> id('input)),
-            ("onchange" -> ("{" + SHtml.onEvent(v => {getAllOneOfManyValues().find(_.id == v).foreach(value = _); onChangeServerSide()}).toJsCmd + "; return true; }"))
+            ("onchange" -> ("{" + SHtml.onEvent(v => {getAllOneOfManyValues().find(_.id == v).foreach(value = _); onChangeClientSide()}).toJsCmd + "; return true; }"))
           )): _*)
       ))
 }
@@ -133,7 +133,7 @@ trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableEle
           (checkboxInputAttrs ++ Seq[ElemAttr](
             ("id" -> id('input)),
             ("onchange" -> ("{" + SHtml.ajaxCall(JsRaw(sel('input) + ".is(':checked')"),
-              v => {value = v.toBoolean; onChangeServerSide()}).toJsCmd + "; return true; }"))
+              v => {value = v.toBoolean; onChangeClientSide()}).toJsCmd + "; return true; }"))
           )): _*)
       ))
 }
@@ -143,6 +143,6 @@ trait IconElem extends HTMLEditableElem {def icon: String}
 trait HTMLIIconElem extends IconElem {
   override def htmlElemRendererTransforms =
     super.htmlElemRendererTransforms andThen
-      "i [class]" #> s"icon-$icon"
+      "i [class]" #> s"$icon"
 }
 
