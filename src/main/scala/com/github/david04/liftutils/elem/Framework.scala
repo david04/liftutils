@@ -40,11 +40,11 @@ trait Bootstrap2 extends Framework {
   def warningClass: String = ???
   def successClass: String = ???
 
-  def btnDefault: String = ???
-  def btnMute: String = ???
-  def btnPrimary: String = ???
-  def btnSuccess: String = ???
-  def btnInfo: String = ???
-  def btnWarning: String = ???
-  def btnDanger: String = ???
+  def btnDefault: String = ""
+  def btnMute: String = ""
+  def btnPrimary: String = "btn-primary"
+  def btnSuccess: String = "btn-success"
+  def btnInfo: String = "btn-info"
+  def btnWarning: String = "btn-warning"
+  def btnDanger: String = "btn-danger"
 }

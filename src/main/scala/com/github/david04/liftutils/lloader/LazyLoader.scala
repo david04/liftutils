@@ -42,8 +42,8 @@ class LazyLoader(
         s"if(!$running) {" +
         s"  $running = true;" +
         SHtml.ajaxInvoke(() => {
-          val toRemove = left.filter(_.isDone)
-          val updates = left.filter(_.isDone).map(_.get()).foldLeft(JsCmds.Noop)(_ & _)
+          val toRemove = left.filter(f => f.isDone || f.isCancelled)
+          val updates = left.filter(_.isDone).flatMap(f => tryo(f.get())).foldLeft(JsCmds.Noop)(_ & _)
           left --= toRemove
           Run(s"$running = false;") & updates
           //& Run(if (left.isEmpty) s";window.clearTimeout(window.$variable);" else "")

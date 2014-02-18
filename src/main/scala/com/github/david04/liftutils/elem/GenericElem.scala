@@ -62,14 +62,19 @@ trait GenEditableOneOfManyValueElem extends GenOneOfManyValueElem with Validatab
 
 abstract class GenDouble2GenString extends GenEditableDoubleValueElem with GenEditableStringValueElem {
 
-  protected def double2StringFormat = "%f"
+  val suffix: Option[String]
+  val precision: Int
+  protected def double2StringFormat = s"%.${precision}f"
+
+  private def currentStringValueWithoutSuffix() =
+    suffix.map(suffix => getCurrentStringValue().replaceAllLiterally(suffix, "")).getOrElse(getCurrentStringValue())
 
   override def error: Option[NodeSeq] =
-    Try(getCurrentStringValue().toDouble).map(_ => super.error).getOrElse(Some(Text("Invalid value.")))
+    Try(currentStringValueWithoutSuffix().toDouble).map(_ => super.error).getOrElse(Some(Text("Invalid value.")))
 
-  def getCurrentDoubleValue(): Double = getCurrentStringValue().toDouble
+  def getCurrentDoubleValue(): Double = currentStringValueWithoutSuffix().toDouble
 
-  def getStringValue() = double2StringFormat.format(getDoubleValue())
+  def getStringValue() = double2StringFormat.format(getDoubleValue()) + suffix.getOrElse("")
 }
 
 abstract class GenEnum2GenOneOfMany extends GenEditableEnumValueElem with GenEditableOneOfManyValueElem {

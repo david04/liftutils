@@ -37,7 +37,7 @@ trait JsonSerializable {
 private class JsonSerializableSerializer extends JsonSerializer[JsonSerializable] {
 
   def serialize(value: JsonSerializable, jgen: JsonGenerator, provider: SerializerProvider) {
-    value.json().foreach(v => jgen.writeRawValue(s"eval(${v.encJs})"))
+    value.json().foreach(v => jgen.writeRawValue(v))
   }
 }
 

@@ -45,7 +45,7 @@ trait ModalEditElem extends HTMLEditableElem with Modal with LabeledElem {
   protected def height: Option[Int] = None
   protected def title: String = labelStr("modalTitle")
 
-  override private[elem] def update() =
+  override def update() =
     super.update() & {
       if (enabled())
         Run(sel('vwrapper) + ".fadeIn(300);") &

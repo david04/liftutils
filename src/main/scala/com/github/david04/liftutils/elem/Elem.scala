@@ -57,7 +57,7 @@ trait EditableElem extends ViewableElem with ValidatableElem with NamedElem {
 
 trait UpdatableElem extends ViewableElem {
 
-  private[elem] def update(): JsCmd
+  def update(): JsCmd
 }
 
 trait HTMLViewableElem extends ViewableElem with NamedElem with UpdatableElem with Loc {
@@ -76,7 +76,7 @@ trait HTMLViewableElem extends ViewableElem with NamedElem with UpdatableElem wi
 
   protected def wrapName(name: String) = name + ": "
 
-  private[elem] def update(): JsCmd = Noop
+  def update(): JsCmd = Noop
 }
 
 trait HTMLEditableElem extends HTMLViewableElem with EditableElem {
@@ -108,10 +108,12 @@ trait HTMLEditableElem extends HTMLViewableElem with EditableElem {
           sel('wrapper) + ".removeClass(" + framework.errorClass.encJs + "); ")
   }
 
-  override private[elem] def update() =
+  protected def enableDisableTransitionTime = 300
+
+  override def update() =
     super.update() &
       (if (enabled())
-        Run(sel('wrapper) + ".fadeIn(300);") & updateValidation()
+        Run(sel('wrapper) + s".fadeIn($enableDisableTransitionTime);") & updateValidation()
       else
-        Run(sel('wrapper) + ".fadeOut();"))
+        Run(sel('wrapper) + s".fadeOut($enableDisableTransitionTime);"))
 }

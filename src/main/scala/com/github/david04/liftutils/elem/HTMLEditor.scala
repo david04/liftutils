@@ -145,6 +145,15 @@ trait DefaultHTMLEditor extends GlobalValidatableHTMLEditor with SemanticSubmitB
   type E = HTMLViewableElem
 }
 
+trait DefaultBS2HTMLEditor extends DefaultHTMLEditor with Bootstrap2 with Loc {
+  def framework = new Bootstrap2 {}
+  implicit def editor = this
+
+  protected def onSave(): JsCmd
+
+  override protected def saved() = super.saved() & onSave()
+}
+
 trait DefaultBS3HTMLEditor extends DefaultHTMLEditor with Bootstrap3 with Loc {
   def framework = new Bootstrap3 {}
   implicit def editor = this

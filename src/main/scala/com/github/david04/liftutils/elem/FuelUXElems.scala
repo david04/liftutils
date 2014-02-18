@@ -41,8 +41,11 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
   type Type = String
 
   def all: Seq[String]
+
   def get: () => Option[String]
+
   def set: Option[String] => Unit
+
   val initialValue = get()
   var inited = false
   var selected: Option[Node] = None
@@ -64,7 +67,7 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
     val map = collection.mutable.Map[ID, Node]()
 
     def recur(pre: String, all: Seq[Array[String]]): Array[Node] =
-      (if(allowSelectStar) Array("*") +: all else all)
+      (if (allowSelectStar) Array("*") +: all else all)
         .groupBy(_.head).mapValues(children => {
         val tail = children.map(_.tail)
         (tail.filterNot(_.isEmpty), tail.exists(_.isEmpty))
@@ -120,9 +123,13 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
           "}}}).on('updated', function(sel) {" +
           SHtml.jsonCall(JsRaw("$('#" + id('tree) + "').tree('selectedItems').map(function(i) {return i.id;})"),
             (v: JValue) => v match {
-              case JArray(selectedLst: List[JString]) =>
+              case JArray((sel: JString) :: rest) =>
                 inited = true
-                selected = selectedLst.map(s => map(s.s)).headOption
+                selected = Some(map(sel.s))
+                currentSelectionRenderer.setHtml() & onChangeClientSide()
+              case _ =>
+                inited = true
+                selected = None
                 currentSelectionRenderer.setHtml() & onChangeClientSide()
             }).toJsCmd +
           "});")))
@@ -134,7 +141,9 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
         ".elem-error [id]" #> id('error) &
         ".tree-title-lbl" #> currentSelectionRenderer) andThen
       (".tree [id]" #> id('tree)) andThen
-      ((ns: NodeSeq) => ns ++ <tail>{script}</tail>)
+      ((ns: NodeSeq) => ns ++ <tail>
+        {script}
+      </tail>)
   }
 }
 

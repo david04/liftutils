@@ -18,6 +18,8 @@ import net.liftweb.http.js.JE.JsRaw
 import com.fasterxml.jackson.module.scala._
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.david04.liftutils.jacksonxml.{JsonSerializable, JSON}
+import scala.util.Random
+import scala.collection.SortedMap
 
 case class DateRangePicker(
                             onSelection: (Long, Long) => JsCmd,
@@ -30,6 +32,16 @@ case class DateRangePicker(
 
   val id = S.formFuncName
 
+  val customRanges = (
+    for {
+      o <- options.toSeq
+      rs <- o.ranges.toSeq
+      r <- rs.ranges.collect({case c: CustomRange => c})
+    } yield (r.id, r)
+    ).toMap
+
+  def setCustomRange(range: CustomRange) = "$('#" + id + " .daterangepicker-lbl').text(" + range.name.encJs + ");"
+
   def render =
     (
       ".daterangepicker-around [id]" #> id &
@@ -38,19 +50,47 @@ case class DateRangePicker(
       <tail>
         {Script(OnLoad(Run("$('#" + id + "').daterangepicker(" +
         JSON.writeValueAsString(options) + ",\n" +
-        "function (start, end) {" +
-        "$('#" + id + " .daterangepicker-lbl').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));" +
+        "function (_start, _end) {" +
+        "var start = _start.toDate().getTime();" +
+        "var end = _end.toDate().getTime();" +
+        "console.log(start);" +
+        (customRanges.values.toList.map(r => s"if(start == end && start == ${r.id}) " + setCustomRange(r)) :+
+          "{$('#" + id + " .daterangepicker-lbl').html(_start.format('MMMM D, YYYY') + ' - ' + _end.format('MMMM D, YYYY'));}")
+          .mkString(" else ") +
         SHtml.jsonCall(
-          JsRaw("[start.toDate().getTime(),end.toDate().getTime()]"),
+          JsRaw("[start,end]"),
           (v: JValue) => v match {
             case JArray((JInt(from)) :: (JInt(to)) :: Nil) =>
-              onSelection(from.toLong, to.toLong)
+              if (from == to && customRanges.isDefinedAt(from.toLong)) customRanges(from.toLong).onSelection.apply()
+              else onSelection(from.toLong, to.toLong)
           }).toJsCmd +
-        "}).data('daterangepicker').notify();") & JsShowId(id)))}
+        "}).data('daterangepicker').notify();"
+
+      ) & JsShowId(id)))}
       </tail>
 }
 
-case class Range(name: String, value: (Moment, Moment))
+trait RangeOption {
+  def name: String
+
+  def value: (Moment, Moment)
+}
+
+case class Range(name: String, from: Moment, to: Moment) extends RangeOption {
+  def value: (Moment, Moment) = (from, to)
+}
+
+case class CustomRange(name: String, onSelection: () => JsCmd) extends RangeOption {
+  val idValue = (99999999999999L - math.abs(name.hashCode).toLong * 10000)
+  val id = idValue - idValue % (24 * 60 * 60 * 1000l)
+
+  def value: (Moment, Moment) = (new Moment(id), new Moment(id))
+}
+
+case class Ranges(ranges: RangeOption*) extends JsonSerializable {
+  def json(): Option[String] =
+    Some(JSON.writeValueAsString(SortedMap(ranges.map(r => (r.name, r.value)): _*)(Ordering.by(v => ranges.indexWhere(_.name == v)))))
+}
 
 case class Locale(
                    applyLabel: Option[String] = None,
@@ -74,7 +114,7 @@ case class Options(
                     timePicker: Option[Boolean] = None,
                     timePickerIncrement: Option[Int] = None,
                     timePicker12Hour: Option[Boolean] = None,
-                    ranges: Option[Map[String, (Moment, Moment)]] = None,
+                    ranges: Option[Ranges] = None,
                     buttonClasses: Option[Array[String]] = None,
                     applyClass: Option[String] = None,
                     cancelClass: Option[String] = None,
