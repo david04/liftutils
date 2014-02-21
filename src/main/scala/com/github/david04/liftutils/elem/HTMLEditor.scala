@@ -18,7 +18,7 @@ trait HTMLViewer extends ID {
 
 }
 
-trait HTMLEditor extends HTMLViewer {
+trait HTMLEditor extends HTMLViewer with Loc {
 
   type E <: HTMLViewableElem
 
@@ -28,7 +28,9 @@ trait HTMLEditor extends HTMLViewer {
 
   protected def buildElems(): Seq[E]
 
-  protected def editorAllTemplate = Templates("templates-hidden" :: "editor-all" :: Nil).get
+  protected def editorAllTemplatePath = "templates-hidden" :: "editor-all" :: Nil
+
+  protected def editorAllTemplate = Templates(editorAllTemplatePath).get
 
   protected lazy val viewableElems = buildElems()
   protected lazy val elems = viewableElems.collect({case e: HTMLEditableElem => e})
@@ -40,6 +42,7 @@ trait HTMLEditor extends HTMLViewer {
   protected def onFailedSaveAttempt(): Unit = {
     elems.foreach({case e: HTMLEditableElem => e.onFailedSaveAttempt()})
   }
+
   protected def onSucessfulSave(): Unit = {
     elems.foreach({case e: HTMLEditableElem => e.onSucessfulSave()})
   }
@@ -68,6 +71,7 @@ trait HTMLEditor extends HTMLViewer {
       ".editor-elems" #> ((_: NodeSeq) => viewableElems.map(elem => <div class={s"editor-elem-${elem.elemName}"}></div>)) andThen
       viewableElems.map(elem => s".editor-elem-${elem.elemName}" #> ((_: NodeSeq) => elem.renderElem)).reduceOption(_ & _).getOrElse(PassThru) andThen
       ".editor-form [id]" #> id('form) andThen
+      ".editor-btn-lbl *" #> loc("submitBtn") andThen
       ".editor-btn-submit" #> submitBtnRenderer andThen
       SHtml.makeFormsAjax
 
@@ -100,6 +104,7 @@ trait GlobalValidatableHTMLEditor extends HTMLEditor {
       globalValidatableHTMLEditorShowGlobalError = true
     super.onFailedSaveAttempt()
   }
+
   override protected def onSucessfulSave(): Unit = {
     globalValidatableHTMLEditorShowGlobalError = false
     super.onSucessfulSave()
@@ -120,13 +125,17 @@ trait GlobalValidatableHTMLEditor extends HTMLEditor {
 
 trait SemanticSubmitButtonHTMLEditor extends HTMLEditor {
 
+  def semanticInvalid = framework.btnDanger
+  def semanticModified = framework.btnSuccess
+  def semanticSaved = framework.btnMute
+
   def submitBtnSemanticClass =
-    if (!isValid) framework.btnDanger
-    else if (modified) framework.btnSuccess
-    else framework.btnMute
+    if (!isValid) semanticInvalid
+    else if (modified) semanticModified
+    else semanticSaved
 
   def submitBtnSemanticUpdate(): JsCmd = Run {
-    Seq(framework.btnDanger, framework.btnSuccess, framework.btnMute)
+    Seq(semanticInvalid, semanticModified, semanticSaved)
       .map(clas => "$('#" + submitBtnRenderer.latestId + "').removeClass('" + clas + "');").mkString +
       "$('#" + submitBtnRenderer.latestId + "').addClass('" + submitBtnSemanticClass + "');"
   }
@@ -147,6 +156,7 @@ trait DefaultHTMLEditor extends GlobalValidatableHTMLEditor with SemanticSubmitB
 
 trait DefaultBS2HTMLEditor extends DefaultHTMLEditor with Bootstrap2 with Loc {
   def framework = new Bootstrap2 {}
+
   implicit def editor = this
 
   protected def onSave(): JsCmd
@@ -156,6 +166,7 @@ trait DefaultBS2HTMLEditor extends DefaultHTMLEditor with Bootstrap2 with Loc {
 
 trait DefaultBS3HTMLEditor extends DefaultHTMLEditor with Bootstrap3 with Loc {
   def framework = new Bootstrap3 {}
+
   implicit def editor = this
 
   protected def onSave(): JsCmd

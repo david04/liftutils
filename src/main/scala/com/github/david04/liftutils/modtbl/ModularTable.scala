@@ -15,12 +15,15 @@ trait Table extends Loc {
   def table = this
 
   def sel(id: String): String = "$('#" + id + "')"
+
   def sel(id: String, rest: String): String = sel(id) + rest
 
   trait Col extends Loc {
     self: C =>
     override def parentLoc = table
+
     def renderHead: NodeSeq => NodeSeq = PassThru
+
     def renderRow(row: R, rowId: String, idx: Int, colId: String): NodeSeq => NodeSeq =
       "td [id]" #> colId
   }
@@ -32,17 +35,23 @@ trait Table extends Loc {
 
   /** Get all rows. */
   protected def rows: Seq[R]
+
   /** Get all columns. */
   protected val columns: Seq[C]
 
   protected def templatePath: List[String] = "templates-hidden" :: "modtbl-dflt" :: Nil
+
   protected lazy val template = ClearClearable(Templates(templatePath).get)
 
   protected lazy val pageRenderer = SHtml.idMemoize(_ => pageTransforms())
+
+  protected def rerenderPage() = pageRenderer.setHtml()
+
   protected def pageTransforms(): NodeSeq => NodeSeq =
     ".modtbl-table" #> tableRenderer
 
   protected lazy val tableRenderer = SHtml.idMemoize(_ => tableTransforms())
+
   protected def tableTransforms(): NodeSeq => NodeSeq =
     "thead tr th" #> columns.map(col => col.renderHead) &
       "tbody tr" #> rows.zipWithIndex.map(row => rowTransforms(row._1, S.formFuncName, row._2))
@@ -60,6 +69,7 @@ trait StrColTable extends Table {
   trait StrHeadCol extends Col {
     self: C =>
     def title: String
+
     override def renderHead: NodeSeq => NodeSeq =
       super.renderHead andThen
         "th *" #> title
@@ -73,6 +83,7 @@ trait NodeSeqRowTable extends Table {
   trait NodeSeqRowCol extends Col {
     self: C =>
     def rowNodeSeqValue: R => NodeSeq
+
     override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String): NodeSeq => NodeSeq =
       super.renderRow(row, rowId, rowIdx, colId) andThen
         "td *" #> rowNodeSeqValue(row)
@@ -86,6 +97,7 @@ trait StrRowTable extends NodeSeqRowTable {
   trait StrRowCol extends NodeSeqRowCol {
     self: C =>
     def rowStrValue: R => String
+
     def rowNodeSeqValue: R => NodeSeq = (r: R) => scala.xml.Text(rowStrValue(r))
   }
 
@@ -94,6 +106,7 @@ trait StrRowTable extends NodeSeqRowTable {
 trait ZebraTable extends Table {
 
   protected def zebraTableEvenClass = "even"
+
   protected def zebraTableOddClass = "odd"
 
   override protected def rowTransforms(row: R, rowId: String, rowIdx: Int): NodeSeq => NodeSeq =
@@ -119,10 +132,13 @@ trait ClickableRowTable extends Table {
 trait RowDetailsTable extends ClickableRowTable {
 
   protected def rowDetailsTemplatePath: List[String] = "templates-hidden" :: "modtbl-rowDetails-dflt" :: Nil
+
   protected def rowDetailsTemplate = Templates(rowDetailsTemplatePath).get(0).descendant(3)
 
   protected var currentDetailsRow: Option[(R, JsCmd)] = None
+
   protected def rowDetailsClasses: List[String] = "details" :: Nil
+
   protected def rowDetailsContentClass: String = "details-contents"
 
   protected def openDetailsRow(row: R, rowId: String, rowIdx: Int): JsCmd = Run {
@@ -180,9 +196,13 @@ trait QueryableTable extends Table {
   protected def query(params: Q): Seq[R]
 
   protected def createQuery(): Q
+
   protected def prepareQuery(query: Q): Q = query
 
   protected def rows = query(prepareQuery(createQuery()))
+}
+
+trait KnownSizeQueryableTable extends QueryableTable {
 
   protected val rowsSize: Int
 }
@@ -199,11 +219,11 @@ trait PaginatedQueryableTable extends QueryableTable {
   protected lazy val pagBtnsCurrentClass = "active"
   protected lazy val pagBtnsDisabledClass = "disabled"
   protected lazy val pagNBtns = 5
-  protected lazy val defaultPageSize = 10
+  protected lazy val defaultPageSize = 40
 
   protected var currentPage = 0
   protected var pageSize = defaultPageSize
-  protected lazy val nPages = math.ceil(rowsSize / pageSize.toDouble).toInt
+  protected val nPages: Int
 
   override protected def prepareQuery(_query: Q): Q = {
     val query = super.prepareQuery(_query)
@@ -219,24 +239,28 @@ trait PaginatedQueryableTable extends QueryableTable {
 
   protected def firstPage() = SHtml.onEvent(_ => {
     currentPage = 0
-    pageRenderer.setHtml()
-  })
+    rerenderPage()
+  }).cmd & Run("return false;")
+
   protected def prevPage() = SHtml.onEvent(_ => {
     currentPage = math.max(0, currentPage - 1)
-    pageRenderer.setHtml()
-  })
+    rerenderPage()
+  }).cmd & Run("return false;")
+
   protected def toPage(n: Int) = SHtml.onEvent(_ => {
     currentPage = n
-    pageRenderer.setHtml()
-  })
+    rerenderPage()
+  }).cmd & Run("return false;")
+
   protected def nextPage() = SHtml.onEvent(_ => {
     currentPage = math.min(nPages - 1, currentPage + 1)
-    pageRenderer.setHtml()
-  })
+    rerenderPage()
+  }).cmd & Run("return false;")
+
   protected def lastPage() = SHtml.onEvent(_ => {
     currentPage = nPages - 1
-    pageRenderer.setHtml()
-  })
+    rerenderPage()
+  }).cmd & Run("return false;")
 
   protected def currentButtons() = {
     val side = pagNBtns - 1
@@ -262,6 +286,12 @@ trait PaginatedQueryableTable extends QueryableTable {
 
   protected lazy val paginationInfoRenderer = SHtml.idMemoize(_ => paginationInfoTransforms())
 
+  protected def paginationInfoTransforms(): NodeSeq => NodeSeq
+}
+
+trait KnownSizePaginatedQueryableTable extends PaginatedQueryableTable with KnownSizeQueryableTable {
+  protected lazy val nPages = math.ceil(rowsSize / pageSize.toDouble).toInt
+
   protected def paginationInfoTransforms(): NodeSeq => NodeSeq =
     ".modtbl-pag-info *" #>
       loc("pagInfo",
@@ -270,11 +300,24 @@ trait PaginatedQueryableTable extends QueryableTable {
         "total" -> rowsSize.toString)
 }
 
+trait UnknownSizePaginatedQueryableTable extends PaginatedQueryableTable {
+
+  protected lazy val nPages = Int.MaxValue / 2
+
+  protected def paginationInfoTransforms(): NodeSeq => NodeSeq =
+    ".modtbl-pag-info *" #>
+      loc("pagInfo",
+        "from" -> (currentPage * pageSize + 1).toString,
+        "to" -> ((currentPage + 1) * pageSize).toString)
+}
+
 
 trait SortableQueryableTable extends QueryableTable {
 
   protected def sortThNone = "sorting"
+
   protected def sortThAsc = "sorting_asc"
+
   protected def sortThDesc = "sorting_desc"
 
   trait SortCol extends Col {
@@ -320,13 +363,13 @@ trait SortableQueryableTable extends QueryableTable {
 
 
 abstract class DefaultTable extends Table
-                                    with NamedTable
-                                    with QueryableTable
-                                    with PaginatedQueryableTable
-                                    with SortableQueryableTable
-                                    with StrColTable
-                                    with StrRowTable
-                                    with ZebraTable {
+with NamedTable
+with QueryableTable
+with PaginatedQueryableTable
+with SortableQueryableTable
+with StrColTable
+with StrRowTable
+with ZebraTable {
   type Q = DefaultQuery
   type C <: DefaultColumn
 
@@ -335,37 +378,39 @@ abstract class DefaultTable extends Table
                            var pageOffset: Int,
                            var sortColumn: C,
                            var sortAsc: Boolean) extends Query
-                                                         with PagQuery
-                                                         with SortQuery
+  with PagQuery
+  with SortQuery
 
   def createQuery = DefaultQuery(0, 0, columns.head, false)
 
   abstract class DefaultColumn(
                                 title: String,
                                 rowValue: R => String) extends Col
-                                                               with StrHeadCol
-                                                               with StrRowCol
-                                                               with SortCol {
+  with StrHeadCol
+  with StrRowCol
+  with SortCol {
     self: C =>
   }
 
 }
 
 abstract class DefaultSimpleTable extends Table
-                                          with NamedTable
-                                          with StrColTable
-                                          with StrRowTable {
+with NamedTable
+with StrColTable
+with StrRowTable {
   override protected def templatePath: List[String] = "templates-hidden" :: "modtbl-simple" :: Nil
+
   type C = DefaultColumn
 
   case class DefaultColumn(
                             name: String,
                             rowValue: R => String) extends Col
-                                                           with StrHeadCol
-                                                           with StrRowCol
-                                                           with Loc {
+  with StrHeadCol
+  with StrRowCol
+  with Loc {
     self: C =>
     def title = loc(s"$name-title")
+
     def rowStrValue: R => String = rowValue
   }
 
@@ -373,14 +418,14 @@ abstract class DefaultSimpleTable extends Table
 
 
 abstract class DefaultOpenableTable extends Table
-                                            with NamedTable
-                                            with QueryableTable
-                                            with PaginatedQueryableTable
-                                            with SortableQueryableTable
-                                            with RowDetailsTable
-                                            with StrColTable
-                                            with StrRowTable
-                                            with ZebraTable {
+with NamedTable
+with QueryableTable
+with PaginatedQueryableTable
+with SortableQueryableTable
+with RowDetailsTable
+with StrColTable
+with StrRowTable
+with ZebraTable {
   type Q = DefaultQuery
   type C <: DefaultColumn
 
@@ -389,19 +434,19 @@ abstract class DefaultOpenableTable extends Table
                            var pageOffset: Int,
                            var sortColumn: C,
                            var sortAsc: Boolean) extends Query
-                                                         with PagQuery
-                                                         with SortQuery
+  with PagQuery
+  with SortQuery
 
   def createQuery = DefaultQuery(0, 0, columns.head, false)
 
   abstract class DefaultColumn(
                                 name: String,
                                 rowValue: R => String) extends Col
-                                                               with ClickableRowCol
-                                                               with StrHeadCol
-                                                               with StrRowCol
-                                                               with SortCol
-                                                               with Loc {
+  with ClickableRowCol
+  with StrHeadCol
+  with StrRowCol
+  with SortCol
+  with Loc {
     self: C =>
 
     def title = loc(s"$name-title")

@@ -168,6 +168,15 @@ trait DefaultElems extends Loggable {
 
   }
 
+  class DateTimePicker(
+                        val elemName: String,
+                        _get: => (Long, Long),
+                        val set: ((Long, Long)) => Unit,
+                        val enabled: () => Boolean = () => true
+                        )(implicit protected val editor: DefaultHTMLEditor) extends DateTimePickerInput with EditableElem2DefaultEditorBridge {
+    def get = () => _get
+  }
+
 }
 
 object DefaultEditableElems extends DefaultElems

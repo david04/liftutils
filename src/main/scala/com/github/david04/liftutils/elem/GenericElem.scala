@@ -29,6 +29,10 @@ trait GenStringValueElem extends Elem {def getStringValue(): String}
 
 trait GenEditableStringValueElem extends GenStringValueElem with ValidatableElem {def getCurrentStringValue(): String}
 
+trait GenDateTimeValueElem extends Elem {def getDateTimeValue(): (Long, Long)}
+
+trait GenEditableDateTimeValueElem extends GenDateTimeValueElem with ValidatableElem {def getCurrentDateTimeValue(): (Long, Long)}
+
 trait GenEnumValueElem extends Elem {
   protected type EnumType <: Enumeration
   protected type EnumValueType = EnumType#Value
@@ -64,6 +68,7 @@ abstract class GenDouble2GenString extends GenEditableDoubleValueElem with GenEd
 
   val suffix: Option[String]
   val precision: Int
+
   protected def double2StringFormat = s"%.${precision}f"
 
   private def currentStringValueWithoutSuffix() =

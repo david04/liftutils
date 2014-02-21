@@ -22,7 +22,7 @@ import com.github.david04.liftutils.Loc.Loc
 trait ID {
   private val _id = S.formFuncName
 
-  def id(part: Symbol) = _id + "-" + part.name
+  def id(part: Symbol) = _id + "_" + part.name
 
   def sel(part: Symbol, func: String = "") = "$('#" + id(part) + "')" + func
 }
