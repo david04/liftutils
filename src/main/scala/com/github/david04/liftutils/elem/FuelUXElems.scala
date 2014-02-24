@@ -17,7 +17,7 @@ import com.github.david04.liftutils.util.Util.__print
 
 object FuelUXTreeValidation {
 
-  trait Req extends FuelUXTree {
+  trait ReqFuelUXTree extends FuelUXTree {
     override def error() =
       (if (getCurrentValue() == None) Some(Text(labelStr("errorReq"))) else None) orElse super.error()
   }

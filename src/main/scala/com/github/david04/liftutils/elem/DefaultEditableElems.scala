@@ -27,6 +27,21 @@ trait DefaultElems extends Loggable {
     private[elem] def save(): Unit = set(getCurrentStringValue())
   }
 
+  class TextArea(
+              val elemName: String,
+              get: => String,
+              set: String => Unit,
+              val enabled: () => Boolean = () => true,
+              protected val textInputAttrs: Seq[ElemAttr] = Seq()
+              )(implicit protected val editor: DefaultHTMLEditor) extends TextAreaInputElem with EditableElem2DefaultEditorBridge {
+
+    protected val placeholder: Option[String] = labelStrOpt("placeholder")
+
+    def getStringValue(): String = get
+
+    private[elem] def save(): Unit = set(getCurrentStringValue())
+  }
+
   class Timezone(
                   val elemName: String,
                   set: TimeZone => Unit,
@@ -84,6 +99,22 @@ trait DefaultElems extends Loggable {
     private[elem] def save(): Unit = set(getCurrentStringValue())
   }
 
+  class Integer(
+                 val elemName: String,
+                 get: => Int,
+                 set: Int => Unit,
+                 val enabled: () => Boolean = () => true,
+                 val suffix: Option[String] = None,
+                 protected val textInputAttrs: Seq[ElemAttr] = Seq()
+                 )(implicit protected val editor: DefaultHTMLEditor) extends GenInt2GenString with TextInputElem with EditableElem2DefaultEditorBridge {
+
+    protected val placeholder: Option[String] = labelStrOpt("placeholder")
+
+    def getIntValue(): Int = get
+
+    private[elem] def save(): Unit = set(getCurrentIntValue())
+  }
+
   class Real(
               val elemName: String,
               get: => Double,
@@ -120,7 +151,7 @@ trait DefaultElems extends Loggable {
                                 set: E#Value => Unit,
                                 protected val enum: E,
                                 val enabled: () => Boolean = () => true,
-                                protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenEnum2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
+                                protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenOneOfEnum2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
 
     protected def enumValue2NodeSeq(v: EnumValueType): NodeSeq = scala.xml.Text(S.?(labelStr(v.toString)))
 
@@ -128,9 +159,28 @@ trait DefaultElems extends Loggable {
 
     protected def errorClass = framework.errorClass
 
-    def getEnumValue: E#Value = get
+    def getOneOfEnumValue: E#Value = get
 
-    private[elem] def save(): Unit = set(getCurrentEnumValue())
+    private[elem] def save(): Unit = set(getCurrentOneOfEnumValue())
+  }
+
+  class MultiEnum[E <: Enumeration](
+                                     val elemName: String,
+                                     get: => Seq[E#Value],
+                                     set: Seq[E#Value] => Unit,
+                                     protected val enum: E,
+                                     val enabled: () => Boolean = () => true,
+                                     protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenManyOfEnum2GenOneOfMany with MultiSelectInputElem with EditableElem2DefaultEditorBridge {
+
+    protected def enumValue2NodeSeq(v: EnumValueType): NodeSeq = scala.xml.Text(S.?(labelStr(v.toString)))
+
+    protected type EnumType = E
+
+    protected def errorClass = framework.errorClass
+
+    def getManyOfEnumValue: Seq[E#Value] = get
+
+    private[elem] def save(): Unit = set(getCurrentManyOfEnumValue())
   }
 
   class Select[T](
@@ -139,7 +189,7 @@ trait DefaultElems extends Loggable {
                    set: T => Unit,
                    all: => Seq[T],
                    val enabled: () => Boolean = () => true,
-                   protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenSeq2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
+                   protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenOneOfSeq2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
 
     type SeqValueType = T
 
@@ -149,9 +199,30 @@ trait DefaultElems extends Loggable {
 
     protected def seq: Seq[SeqValueType] = all
 
-    def getSeqValue() = get
+    def getOneOfSeqValue() = get
 
-    private[elem] def save(): Unit = set(getCurrentSeqValue())
+    private[elem] def save(): Unit = set(getCurrentOneOfSeqValue())
+  }
+
+  class MultiSelect[T](
+                        val elemName: String,
+                        get: => Seq[T],
+                        set: Seq[T] => Unit,
+                        all: => Seq[T],
+                        val enabled: () => Boolean = () => true,
+                        protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenManyOfSeq2GenManyOfMany with MultiSelectInputElem with EditableElem2DefaultEditorBridge {
+
+    type SeqValueType = T
+
+    protected def seqValue2NodeSeq(v: SeqValueType): NodeSeq = scala.xml.Text(labelStr(v.toString))
+
+    protected def errorClass = framework.errorClass
+
+    protected def seq: Seq[SeqValueType] = all
+
+    def getManyOfSeqValue() = get
+
+    private[elem] def save(): Unit = set(getCurrentManyOfSeqValue())
   }
 
   class Tree(

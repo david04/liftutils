@@ -15,6 +15,7 @@ import net.liftweb.http.js.JE.{ValById, JsVal, JsRaw}
 import net.liftweb.http.S.{SFuncHolder, LFuncHolder, AFuncHolder}
 import net.liftweb.http.js.JsCmds.{Run, OnLoad, Script}
 import org.apache.commons.lang.StringEscapeUtils
+import net.liftweb.json.JsonAST.{JNull, JString, JArray, JValue}
 
 trait PasswordInputElem extends TextInputElem {
 
@@ -25,7 +26,7 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
 
   protected def placeholder: Option[String]
 
-  private var value: String = getStringValue()
+  protected var value: String = getStringValue()
 
   def getCurrentStringValue(): String = value
 
@@ -35,13 +36,14 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
 
   import ElemAttr._
 
-  protected def inputElem: NodeSeq = SHtml.text(value, value = _,
-    textInputAttrs ++ Seq[ElemAttr](
-      ("id" -> id('input)),
-      ("placeholder" -> placeholder.getOrElse("")),
-      ("onchange" -> ("{" + SHtml.onEvent(v => {value = v; onChangeClientSide()}).toJsCmd + "; return true; }")),
-      ("onkeyup" -> ("{if (window.event.keyCode == 13) {" + SHtml.ajaxCall(ValById(id('input)), v => {value = v; onChangeClientSide() & submit()}).toJsCmd + "; }}"))
-    ): _*)
+  protected def inputElemDefaultAttrs: Seq[ElemAttr] = Seq[ElemAttr](
+    ("id" -> id('input)),
+    ("placeholder" -> placeholder.getOrElse("")),
+    ("onchange" -> ("{" + SHtml.onEvent(v => {value = v; onChangeClientSide()}).toJsCmd + "; return true; }")),
+    ("onkeyup" -> ("{if (window.event.keyCode == 13) {" + SHtml.ajaxCall(ValById(id('input)), v => {value = v; onChangeClientSide() & submit()}).toJsCmd + "; }}"))
+  )
+
+  protected def inputElem: NodeSeq = SHtml.text(value, value = _, textInputAttrs ++ inputElemDefaultAttrs: _*)
 
   override protected def htmlElemRendererTransforms =
     super.htmlElemRendererTransforms andThen (
@@ -51,6 +53,10 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
         ".elem-error [id]" #> id('error)
       ) andThen
       ((ns: NodeSeq) => bind("elem", ns, "input" -%> inputElem))
+}
+
+trait TextAreaInputElem extends TextInputElem {
+  override protected def inputElem: NodeSeq = SHtml.textarea(value, value = _, textInputAttrs ++ inputElemDefaultAttrs: _*)
 }
 
 trait TextViewerElem extends GenStringValueElem with HTMLViewableElem with LabeledElem {
@@ -107,6 +113,48 @@ trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with L
           (selectInputAttrs ++ Seq[ElemAttr](
             ("id" -> id('input)),
             ("onchange" -> ("{" + SHtml.onEvent(v => {getAllOneOfManyValues().find(_.id == v).foreach(value = _); onChangeClientSide()}).toJsCmd + "; return true; }"))
+          )): _*)
+      ))
+}
+
+trait MultiSelectInputElem extends GenManyOfManyValueElem with HTMLEditableElem with LabeledElem {
+
+  private var value = getManyOfManyValue()
+
+  def getCurrentManyOfManyValue() = value
+
+  protected def selectInputAttrs: Seq[ElemAttr]
+
+  override protected def htmlElemRendererTransforms =
+    super.htmlElemRendererTransforms andThen (
+      ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
+        ".elem-wrap [id]" #> id('wrapper) &
+        ".elem-lbl *" #> wrapName(labelStr) &
+        ".elem-error [id]" #> id('error)
+      ) andThen
+      ((ns: NodeSeq) => bind("elem", ns, "input" -%>
+        SHtml.multiSelectObj[String](
+          getAllManyOfManyValues().map(v => (v.id, v.name.toString())),
+          value.map(_.id),
+          (v: List[String]) => {
+            val map = getAllManyOfManyValues().map(v => (v.id, v)).toMap
+            value = v.flatMap(map.get(_))
+          },
+          (selectInputAttrs ++ Seq[ElemAttr](
+            ("id" -> id('input)),
+            ("onchange" -> ("{" + SHtml.jsonCall(JsRaw(sel('input, ".val()")),
+              (v: JValue) => v match {
+                case JArray(lst) =>
+                  val map = getAllManyOfManyValues().map(v => (v.id, v)).toMap
+                  value = lst.collect({case JString(v) => v}).flatMap(map.get(_))
+                  onChangeClientSide()
+                case JNull =>
+                  value = Seq()
+                  onChangeClientSide()
+                case other =>
+                  println(other)
+                  ???
+              }).toJsCmd + "; return true; }"))
           )): _*)
       ))
 }
