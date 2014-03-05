@@ -22,10 +22,19 @@ trait Table extends Loc {
     self: C =>
     override def parentLoc = table
 
-    def renderHead: NodeSeq => NodeSeq = PassThru
+    def tdClasses = ""
+    def thClasses = ""
+    def tdStyle = ""
+    def thStyle = ""
+
+    def renderHead: NodeSeq => NodeSeq =
+      "th [class+]" #> thClasses &
+        "th [style+]" #> thStyle
 
     def renderRow(row: R, rowId: String, idx: Int, colId: String): NodeSeq => NodeSeq =
-      "td [id]" #> colId
+      "td [class+]" #> tdClasses &
+        "td [style+]" #> tdStyle &
+        "td [id]" #> colId
   }
 
   /** Row type */
@@ -48,9 +57,12 @@ trait Table extends Loc {
   protected def rerenderPage() = pageRenderer.setHtml()
 
   protected def pageTransforms(): NodeSeq => NodeSeq =
-    ".modtbl-table" #> tableRenderer
+    ".modtbl-table [modtbl]" #> locPrefix &
+      ".modtbl-table" #> tableRenderer
 
   protected lazy val tableRenderer = SHtml.idMemoize(_ => tableTransforms())
+
+  protected def rerenderTable() = tableRenderer.setHtml()
 
   protected def tableTransforms(): NodeSeq => NodeSeq =
     "thead tr th" #> columns.map(col => col.renderHead) &
@@ -60,7 +72,7 @@ trait Table extends Loc {
     "tr [id]" #> rowId &
       "td" #> columns.map(col => col.renderRow(row, rowId, rowIdx, S.formFuncName))
 
-  def render(): NodeSeq = (".modtbl-around" #> pageRenderer).apply(template)
+  def renderTable(): NodeSeq = (".modtbl-around" #> pageRenderer).apply(template)
 }
 
 trait StrColTable extends Table {
@@ -363,13 +375,13 @@ trait SortableQueryableTable extends QueryableTable {
 
 
 abstract class DefaultTable extends Table
-with NamedTable
-with QueryableTable
-with PaginatedQueryableTable
-with SortableQueryableTable
-with StrColTable
-with StrRowTable
-with ZebraTable {
+                                    with NamedTable
+                                    with QueryableTable
+                                    with PaginatedQueryableTable
+                                    with SortableQueryableTable
+                                    with StrColTable
+                                    with StrRowTable
+                                    with ZebraTable {
   type Q = DefaultQuery
   type C <: DefaultColumn
 
@@ -378,26 +390,26 @@ with ZebraTable {
                            var pageOffset: Int,
                            var sortColumn: C,
                            var sortAsc: Boolean) extends Query
-  with PagQuery
-  with SortQuery
+                                                         with PagQuery
+                                                         with SortQuery
 
   def createQuery = DefaultQuery(0, 0, columns.head, false)
 
   abstract class DefaultColumn(
                                 title: String,
                                 rowValue: R => String) extends Col
-  with StrHeadCol
-  with StrRowCol
-  with SortCol {
+                                                               with StrHeadCol
+                                                               with StrRowCol
+                                                               with SortCol {
     self: C =>
   }
 
 }
 
 abstract class DefaultSimpleTable extends Table
-with NamedTable
-with StrColTable
-with StrRowTable {
+                                          with NamedTable
+                                          with StrColTable
+                                          with StrRowTable {
   override protected def templatePath: List[String] = "templates-hidden" :: "modtbl-simple" :: Nil
 
   type C = DefaultColumn
@@ -405,9 +417,9 @@ with StrRowTable {
   case class DefaultColumn(
                             name: String,
                             rowValue: R => String) extends Col
-  with StrHeadCol
-  with StrRowCol
-  with Loc {
+                                                           with StrHeadCol
+                                                           with StrRowCol
+                                                           with Loc {
     self: C =>
     def title = loc(s"$name-title")
 
@@ -418,14 +430,14 @@ with StrRowTable {
 
 
 abstract class DefaultOpenableTable extends Table
-with NamedTable
-with QueryableTable
-with PaginatedQueryableTable
-with SortableQueryableTable
-with RowDetailsTable
-with StrColTable
-with StrRowTable
-with ZebraTable {
+                                            with NamedTable
+                                            with QueryableTable
+                                            with PaginatedQueryableTable
+                                            with SortableQueryableTable
+                                            with RowDetailsTable
+                                            with StrColTable
+                                            with StrRowTable
+                                            with ZebraTable {
   type Q = DefaultQuery
   type C <: DefaultColumn
 
@@ -434,19 +446,19 @@ with ZebraTable {
                            var pageOffset: Int,
                            var sortColumn: C,
                            var sortAsc: Boolean) extends Query
-  with PagQuery
-  with SortQuery
+                                                         with PagQuery
+                                                         with SortQuery
 
   def createQuery = DefaultQuery(0, 0, columns.head, false)
 
   abstract class DefaultColumn(
                                 name: String,
                                 rowValue: R => String) extends Col
-  with ClickableRowCol
-  with StrHeadCol
-  with StrRowCol
-  with SortCol
-  with Loc {
+                                                               with ClickableRowCol
+                                                               with StrHeadCol
+                                                               with StrRowCol
+                                                               with SortCol
+                                                               with Loc {
     self: C =>
 
     def title = loc(s"$name-title")

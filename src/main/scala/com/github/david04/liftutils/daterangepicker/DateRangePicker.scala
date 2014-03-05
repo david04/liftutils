@@ -53,7 +53,7 @@ case class DateRangePicker(
         "function (_start, _end) {" +
         "var start = _start.toDate().getTime();" +
         "var end = _end.toDate().getTime();" +
-        "console.log(start);" +
+        "if(start > 0 && end > 0) {" +
         (customRanges.values.toList.map(r => s"if(start == end && start == ${r.id}) " + setCustomRange(r)) :+
           "{$('#" + id + " .daterangepicker-lbl').html(_start.format('MMMM D, YYYY') + ' - ' + _end.format('MMMM D, YYYY'));}")
           .mkString(" else ") +
@@ -64,6 +64,7 @@ case class DateRangePicker(
               if (from == to && customRanges.isDefinedAt(from.toLong)) customRanges(from.toLong).onSelection.apply()
               else onSelection(from.toLong, to.toLong)
           }).toJsCmd +
+        "}" +
         "}).data('daterangepicker').notify();"
 
       ) & JsShowId(id)))}

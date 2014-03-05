@@ -4,28 +4,77 @@ import net.liftweb.http.S
 import net.liftweb.json.JsonAST._
 import net.liftweb.json.Extraction._
 import net.liftweb.json.Printer._
+import net.liftweb.util._
+import net.liftweb.util.Helpers._
 import net.liftweb.json.JsonDSL._
 import net.liftweb.http.js.JsCmds._
 import net.liftweb.json.JsonAST
 import com.github.david04.liftutils.util.Util.__print
+import scala.xml.NodeSeq
+import net.liftweb.http.js.JsCmd
+
+case class ChartTooltip(offsetX: Int, offsetY: Int, tooltips: Seq[(NodeSeq, JsCmd)])
 
 case class Chart(
                   series: Array[Series],
-                  options: Option[Options.Options] = None
+                  options: Option[Options.Options] = None,
+                  tooltip: Option[ChartTooltip] = None
                   ) {
 
   implicit val formats = net.liftweb.json.DefaultFormats
 
   val id = S.formFuncName
 
-  def render =
+  def render = try {
     <div id={id} style="width: 100%; height: 300px;"></div> ++
       <tail>{
-        Script(OnLoad(Run("window.plot" + id + " = $('#" + id + "').plot(" +
-          compact(JsonAST.render(decompose(series))) +
-          options.map(opt => compact(JsonAST.render(decompose(opt)))).map("," + _).getOrElse("") +
-          ").data('plot');")))
+        Script(OnLoad(Run({
+          "window.plot" + id + " = $('#" + id + "').plot(" +
+            compact(JsonAST.render(decompose(series))) +
+            options.map(opt => compact(JsonAST.render(decompose(opt)))).map("," + _).getOrElse("") +
+            ").data('plot');" +
+            tooltip.map(tp => {
+              val idSel = "$('#" + id + "')"
+              val tpId = id + "tt"
+              val tpSel = "$('#" + tpId + "')"
+              val d = "$"
+              val html = """'<div class="chart-tooltip"><div class="date">' + 'hello' + '<\div><\div>'"""
+              val tooltips = tp.tooltips.map(_._1.toString.encJs).mkString("[", ",", "]")
+              val tooltipsJs = tp.tooltips.map(_._2.toJsCmd.encJs).mkString("[", ",", "]")
+              s"""
+                |var tooltips = $tooltips;
+                |var tooltipsJs = $tooltipsJs;
+                |(function(){
+                |var previousPoint = null;
+                |$idSel.bind('plothover', function (event, pos, item) {
+                |if (item) {
+                |  if (previousPoint != item.dataIndex) {
+                |    previousPoint = item.dataIndex;
+                |    $tpSel.remove();
+                |    var x = item.pageX;
+                |    var y = item.pageY;
+                |    $d(tooltips[item.dataIndex]).css({
+                |      position: 'absolute',
+                |      display: 'none',
+                |      top: y + ${tp.offsetY},
+                |      left: x + ${tp.offsetX}
+                |    }).attr('id', '$tpId').appendTo("body").fadeIn(200);
+                |    eval('0, '+tooltipsJs[item.dataIndex]);
+                |  }
+                |} else {
+                |  $tpSel.remove();
+                |  previousPoint = null;
+                |}
+                |});
+                |})();"""
+            }.stripMargin).getOrElse("")
+        })))
       }</tail>
+  } catch {
+    case e: Exception =>
+      e.printStackTrace()
+      throw e
+  }
 }
 
 case class Series(

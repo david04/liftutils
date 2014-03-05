@@ -24,7 +24,7 @@ object LazyLoader {
 }
 
 class LazyLoader(
-               loadingTemplate: => NodeSeq,
+               defaultLoadingTemplate: => NodeSeq,
                interval: Int = LazyLoader.defaultInterval,
                val pool: ExecutorService = LazyLoader.createDefaultPool()
                ) {
@@ -57,7 +57,7 @@ class LazyLoader(
   def loader(): NodeSeq = <tail>{Script(OnLoad(callback()))}</tail>
   def installLoader(): NodeSeq => NodeSeq = (ns: NodeSeq) => ns ++ loader()
 
-  def idMemoize(f: IdMemoizeTransform => NodeSeqFuncOrSeqNodeSeqFunc): IdMemoizeTransform = {
+  def idMemoize(f: IdMemoizeTransform => NodeSeqFuncOrSeqNodeSeqFunc, loadingTemplate: NodeSeq = defaultLoadingTemplate): IdMemoizeTransform = {
     new IdMemoizeTransform {
       val self = this
       var loadedOnce = false
@@ -85,6 +85,7 @@ class LazyLoader(
 
       def load() = {
         left += pool.submit(new Callable[JsCmd] {def call(): JsCmd = try {SetHtml(latestId, f(self)(latestKids))} finally {loadedOnce = true}})
+
         <div id={latestId}>{loadingTemplate}</div>
       }
 
