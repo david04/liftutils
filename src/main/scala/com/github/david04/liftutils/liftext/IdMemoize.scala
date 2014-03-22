@@ -47,7 +47,7 @@ trait IdMemoizeTransform2 extends Function1[NodeSeq, NodeSeq] with IdMemoizeTran
 
 object SHtml2 {
 
-  def idMemoize2(_f: IdMemoizeTransform2 => NodeSeqFuncOrSeqNodeSeqFunc): IdMemoizeTransform2 = {
+  def memoizeElem(_f: IdMemoizeTransform2 => NodeSeqFuncOrSeqNodeSeqFunc): IdMemoizeTransform2 = {
     new IdMemoizeTransform2 {def f = _f}
   }
 

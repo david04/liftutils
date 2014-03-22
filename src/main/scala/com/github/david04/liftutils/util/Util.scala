@@ -30,15 +30,34 @@ object Util {
 
   def runJsCmd(b: => JsCmd) = SHtml.jsonCall(JsNull, (_: JValue) => b)
 
+
   var idx = 0
   var lastOpen = false
+  var enabled = true
 
   /**
    * Profile
    */
-  def %?[T](s: String)(b: => T) =
-    if (!enableProfiling) b
-    else {
+  def %?[T](s: String)(b: => T): T = %?[T](s, null)(b)
+
+  def disableProfiling[T](b: => T): T = {
+    enabled = false
+    val (ret, ex) = try {
+      val ret = b
+      (Some(ret), None)
+    } catch {
+      case t: Throwable => (None, Some(t))
+    }
+    enabled = true
+    (ret, ex) match {
+      case (Some(ret), _) => ret
+      case (_, Some(t)) => throw t
+      case _ => ???
+    }
+  }
+
+  def %?[T](s: String, rslt: T => String)(b: => T): T = {
+    if (enabled) {
       val space = (0 until idx).map(_ => "  ").mkString
 
       if (lastOpen) println()
@@ -46,6 +65,7 @@ object Util {
 
       lastOpen = true
       idx = idx + 2
+
       val start = System.currentTimeMillis()
       val (ret, ex) = try {
         val ret = b
@@ -54,17 +74,25 @@ object Util {
         case t: Throwable => (None, Some(t))
       }
       val took = System.currentTimeMillis() - start
+
       idx = idx - 2
 
       val exception = ex match {case Some(t) => s" ! {Exception: '${t.getMessage}'}" case None => ""}
 
+      val rsltStr = ret.flatMap(ret => Option(rslt).map(_(ret))).map(" [" + _ + "]").getOrElse("")
       println(
-        if (lastOpen) s" [${took}ms]$exception" else s"${space}Finished '$s' [${took}ms]$exception"
+        if (lastOpen) s" [${took}ms]$exception$rsltStr" else s"${space}Finished '$s' [${took}ms]$exception$rsltStr"
       )
       lastOpen = false
+
       (ret, ex) match {
         case (Some(ret), _) => ret
         case (_, Some(t)) => throw t
+        case _ => ???
       }
+    } else {
+      b
     }
+
+  }
 }

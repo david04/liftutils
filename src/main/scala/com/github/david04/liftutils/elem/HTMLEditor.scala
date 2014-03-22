@@ -61,7 +61,7 @@ trait HTMLEditor extends HTMLViewer with Loc {
 
   def submitBtnTransforms: NodeSeq => NodeSeq = ".editor-btn-submit [onclick]" #> {submitForm()}
 
-  lazy val submitBtnRenderer = SHtml2.idMemoize2(_ => submitBtnTransforms)
+  lazy val submitBtnRenderer = SHtml2.memoizeElem(_ => submitBtnTransforms)
 
   def submitForm(): JsCmd =
     S.fmapFunc(() => onSubmit())(name => Run("liftAjax.lift_uriSuffix = '" + name + "=_'; $('#" + id('form) + "').submit();"))

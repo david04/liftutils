@@ -40,10 +40,10 @@ trait NodeSeqViewableElem extends ViewableElem {def renderNodeSeqView: NodeSeq}
 trait NamedElem extends ViewableElem {def elemName: String}
 
 trait LabeledElem extends NamedElem with Loc {
-  def labelStr: String = loc(s"elem-lbl-$elemName")
-  def labelStrOpt(suffix: String): Option[String] = locOpt(s"elem-lbl-$elemName-$suffix")
-  def labelStr(suffix: String): String = loc(s"elem-lbl-$elemName-$suffix")
-  def glabelStr(suffix: String): String = loc(s"elem-lbl-$suffix")
+  def labelStr: String = withPrefix("elemLbl").loc(elemName)
+  def labelStrOpt(suffix: String): Option[String] = withPrefix("elemLbl").withPrefix(elemName).locOpt(suffix)
+  def labelStr(suffix: String): String = withPrefix("elemLbl").withPrefix(elemName).loc(suffix)
+  def glabelStr(suffix: String): String = withPrefix("elemLbl").loc(suffix)
 }
 
 trait EditableElem extends ViewableElem with ValidatableElem with NamedElem {
@@ -113,7 +113,7 @@ trait HTMLEditableElem extends HTMLViewableElem with EditableElem {
   override def update() =
     super.update() &
       (if (enabled())
-        Run(sel('wrapper) + s".fadeIn($enableDisableTransitionTime);") & updateValidation()
+        Run(sel('wrapper) + s".slideDown($enableDisableTransitionTime);") & updateValidation()
       else
-        Run(sel('wrapper) + s".fadeOut($enableDisableTransitionTime);"))
+        Run(sel('wrapper) + s".slideUp($enableDisableTransitionTime);"))
 }

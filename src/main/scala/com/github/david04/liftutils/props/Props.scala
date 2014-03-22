@@ -1,66 +1,65 @@
 package com.github.david04.liftutils.props
 
-import net.liftweb.util.BasicTypesHelpers
-import net.liftweb.json.{DefaultFormats, JsonAST}
-import net.liftweb.json.JsonAST.{JArray, JString, JField, JObject}
-
+import net.liftweb.util.{BasicTypesHelpers, FatLazy}
+import net.liftweb.json._
+import net.liftweb.json.JsonAST.{JString, JField, JObject}
+import net.liftweb.common.Box
 
 trait Props {
 
-//  lazy val props = {
-//    implicit val formats = DefaultFormats
-//    var propsJson = net.liftweb.json.parse(props).asInstanceOf[JObject]
-//    case class Prop(_prefix: String) {
-//
-//      def in(prefix: String) = Prop(_prefix + "." + prefix)
-//
-//      private def withPrefix(name: String) = _prefix + "." + name
-//
-//      val str = new {
-//        def apply(name: String): Option[String] =
-//          propsJson.values.get(withPrefix(name)).map(_.asInstanceOf[String])
-//
-//        def update(name: String, value: Option[String]) {
-//          propsJson = propsJson.copy(obj = propsJson.obj.filter(_.name != withPrefix(name)) ++ value.map(value => JField(withPrefix(name), JString(value))).toList)
-//          self.update(_.props = JsonAST.compactRender(propsJson))
-//          println(propsJson)
-//        }
-//
-//        def update(name: String, value: String): Unit = update(name, Some(value))
-//      }
-//      val int = new {
-//        def apply(name: String): Option[Int] = str(name).flatMap(v => BasicTypesHelpers.tryo(v.toInt))
-//
-//        def update(name: String, value: Option[Int]) = str(name) = value.map(_ + "")
-//
-//        def update(name: String, value: Int): Unit = update(name, Some(value))
-//      }
-//      val long = new {
-//        def apply(name: String): Option[Long] = str(name).flatMap(v => BasicTypesHelpers.tryo(v.toLong))
-//
-//        def update(name: String, value: Option[Long]) = str(name) = value.map(_ + "")
-//
-//        def update(name: String, value: Long): Unit = update(name, Some(value))
-//      }
-//      val strSeq = new {
-//        def apply(name: String): Option[List[String]] = {
-//          val prefixed = withPrefix(name)
-//          propsJson.obj
-//            .collectFirst({case JField(`prefixed`, JArray(values)) => values})
-//            .map(_.collect({case JString(v) => v}))
-//        }
-//
-//        def update(name: String, value: Option[Seq[String]]) {
-//          propsJson = propsJson.copy(obj = propsJson.obj.filter(_.name != withPrefix(name)) ++ value.map(value => JField(withPrefix(name), JArray(value.map(JString(_)).toList))).toList)
-//          self.update(_.props = JsonAST.compactRender(propsJson))
-//          println(propsJson)
-//        }
-//
-//        def update(name: String, value: Seq[String]): Unit = update(name, Some(value))
-//      }
-//
-//      def remove(name: String) = str(name) = None
-//    }
-//    Prop("")
-//  }
+  protected def prefix = ""
+
+  def get(key: String): Option[String]
+  def set(key: String, value: Option[String]): Unit
+  def set(key: String, value: String): Unit = set(key, Some(value))
+
+  def getInt(key: String): Option[Int] = get(key).flatMap(s => BasicTypesHelpers.tryo(s.toInt))
+  def setInt(key: String, value: Option[Int]): Unit = set(key, value.map(_.toString))
+  def setInt(key: String, value: Int): Unit = setInt(key, Some(value))
+
+  def getBoolean(key: String): Option[Boolean] = get(key).flatMap(s => BasicTypesHelpers.tryo(s.toBoolean))
+  def setBoolean(key: String, value: Option[Boolean]): Unit = set(key, value.map(_.toString))
+  def setBoolean(key: String, value: Boolean): Unit = setBoolean(key, Some(value))
+
+  def strVar(name: String, initial: => String): Var[String] = new Var(initial, () => get(name), (value: Option[String]) => set(name, value))
+  def intVar(name: String, initial: => Int): Var[Int] = new Var(initial, () => getInt(name), (value: Option[Int]) => setInt(name, value))
+  def boolVar(name: String, initial: => Boolean): Var[Boolean] = new Var(initial, () => getBoolean(name), (value: Option[Boolean]) => setBoolean(name, value))
+
+  class Var[T](initial: => T, getter: () => Option[T], setter: Option[T] => Unit) extends FatLazy[T](null.asInstanceOf[T]) {
+    private var value = getter()
+
+    override def defined_? = synchronized(value != None)
+    override def get: T = synchronized {value.getOrElse({value = Some(initial); get})}
+    override def set(n: T): T = synchronized {value = Some(n); setter(Some(n));n}
+    override def setFrom(other: FatLazy[T]): Unit = ???
+    override def reset = synchronized {value = None}
+    override def calculated_? = synchronized {value.isDefined}
+  }
+
+  def in(prefix: String) = {
+    val _prefix = prefix
+    val parent = this
+    new Props {
+      def get(key: String): Option[String] = parent.get(_prefix + "." + key)
+      def set(key: String, value: Option[String]): Unit = parent.set(_prefix + "." + key, value)
+    }
+  }
+}
+
+trait JSonProps extends Props {
+
+  implicit val formats = DefaultFormats
+
+  protected def getJSon: String
+  protected def setJSon(value: String): Unit
+
+  def get(key: String): Option[String] = json.get.obj.collectFirst({case JField(`key`, JString(s)) => s})
+  def set(key: String, value: Option[String]): Unit = {
+    json set JObject(value.map(v => JField(key, JString(v)) :: Nil).getOrElse(Nil) ::: json.get.obj.filter(_.name != key))
+    setJSon(compactRender(json.get))
+  }
+
+  protected val json: FatLazy[JObject] = FatLazy({
+    Box.asA[JObject](parse(getJSon)).getOrElse(JObject(Nil))
+  })
 }

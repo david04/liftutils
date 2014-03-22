@@ -2,15 +2,26 @@ package code.modtbl
 
 import scala.xml.NodeSeq
 import net.liftweb.http.{SHtml, Templates, S}
-import net.liftweb.util.{ClearClearable, PassThru}
+import net.liftweb.util.{FatLazy, ClearClearable, PassThru}
 import net.liftweb.util.Helpers._
 import com.github.david04.liftutils.Loc.Loc
-import com.github.david04.liftutils.util.Util.__print
 import net.liftweb.http.js.{JsCmds, JsCmd}
 import net.liftweb.http.js.JsCmds.Run
+import com.github.david04.liftutils.props.Props
+import com.github.david04.liftutils.elem.ID
 
+trait Col {
 
-trait Table extends Loc {
+  def tdClasses = ""
+
+  def thClasses = ""
+
+  def tdStyle = ""
+
+  def thStyle = ""
+}
+
+trait Table extends Loc with ID {
 
   def table = this
 
@@ -18,14 +29,9 @@ trait Table extends Loc {
 
   def sel(id: String, rest: String): String = sel(id) + rest
 
-  trait Col extends Loc {
+  trait TableCol extends Col with Loc {
     self: C =>
     override def parentLoc = table
-
-    def tdClasses = ""
-    def thClasses = ""
-    def tdStyle = ""
-    def thStyle = ""
 
     def renderHead: NodeSeq => NodeSeq =
       "th [class+]" #> thClasses &
@@ -40,7 +46,7 @@ trait Table extends Loc {
   /** Row type */
   type R
   /** Column type */
-  type C <: Col
+  type C <: TableCol
 
   /** Get all rows. */
   protected def rows: Seq[R]
@@ -57,7 +63,7 @@ trait Table extends Loc {
   protected def rerenderPage() = pageRenderer.setHtml()
 
   protected def pageTransforms(): NodeSeq => NodeSeq =
-    ".modtbl-table [modtbl]" #> locPrefix &
+    ".modtbl-table [id]" #> id('table) andThen
       ".modtbl-table" #> tableRenderer
 
   protected lazy val tableRenderer = SHtml.idMemoize(_ => tableTransforms())
@@ -72,47 +78,12 @@ trait Table extends Loc {
     "tr [id]" #> rowId &
       "td" #> columns.map(col => col.renderRow(row, rowId, rowIdx, S.formFuncName))
 
-  def renderTable(): NodeSeq = (".modtbl-around" #> pageRenderer).apply(template)
-}
+  def renderedTable(): NodeSeq =
+    (".modtbl-around [modtbl]" #> locPrefix &
+      ".modtbl-around [id]" #> id('around) andThen
+      ".modtbl-around" #> pageRenderer).apply(template)
 
-trait StrColTable extends Table {
-  type C <: StrHeadCol
-
-  trait StrHeadCol extends Col {
-    self: C =>
-    def title: String
-
-    override def renderHead: NodeSeq => NodeSeq =
-      super.renderHead andThen
-        "th *" #> title
-  }
-
-}
-
-trait NodeSeqRowTable extends Table {
-  type C <: NodeSeqRowCol
-
-  trait NodeSeqRowCol extends Col {
-    self: C =>
-    def rowNodeSeqValue: R => NodeSeq
-
-    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String): NodeSeq => NodeSeq =
-      super.renderRow(row, rowId, rowIdx, colId) andThen
-        "td *" #> rowNodeSeqValue(row)
-  }
-
-}
-
-trait StrRowTable extends NodeSeqRowTable {
-  type C <: StrRowCol
-
-  trait StrRowCol extends NodeSeqRowCol {
-    self: C =>
-    def rowStrValue: R => String
-
-    def rowNodeSeqValue: R => NodeSeq = (r: R) => scala.xml.Text(rowStrValue(r))
-  }
-
+  def renderTable(): NodeSeq => NodeSeq = (_: NodeSeq) => renderedTable()
 }
 
 trait ZebraTable extends Table {
@@ -131,7 +102,7 @@ trait ClickableRowTable extends Table {
 
   protected def onClick(row: R, rowId: String, rowIdx: Int, col: C, colId: String): JsCmd = JsCmds.Noop
 
-  trait ClickableRowCol extends Col {
+  trait ClickableRowCol extends TableCol {
     self: C =>
 
     override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String): NodeSeq => NodeSeq =
@@ -197,6 +168,10 @@ trait RowDetailsTable extends ClickableRowTable {
           PassThru
       }
     }
+}
+
+trait PersistentTable extends Table {
+  def props: Props
 }
 
 trait QueryableTable extends Table {
@@ -332,15 +307,17 @@ trait SortableQueryableTable extends QueryableTable {
 
   protected def sortThDesc = "sorting_desc"
 
-  trait SortCol extends Col {
+  trait SortCol extends TableCol {
     self: C =>
 
-    val sortable: Boolean
+    def defaultSortAsc: Boolean = true
+
+    def sortable: Boolean
 
     override def renderHead: NodeSeq => NodeSeq =
       super.renderHead andThen
         (if (sortable)
-          "th [class+]" #> (if (this == currentSortCol) (if (currentSortAsc) sortThAsc else sortThDesc) else sortThNone) &
+          "th [class+]" #> (if (this == currentSortCol) (if (currentSortAsc.get) sortThAsc else sortThDesc) else sortThNone) &
             "th [onclick]" #> clickedSortableHeader(this)
         else PassThru)
   }
@@ -350,16 +327,20 @@ trait SortableQueryableTable extends QueryableTable {
     var sortAsc: Boolean
   }
 
+  type C <: SortCol
   type Q <: SortQuery
 
-  protected var currentSortCol: C = columns.head
-  protected var currentSortAsc: Boolean = false
+  protected var _currentSortCol: C = columns.head
+  protected def currentSortCol: C = _currentSortCol
+  protected def currentSortCol_=(c: C): Unit = _currentSortCol = c
+  protected val currentSortAsc: FatLazy[Boolean] = FatLazy(currentSortCol.defaultSortAsc)
 
   protected def clickedSortableHeader(col: C) = SHtml.onEvent(_ => {
     if (col == currentSortCol) {
-      currentSortAsc = !currentSortAsc
+      currentSortAsc() = !currentSortAsc.get
     } else {
       currentSortCol = col
+      currentSortAsc() = col.defaultSortAsc
     }
 
     tableRenderer.setHtml()
@@ -368,18 +349,30 @@ trait SortableQueryableTable extends QueryableTable {
   override protected def prepareQuery(_query: Q): Q = {
     val query = super.prepareQuery(_query)
     query.sortColumn = currentSortCol
-    query.sortAsc = currentSortAsc
+    query.sortAsc = currentSortAsc.get
     query
   }
 }
 
+trait PersistentSortableQueryableTable extends SortableQueryableTable with NamedColTable with PersistentTable {
+
+  type C <: SortCol with NamedCol
+
+  protected lazy val _currentSortColIdx = props.intVar("sortCol", 0)
+  override protected def currentSortCol: C = columns.sortBy(_.name).drop(_currentSortColIdx.get).headOption.getOrElse(columns.head)
+  override protected def currentSortCol_=(c: C): Unit = {
+    _currentSortColIdx() = columns.sortBy(_.name).indexOf(c)
+  }
+
+  override protected val currentSortAsc = props.boolVar("sortAsc", currentSortCol.defaultSortAsc)
+}
 
 abstract class DefaultTable extends Table
                                     with NamedTable
                                     with QueryableTable
                                     with PaginatedQueryableTable
                                     with SortableQueryableTable
-                                    with StrColTable
+                                    with LocStrHeadTable
                                     with StrRowTable
                                     with ZebraTable {
   type Q = DefaultQuery
@@ -396,34 +389,44 @@ abstract class DefaultTable extends Table
   def createQuery = DefaultQuery(0, 0, columns.head, false)
 
   abstract class DefaultColumn(
-                                title: String,
-                                rowValue: R => String) extends Col
-                                                               with StrHeadCol
+                                name: String,
+                                rowValue: R => String) extends TableCol
+                                                               with LocStrHeadCol
                                                                with StrRowCol
                                                                with SortCol {
     self: C =>
+
+    def rowStrValue: R => String = rowValue
   }
 
 }
 
 abstract class DefaultSimpleTable extends Table
                                           with NamedTable
-                                          with StrColTable
+                                          with LocStrHeadTable
                                           with StrRowTable {
   override protected def templatePath: List[String] = "templates-hidden" :: "modtbl-simple" :: Nil
 
+  trait DefaultColumn extends TableCol with LocStrHeadCol {}
+
   type C = DefaultColumn
 
-  case class DefaultColumn(
-                            name: String,
-                            rowValue: R => String) extends Col
-                                                           with StrHeadCol
-                                                           with StrRowCol
-                                                           with Loc {
+  case class DefaultStringColumn(
+                                  name: String,
+                                  rowValue: R => String) extends DefaultColumn
+                                                                 with StrRowCol {
     self: C =>
-    def title = loc(s"$name-title")
 
     def rowStrValue: R => String = rowValue
+  }
+
+  case class DefaultNodeSeqColumn(
+                                   name: String,
+                                   rowValue: R => NodeSeq) extends DefaultColumn
+                                                                   with NodeSeqRowCol {
+    self: C =>
+
+    def rowNodeSeqValue: R => NodeSeq = rowValue
   }
 
 }
@@ -435,7 +438,7 @@ abstract class DefaultOpenableTable extends Table
                                             with PaginatedQueryableTable
                                             with SortableQueryableTable
                                             with RowDetailsTable
-                                            with StrColTable
+                                            with LocStrHeadTable
                                             with StrRowTable
                                             with ZebraTable {
   type Q = DefaultQuery
@@ -453,15 +456,12 @@ abstract class DefaultOpenableTable extends Table
 
   abstract class DefaultColumn(
                                 name: String,
-                                rowValue: R => String) extends Col
+                                rowValue: R => String) extends TableCol
                                                                with ClickableRowCol
-                                                               with StrHeadCol
+                                                               with LocStrHeadCol
                                                                with StrRowCol
-                                                               with SortCol
-                                                               with Loc {
+                                                               with SortCol {
     self: C =>
-
-    def title = loc(s"$name-title")
   }
 
 }
