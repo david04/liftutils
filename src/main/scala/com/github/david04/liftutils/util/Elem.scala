@@ -2,7 +2,7 @@ package com.github.david04.liftutils.util
 
 import java.util.UUID
 import scala.xml
-import net.liftweb.http.js.JsCmds.{Replace, SetHtml}
+import net.liftweb.http.js.JsCmds.Replace
 import scala.xml.NodeSeq
 import net.liftweb.http.js.JsCmd
 

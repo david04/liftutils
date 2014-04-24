@@ -1,9 +1,7 @@
 package com.github.david04.liftutils.util
 
 import net.liftweb.http.rest.RestHelper
-import net.liftweb.http.{InMemoryResponse, PlainTextResponse, Req}
-import javax.activation.MimetypesFileTypeMap
-import com.github.david04.liftutils.util.Util.__print
+import net.liftweb.http.{InMemoryResponse, Req}
 
 /**
  * Created by david at 9:37 PM

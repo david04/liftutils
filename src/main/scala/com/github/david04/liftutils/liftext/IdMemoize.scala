@@ -1,16 +1,12 @@
 package net.liftweb
 package http
 
-import S._
 import common._
 import util._
 import util.Helpers._
 import http.js._
-import http.js.AjaxInfo
-import JE._
 import JsCmds._
 import scala.xml._
-import json._
 
 trait IdMemoizeTransform2 extends Function1[NodeSeq, NodeSeq] with IdMemoizeTransform {
   def f: IdMemoizeTransform2 => NodeSeqFuncOrSeqNodeSeqFunc
@@ -34,9 +30,9 @@ trait IdMemoizeTransform2 extends Function1[NodeSeq, NodeSeq] with IdMemoizeTran
   }
 
   def applyAgain(): NodeSeq = {
-//    println("TEMPLATE:\n " + latestElem)
+    //    println("TEMPLATE:\n " + latestElem)
     val r = ensureId(Helpers.findBox(f(this)(latestElem))(Full(_)).openOr(<span/>))
-//    println("RESULT:\n " + r)
+    //    println("RESULT:\n " + r)
     r
   }
 

@@ -4,12 +4,9 @@ import net.liftweb.http.S
 import net.liftweb.json.JsonAST._
 import net.liftweb.json.Extraction._
 import net.liftweb.json.Printer._
-import net.liftweb.util._
 import net.liftweb.util.Helpers._
-import net.liftweb.json.JsonDSL._
 import net.liftweb.http.js.JsCmds._
 import net.liftweb.json.JsonAST
-import com.github.david04.liftutils.util.Util.__print
 import scala.xml.NodeSeq
 import net.liftweb.http.js.JsCmd
 

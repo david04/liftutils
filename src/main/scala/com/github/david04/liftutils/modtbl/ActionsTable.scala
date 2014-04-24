@@ -1,4 +1,4 @@
-package code.modtbl
+package com.github.david04.liftutils.modtbl
 
 import net.liftweb.http.{SHtml, Templates}
 import net.liftweb.util.Helpers._

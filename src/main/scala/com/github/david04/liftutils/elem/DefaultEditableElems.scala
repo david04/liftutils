@@ -3,7 +3,6 @@ package com.github.david04.liftutils.elem
 import net.liftweb.http.SHtml.ElemAttr
 import scala.xml.NodeSeq
 import net.liftweb.http.{SHtml, S}
-import scala.util.parsing.combinator.RegexParsers
 import com.github.david04.liftutils.Loc.Loc
 import net.liftweb.http.js.JsCmds.{Run, OnLoad, Script}
 import net.liftweb.common.Loggable
@@ -28,12 +27,12 @@ trait DefaultElems extends Loggable {
   }
 
   class TextArea(
-              val elemName: String,
-              get: => String,
-              set: String => Unit,
-              val enabled: () => Boolean = () => true,
-              protected val textInputAttrs: Seq[ElemAttr] = Seq()
-              )(implicit protected val editor: DefaultHTMLEditor) extends TextAreaInputElem with EditableElem2DefaultEditorBridge {
+                  val elemName: String,
+                  get: => String,
+                  set: String => Unit,
+                  val enabled: () => Boolean = () => true,
+                  protected val textInputAttrs: Seq[ElemAttr] = Seq()
+                  )(implicit protected val editor: DefaultHTMLEditor) extends TextAreaInputElem with EditableElem2DefaultEditorBridge {
 
     protected val placeholder: Option[String] = labelStrOpt("placeholder")
 

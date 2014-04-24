@@ -13,7 +13,6 @@ import net.liftweb.http.js.JsCmds.Run
 import net.liftweb.common.Full
 import net.liftweb.http.js.JE.JsRaw
 import net.liftweb.http.js.JsCmd
-import com.github.david04.liftutils.util.Util.__print
 
 object FuelUXTreeValidation {
 

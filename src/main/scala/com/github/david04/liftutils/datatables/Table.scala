@@ -8,7 +8,6 @@ import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import net.liftweb.json.Serialization.write
 
-import com.github.david04.liftutils.util.Util.__print
 import scala.collection.mutable.ListBuffer
 
 case class oAria(

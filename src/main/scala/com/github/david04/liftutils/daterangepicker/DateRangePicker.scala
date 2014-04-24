@@ -1,24 +1,13 @@
 package com.github.david04.liftutils.daterangepicker
 
-import net.liftweb.json.JsonAST.{JValue, JObject}
 import net.liftweb.http.{SHtml, Templates, S}
 import net.liftweb.http.js.JsCmd
-import net.liftweb.util._
 import net.liftweb.util.Helpers._
-import net.liftweb.http.js.JsCmds._
 import net.liftweb.json.JsonAST._
-import net.liftweb.json.Extraction._
-import net.liftweb.json.Printer._
-import net.liftweb.json.JsonDSL._
 import net.liftweb.http.js.JsCmds._
-import net.liftweb.json.JsonAST
-import com.github.david04.liftutils.util.Util.__print
 import net.liftweb.http.js.JE.JsRaw
 
-import com.fasterxml.jackson.module.scala._
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.david04.liftutils.jacksonxml.{JsonSerializable, JSON}
-import scala.util.Random
 import scala.collection.SortedMap
 
 case class DateRangePicker(

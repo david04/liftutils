@@ -16,17 +16,11 @@ trait JsonSerializableTypeModifierModule extends JacksonModule {
 
 package com.github.david04.liftutils.jacksonxml {
 
-import net.liftweb.util.Helpers._
-import com.fasterxml.jackson.module.scala.{DefaultScalaModule, JacksonModule}
+import com.fasterxml.jackson.module.scala.JacksonModule
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind._
-import com.fasterxml.jackson.databind.ser.{BeanPropertyWriter, BeanSerializerModifier, Serializers}
-import com.fasterxml.jackson.module.scala.modifiers.OptionTypeModifierModule
-import scala.collection.JavaConverters._
+import com.fasterxml.jackson.databind.ser.Serializers
 import java.{util => ju}
-import com.fasterxml.jackson.databind.`type`.CollectionLikeType
-import com.fasterxml.jackson.databind.jsontype.TypeSerializer
-import scala.Some
 import com.fasterxml.jackson.module.scala.deser.UntypedObjectDeserializerModule
 import com.fasterxml.jackson.annotation.JsonInclude
 
@@ -61,17 +55,17 @@ object JSON extends ObjectMapper {
 
   registerModule(
     new JacksonModule
-      with IteratorModule
-      with EnumerationModule
-      with OptionModule
-      with SeqModule
-      with IterableModule
-      with TupleModule
-      with MapModule
-      with CaseClassModule
-      with SetModule
-      with JsonSerializableSerializerModule
-      with UntypedObjectDeserializerModule {
+        with IteratorModule
+        with EnumerationModule
+        with OptionModule
+        with SeqModule
+        with IterableModule
+        with TupleModule
+        with MapModule
+        with CaseClassModule
+        with SetModule
+        with JsonSerializableSerializerModule
+        with UntypedObjectDeserializerModule {
       override def getModuleName = "DefaultScalaModule"
     })
   setSerializationInclusion(JsonInclude.Include.NON_NULL)

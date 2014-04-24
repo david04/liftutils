@@ -3,7 +3,6 @@ package com.github.david04.liftutils.modal
 import net.liftweb.util._
 import net.liftweb.util.Helpers._
 import net.liftweb.http._
-import net.liftweb.http.js.jquery.JQuery14Artifacts
 import scala.xml.NodeSeq
 import net.liftweb.http.js.JsCmds.Run
 import net.liftweb.http.js.JsCmd

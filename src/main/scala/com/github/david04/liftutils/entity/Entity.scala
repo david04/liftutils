@@ -1,6 +1,6 @@
 package com.github.david04.liftutils.entity
 
-import com.github.david04.liftutils.elem.{DefaultHTMLEditor, HTMLEditor}
+import com.github.david04.liftutils.elem.DefaultHTMLEditor
 import com.github.david04.liftutils.datatables.Col
 
 trait StdEntityBase {

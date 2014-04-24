@@ -1,16 +1,18 @@
 package com.github.david04.liftutils.Loc
 
-import net.liftweb.common._
 import net.liftweb.http.S
-import com.github.david04.liftutils.util.Util.__print
 import scala.xml._
-import net.liftweb.util.StringHelpers
 
 object Loc {
   val missing = collection.mutable.HashSet[String]()
+
+  var processMissingLoc: Seq[String] => Unit = {
+    missing => println("Missing i18n keys:\n" + missing.map(_ + "=").sorted.mkString("\n"))
+  }
+
   Runtime.getRuntime.addShutdownHook(new Thread() {
     override def run() {
-      println("Missing i18n keys:\n" + missing.toSeq.map(_ + "=").sorted.mkString("\n"))
+      if (missing.nonEmpty) processMissingLoc(missing.toSeq.sorted)
     }
   })
 }
@@ -78,7 +80,7 @@ trait Loc {
     val json =
       ("suffix" -> suffix) ~
         ("prefix" -> fullPrefix.head) ~
-        ("params" -> JObject(params.toList.map(p => JField(p._1, p._2))))
+        ("params" -> JObject(params.toList.map(p => JField(p._1, JString(p._2)))))
     compactRender(json)
   }
 

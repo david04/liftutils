@@ -578,13 +578,15 @@ case class Series(xaxis: Option[XAxisName] = None,
 
   def toJObject = { JObject(for {b <- fields; t <- b._2} yield JField(b._1, toJValue(t))) }
 
-  override def toJson = { JField("seriesDefaults",
-    JObject(for {
-      b <- fields
-      t <- b._2
-    } yield {
-      Box.asA[JSONable](t).map(_.toJson).openOr(JField(b._1, toJValue(t)))
-    })) }
+  override def toJson = {
+    JField("seriesDefaults",
+      JObject(for {
+        b <- fields
+        t <- b._2
+      } yield {
+        Box.asA[JSONable](t).map(_.toJson).openOr(JField(b._1, toJValue(t)))
+      }))
+  }
 
   override val possible_renderers = List(markerOptions, renderer)
 

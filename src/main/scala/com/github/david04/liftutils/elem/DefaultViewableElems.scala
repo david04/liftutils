@@ -1,11 +1,5 @@
 package com.github.david04.liftutils.elem
 
-import net.liftweb.http.SHtml.ElemAttr
-import scala.xml.NodeSeq
-import net.liftweb.http.S
-import scala.util.parsing.combinator.RegexParsers
-import com.github.david04.liftutils.Loc.Loc
-
 
 object DefaultViewableElems {
 

@@ -1,19 +1,14 @@
 package com.github.david04.liftutils.elem
 
 
-import scala.xml.{UnprefixedAttribute, NodeSeq, Text}
+import scala.xml.{UnprefixedAttribute, NodeSeq}
 import net.liftweb.common._
 import net.liftweb.http.S
 import net.liftweb.util.Helpers._
 import net.liftweb.http.SHtml
-import java.net.InetAddress
-import scala.concurrent.duration.Duration
-import java.util.regex.Pattern
 import net.liftweb.http.SHtml.ElemAttr
-import scala.util.Try
-import net.liftweb.http.js.JE.{ValById, JsVal, JsRaw}
-import net.liftweb.http.S.{SFuncHolder, LFuncHolder, AFuncHolder}
-import net.liftweb.http.js.JsCmds.{Run, OnLoad, Script}
+import net.liftweb.http.js.JE.{ValById, JsRaw}
+import net.liftweb.http.S.{SFuncHolder, LFuncHolder}
 import org.apache.commons.lang.StringEscapeUtils
 import net.liftweb.json.JsonAST.{JNull, JString, JArray, JValue}
 
@@ -63,7 +58,6 @@ trait TextViewerElem extends GenStringValueElem with HTMLViewableElem with Label
 
   protected def classes: List[String] = Nil
 
-  import ElemAttr._
 
   override protected def htmlElemRendererTransforms =
     super.htmlElemRendererTransforms andThen

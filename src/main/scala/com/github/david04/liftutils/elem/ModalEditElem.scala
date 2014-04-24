@@ -4,10 +4,8 @@ import com.github.david04.liftutils.modal.Modal
 import net.liftweb.util.Helpers._
 import net.liftweb.http.{SHtml, Templates}
 import scala.xml.NodeSeq
-import net.liftweb.util.PassThru
 import net.liftweb.http.js.JsCmd
-import com.github.david04.liftutils.util.Util.__print
-import net.liftweb.http.js.JsCmds.{SetValById, Run}
+import net.liftweb.http.js.JsCmds.Run
 
 
 trait ModalEditElem extends HTMLEditableElem with Modal with LabeledElem {

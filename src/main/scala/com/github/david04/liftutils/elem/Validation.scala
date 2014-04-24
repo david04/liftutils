@@ -2,16 +2,10 @@ package com.github.david04.liftutils.elem
 
 import scala.xml.NodeSeq
 import scala.xml.Text
-import net.liftweb.common._
-import net.liftweb.http.S
 import net.liftweb.util.Helpers._
-import net.liftweb.http.SHtml
 import java.net.InetAddress
 import scala.concurrent.duration.Duration
 import java.util.regex.Pattern
-import net.liftweb.http.SHtml.ElemAttr
-import scala.util.Try
-import net.liftweb.http.js.JE.JsRaw
 import com.github.david04.liftutils.Loc.Loc
 
 

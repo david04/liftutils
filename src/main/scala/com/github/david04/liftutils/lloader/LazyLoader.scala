@@ -5,7 +5,7 @@ import scala.xml.NodeSeq
 import scala.xml.NodeSeq._
 import net.liftweb.http.{NodeSeqFuncOrSeqNodeSeqFunc, IdMemoizeTransform, S, SHtml}
 import net.liftweb.http.js.{JsCmds, JsCmd}
-import net.liftweb.util.{Helpers, PassThru}
+import net.liftweb.util.Helpers
 import net.liftweb.util.Helpers._
 import net.liftweb.http.js.JsCmds._
 import scala.xml.Elem
@@ -24,10 +24,10 @@ object LazyLoader {
 }
 
 class LazyLoader(
-               defaultLoadingTemplate: => NodeSeq,
-               interval: Int = LazyLoader.defaultInterval,
-               val pool: ExecutorService = LazyLoader.createDefaultPool()
-               ) {
+                  defaultLoadingTemplate: => NodeSeq,
+                  interval: Int = LazyLoader.defaultInterval,
+                  val pool: ExecutorService = LazyLoader.createDefaultPool()
+                  ) {
 
   def blockUI(id: String): JsCmd = Run("$('#" + id + "').block({ message: null });")
   def unblockUI(id: String): JsCmd = Run("$('#" + id + "').unblock();")

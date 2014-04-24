@@ -30,6 +30,12 @@ object Util {
 
   def runJsCmd(b: => JsCmd) = SHtml.jsonCall(JsNull, (_: JValue) => b)
 
+  def time[T](f: => T)(r: Long => Unit): T = {
+    val start = System.currentTimeMillis()
+    val v = f
+    r(System.currentTimeMillis() - start)
+    v
+  }
 
   var idx = 0
   var lastOpen = false

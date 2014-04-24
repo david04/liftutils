@@ -1,14 +1,11 @@
 package com.github.david04.liftutils.crud
 
 import com.github.david04.liftutils.elem._
-import com.github.david04.liftutils.datatables.{TableBase, Table, Col}
-import net.liftweb.http.Templates
+import com.github.david04.liftutils.datatables.Table
 import net.liftweb.util._
 import net.liftweb.util.Helpers._
 import scala.xml.NodeSeq
 import com.github.david04.liftutils.entity.{StdEntityBase, StdEntity}
-import net.liftweb.http.js.JsCmds._
-import net.liftweb.json.JsonAST.JString
 
 trait CrudC {
   def clas: this.type = this
@@ -96,17 +93,17 @@ trait DataTableListableC extends CrudChildC with HTMLListableC with NamedCrudC {
   //type CrudIType <: ListableI[this.type, ViewableTypeI]
 
   override def listTransform = {
-//    val table = new Table[CrudIType](() => all()) with T.cl {
-//      protected def plural: String = clas.plural
-//
-//      protected def singular: String = clas.singular
-//
-//      val columns = listViewableTypeC().map(clas =>
-//        new Col[CrudIType](clas.name, c => JString(c.viewableTypeI(clas).renderNodeSeqView.toString()))
-//      )
-//    }
+    //    val table = new Table[CrudIType](() => all()) with T.cl {
+    //      protected def plural: String = clas.plural
+    //
+    //      protected def singular: String = clas.singular
+    //
+    //      val columns = listViewableTypeC().map(clas =>
+    //        new Col[CrudIType](clas.name, c => JString(c.viewableTypeI(clas).renderNodeSeqView.toString()))
+    //      )
+    //    }
     super.listTransform //andThen
-//      "@crud-table" #> table.render
+    //      "@crud-table" #> table.render
   }
 }
 
@@ -181,24 +178,24 @@ trait CrudU[T <: StdEntity[T]] extends CrudUBase {
   def id: Long = instance.id
 
   def renderU = (ns: NodeSeq) => {
-//    Script(new Modal {
-//      val editor = new Editor {
-//        def buildElems() = instance.elems(this)
-//
-//        protected def saved = { instance.save(); Noop }
-//      }
-//      val body: NodeSeq = editor.renderElems(Templates("templates-hidden" :: "editor" :: Nil).get)
-//
-//      val title: String = "Edit " + crud.singleton.singular.capitalize
-//      val buttons: NodeSeq = (
-//        "@editor-save" #> editor.renderSubmitBtn
-//        ).apply(Templates("templates-hidden" :: "editor-btns" :: Nil).get)
-//
-//      val icon: String = ""
-//    }.show()) ++
-      ("@crud-singular" #> crud.singleton.singular.capitalize &
-        "@crud-singular-lc" #> crud.singleton.singular.toLowerCase &
-        "@crud-plural" #> crud.singleton.plural.capitalize &
-        "@crud-plural-lc" #> crud.singleton.plural.toLowerCase)(ns)
+    //    Script(new Modal {
+    //      val editor = new Editor {
+    //        def buildElems() = instance.elems(this)
+    //
+    //        protected def saved = { instance.save(); Noop }
+    //      }
+    //      val body: NodeSeq = editor.renderElems(Templates("templates-hidden" :: "editor" :: Nil).get)
+    //
+    //      val title: String = "Edit " + crud.singleton.singular.capitalize
+    //      val buttons: NodeSeq = (
+    //        "@editor-save" #> editor.renderSubmitBtn
+    //        ).apply(Templates("templates-hidden" :: "editor-btns" :: Nil).get)
+    //
+    //      val icon: String = ""
+    //    }.show()) ++
+    ("@crud-singular" #> crud.singleton.singular.capitalize &
+      "@crud-singular-lc" #> crud.singleton.singular.toLowerCase &
+      "@crud-plural" #> crud.singleton.plural.capitalize &
+      "@crud-plural-lc" #> crud.singleton.plural.toLowerCase)(ns)
   }
 }
