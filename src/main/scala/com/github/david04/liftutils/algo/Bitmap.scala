@@ -1,13 +1,11 @@
 package com.github.david04.liftutils.algo
 
-import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
 
-class Bitmap extends Serializable{
+class Bitmap extends Serializable {
 
   private var ranges = List[(Long, Long)]()
 
-  def update(idx: Long, v: Boolean) = {if (v) ranges = set(idx, ranges) else ranges = unset(idx, ranges); this}
+  def update(idx: Long, v: Boolean) = { if (v) ranges = set(idx, ranges) else ranges = unset(idx, ranges); this }
 
   def apply(idx: Long): Boolean = valueAt(idx, ranges)
 
