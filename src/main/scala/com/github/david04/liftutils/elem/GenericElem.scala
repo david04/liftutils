@@ -29,6 +29,8 @@ trait GenDateTimeValueElem extends Elem {def getDateTimeValue(): (Long, Long)}
 
 trait GenEditableDateTimeValueElem extends GenDateTimeValueElem with ValidatableElem {def getCurrentDateTimeValue(): (Long, Long)}
 
+trait GenFileOptValueElem extends Elem {def getFile(): Option[(Array[Byte], String)]}
+
 trait GenOneOfEnumValueElem extends Elem {
   protected type EnumType <: Enumeration
   protected type EnumValueType = EnumType#Value

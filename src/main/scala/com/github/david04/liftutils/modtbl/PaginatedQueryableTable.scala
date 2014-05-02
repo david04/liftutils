@@ -20,7 +20,7 @@ trait PaginatedQueryableTable extends QueryableTable {
   protected lazy val pagBtnsCurrentClass = "active"
   protected lazy val pagBtnsDisabledClass = "disabled"
   protected lazy val pagNBtns = 5
-  protected lazy val defaultPageSize = 40
+  protected def defaultPageSize = 40
 
   protected var currentPage = 0
   protected var pageSize = defaultPageSize

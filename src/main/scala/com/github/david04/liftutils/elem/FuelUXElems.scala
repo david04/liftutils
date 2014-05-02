@@ -43,13 +43,13 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
 
   def get: () => Option[String]
 
-  def set: Option[String] => Unit
+  def set: Option[String] => JsCmd
 
   val initialValue = get()
   var inited = false
   var selected: Option[Node] = None
 
-  private[elem] def save(): Unit = set(getCurrentValue())
+  private[elem] def save(): JsCmd = set(getCurrentValue())
 
   def getCurrentValue(): Option[String] = if (inited) selected.map(_.value) else initialValue
 

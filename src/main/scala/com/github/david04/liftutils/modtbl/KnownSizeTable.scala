@@ -8,5 +8,5 @@ import com.github.david04.liftutils.elem.ID
 
 trait KnownSizeTable extends Table {
 
-  protected def rowsSize: Int
+  protected def rowsSize: Long
 }

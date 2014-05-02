@@ -7,6 +7,7 @@ import com.github.david04.liftutils.Loc.Loc
 import net.liftweb.http.js.JsCmds.{Run, OnLoad, Script}
 import net.liftweb.common.Loggable
 import java.util.{Date, TimeZone}
+import net.liftweb.http.js.JsCmd
 
 
 trait DefaultElems extends Loggable {
@@ -14,7 +15,7 @@ trait DefaultElems extends Loggable {
   class Text(
               val elemName: String,
               get: => String,
-              set: String => Unit,
+              set: String => JsCmd,
               val enabled: () => Boolean = () => true,
               protected val textInputAttrs: Seq[ElemAttr] = Seq()
               )(implicit protected val editor: DefaultHTMLEditor) extends TextInputElem with EditableElem2DefaultEditorBridge {
@@ -23,13 +24,13 @@ trait DefaultElems extends Loggable {
 
     def getStringValue(): String = get
 
-    private[elem] def save(): Unit = set(getCurrentStringValue())
+    private[elem] def save(): JsCmd = set(getCurrentStringValue())
   }
 
   class TextArea(
                   val elemName: String,
                   get: => String,
-                  set: String => Unit,
+                  set: String => JsCmd,
                   val enabled: () => Boolean = () => true,
                   protected val textInputAttrs: Seq[ElemAttr] = Seq()
                   )(implicit protected val editor: DefaultHTMLEditor) extends TextAreaInputElem with EditableElem2DefaultEditorBridge {
@@ -38,12 +39,12 @@ trait DefaultElems extends Loggable {
 
     def getStringValue(): String = get
 
-    private[elem] def save(): Unit = set(getCurrentStringValue())
+    private[elem] def save(): JsCmd = set(getCurrentStringValue())
   }
 
   class Timezone(
                   val elemName: String,
-                  set: TimeZone => Unit,
+                  set: TimeZone => JsCmd,
                   val enabled: () => Boolean = () => true
                   )(implicit protected val editor: DefaultHTMLEditor) extends HTMLEditableElem with LabeledElem with EditableElem2DefaultEditorBridge {
 
@@ -65,13 +66,13 @@ trait DefaultElems extends Loggable {
             {Script(OnLoad(Run(sel('elem, ".val((new Date().getTimezoneOffset()) + '');"))))}
           </tail>
 
-    private[elem] def save(): Unit = set(value)
+    private[elem] def save(): JsCmd = set(value)
   }
 
   class Formula(
                  val elemName: String,
                  get: => String,
-                 set: String => Unit,
+                 set: String => JsCmd,
                  val enabled: () => Boolean = () => true,
                  protected val textInputAttrs: Seq[ElemAttr] = Seq()
                  )(implicit protected val editor: DefaultHTMLEditor) extends TextInputElem with EditableElem2DefaultEditorBridge {
@@ -80,13 +81,13 @@ trait DefaultElems extends Loggable {
 
     def getStringValue(): String = get
 
-    private[elem] def save(): Unit = set(getCurrentStringValue())
+    private[elem] def save(): JsCmd = set(getCurrentStringValue())
   }
 
   class Password(
                   val elemName: String,
                   get: => String,
-                  set: String => Unit,
+                  set: String => JsCmd,
                   val enabled: () => Boolean = () => true,
                   protected val textInputAttrs: Seq[ElemAttr] = Seq()
                   )(implicit protected val editor: DefaultHTMLEditor) extends PasswordInputElem with EditableElem2DefaultEditorBridge with Loc {
@@ -95,13 +96,13 @@ trait DefaultElems extends Loggable {
 
     def getStringValue(): String = get
 
-    private[elem] def save(): Unit = set(getCurrentStringValue())
+    private[elem] def save(): JsCmd = set(getCurrentStringValue())
   }
 
   class Integer(
                  val elemName: String,
                  get: => Int,
-                 set: Int => Unit,
+                 set: Int => JsCmd,
                  val enabled: () => Boolean = () => true,
                  val suffix: Option[String] = None,
                  protected val textInputAttrs: Seq[ElemAttr] = Seq()
@@ -111,13 +112,13 @@ trait DefaultElems extends Loggable {
 
     def getIntValue(): Int = get
 
-    private[elem] def save(): Unit = set(getCurrentIntValue())
+    private[elem] def save(): JsCmd = set(getCurrentIntValue())
   }
 
   class Real(
               val elemName: String,
               get: => Double,
-              set: Double => Unit,
+              set: Double => JsCmd,
               val enabled: () => Boolean = () => true,
               val suffix: Option[String] = None,
               val precision: Int = 2,
@@ -128,26 +129,26 @@ trait DefaultElems extends Loggable {
 
     def getDoubleValue(): Double = get
 
-    private[elem] def save(): Unit = set(getCurrentDoubleValue())
+    private[elem] def save(): JsCmd = set(getCurrentDoubleValue())
   }
 
   class Bool(
               val elemName: String,
               get: => Boolean,
-              set: Boolean => Unit,
+              set: Boolean => JsCmd,
               val enabled: () => Boolean = () => true,
               protected val checkboxInputAttrs: Seq[ElemAttr] = Seq()
               )(implicit protected val editor: DefaultHTMLEditor) extends GenEditableBooleanValueElem with CheckboxInputElem with EditableElem2DefaultEditorBridge {
 
     def getBooleanValue(): Boolean = get
 
-    private[elem] def save(): Unit = set(getCurrentBooleanValue())
+    private[elem] def save(): JsCmd = set(getCurrentBooleanValue())
   }
 
   class Enum[E <: Enumeration](
                                 val elemName: String,
                                 get: => E#Value,
-                                set: E#Value => Unit,
+                                set: E#Value => JsCmd,
                                 protected val enum: E,
                                 val enabled: () => Boolean = () => true,
                                 protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenOneOfEnum2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
@@ -160,13 +161,13 @@ trait DefaultElems extends Loggable {
 
     def getOneOfEnumValue: E#Value = get
 
-    private[elem] def save(): Unit = set(getCurrentOneOfEnumValue())
+    private[elem] def save(): JsCmd = set(getCurrentOneOfEnumValue())
   }
 
   class MultiEnum[E <: Enumeration](
                                      val elemName: String,
                                      get: => Seq[E#Value],
-                                     set: Seq[E#Value] => Unit,
+                                     set: Seq[E#Value] => JsCmd,
                                      protected val enum: E,
                                      val enabled: () => Boolean = () => true,
                                      protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenManyOfEnum2GenOneOfMany with MultiSelectInputElem with EditableElem2DefaultEditorBridge {
@@ -179,13 +180,13 @@ trait DefaultElems extends Loggable {
 
     def getManyOfEnumValue: Seq[E#Value] = get
 
-    private[elem] def save(): Unit = set(getCurrentManyOfEnumValue())
+    private[elem] def save(): JsCmd = set(getCurrentManyOfEnumValue())
   }
 
   class Select[T](
                    val elemName: String,
                    get: => T,
-                   set: T => Unit,
+                   set: T => JsCmd,
                    all: => Seq[T],
                    val enabled: () => Boolean = () => true,
                    protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenOneOfSeq2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
@@ -200,13 +201,13 @@ trait DefaultElems extends Loggable {
 
     def getOneOfSeqValue() = get
 
-    private[elem] def save(): Unit = set(getCurrentOneOfSeqValue())
+    private[elem] def save(): JsCmd = set(getCurrentOneOfSeqValue())
   }
 
   class MultiSelect[T](
                         val elemName: String,
                         get: => Seq[T],
-                        set: Seq[T] => Unit,
+                        set: Seq[T] => JsCmd,
                         all: => Seq[T],
                         val enabled: () => Boolean = () => true,
                         protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenManyOfSeq2GenManyOfMany with MultiSelectInputElem with EditableElem2DefaultEditorBridge {
@@ -221,13 +222,13 @@ trait DefaultElems extends Loggable {
 
     def getManyOfSeqValue() = get
 
-    private[elem] def save(): Unit = set(getCurrentManyOfSeqValue())
+    private[elem] def save(): JsCmd = set(getCurrentManyOfSeqValue())
   }
 
   class Tree(
               val elemName: String,
               _get: => Option[String],
-              val set: Option[String] => Unit,
+              val set: Option[String] => JsCmd,
               _all: => Seq[String],
               val enabled: () => Boolean = () => true,
               protected val allowSelectStar: Boolean = false
@@ -241,12 +242,21 @@ trait DefaultElems extends Loggable {
   class DateTimePicker(
                         val elemName: String,
                         _get: => (Long, Long),
-                        val set: ((Long, Long)) => Unit,
+                        val set: ((Long, Long)) => JsCmd,
                         val enabled: () => Boolean = () => true
                         )(implicit protected val editor: DefaultHTMLEditor) extends DateTimePickerInput with EditableElem2DefaultEditorBridge {
     def get = () => _get
   }
 
+  class FileUpload(
+                    val elemName: String,
+                    val set: Option[(Array[Byte], String)] => JsCmd,
+                    val enabled: () => Boolean = () => true,
+                    protected val fileInputAttrs: Seq[ElemAttr] = Seq()
+                    )(implicit protected val editor: DefaultHTMLEditor) extends FileUploadInputElem with EditableElem2DefaultEditorBridge {
+
+    private[elem] def save(): JsCmd = set(getFile())
+  }
 }
 
 object DefaultEditableElems extends DefaultElems

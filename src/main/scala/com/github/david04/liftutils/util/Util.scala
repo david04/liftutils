@@ -37,6 +37,8 @@ object Util {
     v
   }
 
+  def printNs = (ns: NodeSeq) => {println(ns); ns}
+
   var idx = 0
   var lastOpen = false
   var enabled = true

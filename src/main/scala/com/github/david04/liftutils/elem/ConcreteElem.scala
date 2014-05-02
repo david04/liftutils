@@ -3,9 +3,8 @@ package com.github.david04.liftutils.elem
 
 import scala.xml.{UnprefixedAttribute, NodeSeq}
 import net.liftweb.common._
-import net.liftweb.http.S
+import net.liftweb.http.{FileParamHolder, S, SHtml}
 import net.liftweb.util.Helpers._
-import net.liftweb.http.SHtml
 import net.liftweb.http.SHtml.ElemAttr
 import net.liftweb.http.js.JE.{ValById, JsRaw}
 import net.liftweb.http.S.{SFuncHolder, LFuncHolder}
@@ -119,6 +118,8 @@ trait MultiSelectInputElem extends GenManyOfManyValueElem with HTMLEditableElem 
 
   protected def selectInputAttrs: Seq[ElemAttr]
 
+  override def requiresIFrameSubmit(): Boolean = true
+
   override protected def htmlElemRendererTransforms =
     super.htmlElemRendererTransforms andThen (
       ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
@@ -149,6 +150,34 @@ trait MultiSelectInputElem extends GenManyOfManyValueElem with HTMLEditableElem 
                   println(other)
                   ???
               }).toJsCmd + "; return true; }"))
+          )): _*)
+      ))
+}
+
+trait FileUploadInputElem extends GenFileOptValueElem with HTMLEditableElem with LabeledElem {
+
+  private var value: Option[(Array[Byte], String)] = None
+
+  def getFile() = value
+
+  protected def fileInputAttrs: Seq[ElemAttr]
+
+  override def requiresIFrameSubmit = true
+
+  override protected def htmlElemRendererTransforms =
+    super.htmlElemRendererTransforms andThen (
+      ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
+        ".elem-wrap [id]" #> id('wrapper) &
+        ".elem-lbl *" #> wrapName(labelStr) &
+        ".elem-error [id]" #> id('error)
+      ) andThen
+      ((ns: NodeSeq) => bind("elem", ns, "input" -%>
+        SHtml.fileUpload(
+          (file: FileParamHolder) => {
+            value = Some((file.file, file.fileName))
+          },
+          (fileInputAttrs ++ Seq[ElemAttr](
+            ("id" -> id('input))
           )): _*)
       ))
 }

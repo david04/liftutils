@@ -38,8 +38,9 @@ trait SortableQueryableTable extends QueryableTable with NamedColTable {
   type C <: SortCol
   type Q <: SortQuery
 
-  protected var _currentSortColName: String = columns.head.name
-  protected def currentSortCol: C = columns.find(_.name == _currentSortColName).getOrElse(columns.head)
+  protected def defaultSortCol = columns.head
+  protected var _currentSortColName: String = defaultSortCol.name
+  protected def currentSortCol: C = columns.find(_.name == _currentSortColName).getOrElse(defaultSortCol)
   protected def currentSortCol_=(c: C): Unit = _currentSortColName = c.name
   protected val currentSortAsc: FatLazy[Boolean] = FatLazy(currentSortCol.defaultSortAsc)
 

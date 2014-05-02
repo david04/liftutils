@@ -15,11 +15,11 @@ trait DateTimePickerInput extends HTMLEditableElem with LabeledElem {
 
   def get: () => (Long, Long)
 
-  def set: ((Long, Long)) => Unit
+  def set: ((Long, Long)) => JsCmd
 
   var value = get()
 
-  private[elem] def save(): Unit = set(getCurrentValue())
+  private[elem] def save(): JsCmd = set(getCurrentValue())
 
   def getCurrentValue(): (Long, Long) = value
 

@@ -26,6 +26,8 @@ trait Table extends Loc with ID {
 
   def sel(id: String, rest: String): String = sel(id) + rest
 
+  protected def tableClasses: List[String] = Nil
+
   trait TableCol extends Col with Loc {
     self: C =>
     override def parentLoc = table
@@ -79,16 +81,18 @@ trait Table extends Loc with ID {
 
   protected def trStyle = List[String]()
 
+  protected def trStylesFor(row: R, rowId: String, rowIdx: Int): List[String] = trStyle
+
   protected def rowTransforms(row: R, rowId: String, rowIdx: Int): NodeSeq => NodeSeq =
-    "tr [class+]" #> trStyle.mkString(" ") &
+    "tr [class+]" #> trStylesFor(row, rowId, rowIdx).mkString(" ") &
       "tr [id]" #> rowId &
       "td" #> columns.map(col => col.renderRow(row, rowId, rowIdx, S.formFuncName))
 
-
   def renderedTable(): NodeSeq =
-    (".modtbl-around [modtbl]" #> locPrefix &
-      ".modtbl-around [id]" #> id('around) andThen
-      ".modtbl-around" #> pageRenderer).apply(template)
+    (".modtbl-around [class+]" #> tableClasses.mkString(" ") &
+        ".modtbl-around [modtbl]" #> locPrefix &
+        ".modtbl-around [id]" #> id('around) andThen
+        ".modtbl-around" #> pageRenderer).apply(template)
 
   def renderTable(): NodeSeq => NodeSeq = (_: NodeSeq) => renderedTable()
 }

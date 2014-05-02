@@ -6,7 +6,7 @@ import net.liftweb.http.js.JsCmd
 import net.liftweb.http.js.JsCmds._
 import scala.xml.NodeSeq
 import net.liftweb.http.SHtml
-import net.liftweb.util.{ClearNodes, PassThru}
+import net.liftweb.util.{Helpers, ClearNodes, PassThru}
 import com.github.david04.liftutils.Loc.Loc
 
 
@@ -53,25 +53,57 @@ trait HTMLEditor extends HTMLViewer with Loc {
       update()
     } else {
       onSucessfulSave()
-      elems.foreach(_.save())
-      savedInternal() & update()
+      elems.foldLeft(Noop)(_ & _.save()) & savedInternal() & update()
     }
 
   def submitBtnTransforms: NodeSeq => NodeSeq = ".editor-btn-submit [onclick]" #> {submitForm()}
 
+  protected val iframeId = Helpers.nextFuncName
+
   lazy val submitBtnRenderer = SHtml2.memoizeElem(_ => submitBtnTransforms)
 
-  def submitForm(): JsCmd =
-    S.fmapFunc(() => onSubmit())(name => Run("liftAjax.lift_uriSuffix = '" + name + "=_'; $('#" + id('form) + "').submit();"))
+  lazy val submitFuncName = S.formFuncName
+  S.addFunctionMap(submitFuncName, () => onSubmit())
 
-  def renderEditor =
+  def submitForm(): JsCmd = Run("liftAjax.lift_uriSuffix = '" + submitFuncName + "=_'; $('#" + id('form) + "').submit();")
+
+  lazy val requiresIFrameSubmit: Boolean = viewableElems.exists(_.requiresIFrameSubmit)
+
+  def renderEditor = {
     ".editor-all" #> editorAllTemplate andThen
+      ".editor-btn-submit" #> submitBtnRenderer andThen
       ".editor-elems" #> ((_: NodeSeq) => viewableElems.map(elem => <div class={s"editor-elem-${elem.elemName}"}></div>)) andThen
       viewableElems.map(elem => s".editor-elem-${elem.elemName}" #> ((_: NodeSeq) => elem.renderElem)).reduceOption(_ & _).getOrElse(PassThru) andThen
       ".editor-form [id]" #> id('form) andThen
       ".editor-btn-lbl *" #> loc("submitBtn") andThen
-      ".editor-btn-submit" #> submitBtnRenderer andThen
-      SHtml.makeFormsAjax
+      SHtml.makeFormsAjax andThen ({
+      if (!requiresIFrameSubmit) PassThru
+      else (ns: NodeSeq) => {
+        ns ++ Script(OnLoad(Run(
+          s"""
+             |${sel('form)}
+             |.removeAttr('onsubmit')
+             |.attr('action', '/ajax_request/' + lift_page)
+             |.attr('method', 'post')
+             |.attr('target', '$iframeId')
+             |.attr('enctype', 'multipart/form-data' )
+             |.attr('encoding', 'multipart/form-data')
+             |.find('input:submit,button[type=submit]')
+             |.end()
+             |.append(${'$'}('<input type="hidden" name="$submitFuncName" value="_" />'))
+             |.after(
+             |  ${'$'}('<iframe id="$iframeId" name="$iframeId" />')
+             |  .css('display','none')
+             |  .load(function() {
+             |    console.log(${'$'}(this).contents().text());
+             |    ${'$'}.globalEval(${'$'}(this).contents().text());
+             |  })
+             |);
+            """.stripMargin
+        )))
+      }
+    })
+  }
 
   def renderedNoBtns = (".editor-btn-submit" #> ClearNodes).apply(renderEditor(<div class="editor-all"></div>))
 

@@ -42,7 +42,7 @@ trait EditableElem extends ViewableElem with ValidatableElem with NamedElem {
 
   private[elem] val enabled: () => Boolean
 
-  private[elem] def save(): Unit
+  private[elem] def save(): JsCmd
 }
 
 trait UpdatableElem extends ViewableElem {
@@ -67,6 +67,8 @@ trait HTMLViewableElem extends ViewableElem with NamedElem with UpdatableElem wi
   protected def wrapName(name: String) = name + ": "
 
   def update(): JsCmd = Noop
+
+  def requiresIFrameSubmit: Boolean = false
 }
 
 trait HTMLEditableElem extends HTMLViewableElem with EditableElem {
@@ -74,7 +76,6 @@ trait HTMLEditableElem extends HTMLViewableElem with EditableElem {
   override protected def htmlElemTemplatePath: List[String] = "templates-hidden" :: "elem-edit-dflt" :: Nil
 
   protected def onChangeClientSide(): JsCmd = {
-    println("onChangeClientSide")
     if (error().isDefined) htmlEditableElemShowValidation = true
     else htmlEditableElemShowValidation = false
     update()
