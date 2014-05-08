@@ -1,3 +1,23 @@
+//  Copyright (c) 2014 David Miguel Antunes <davidmiguel {at} antunes.net>
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
+
 package com.github.david04.liftutils.elem
 
 
@@ -10,19 +30,26 @@ import net.liftweb.http.js.JE.{ValById, JsRaw}
 import net.liftweb.http.S.{SFuncHolder, LFuncHolder}
 import org.apache.commons.lang.StringEscapeUtils
 import net.liftweb.json.JsonAST.{JNull, JString, JArray, JValue}
+import net.liftweb.http.js.JsCmds._
+import com.github.david04.liftutils.reactive.{RXStr, RxXVar}
+import net.liftweb.http.js.{JsCmd, JE}
 
 trait PasswordInputElem extends TextInputElem {
 
   override protected def inputElem: NodeSeq = ("input [type]" #> "password").apply(super.inputElem)
 }
 
-trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem with LabeledElem {
+trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem with LabeledElem with RxXVar[String] with RXStr {
 
   protected def placeholder: Option[String]
 
-  protected var value: String = getStringValue()
+  //  protected var value: String = getStringValue()
 
-  def getCurrentStringValue(): String = value
+  protected val initialRx = getStringValue()
+  protected val toRX = (s: String) => JE.Str(s)
+  protected val fromRX = (v: JValue) => v.asInstanceOf[JString].s
+
+  def getCurrentStringValue(): String = getRx()
 
   protected def textInputAttrs: Seq[ElemAttr]
 
@@ -33,11 +60,12 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
   protected def inputElemDefaultAttrs: Seq[ElemAttr] = Seq[ElemAttr](
     ("id" -> id('input)),
     ("placeholder" -> placeholder.getOrElse("")),
-    ("onchange" -> ("{" + SHtml.onEvent(v => {value = v; onChangeClientSide()}).toJsCmd + "; return true; }")),
-    ("onkeyup" -> ("{if (window.event.keyCode == 13) {" + SHtml.ajaxCall(ValById(id('input)), v => {value = v; onChangeClientSide() & submit()}).toJsCmd + "; }}"))
+    ("onchange" -> ("{" + setRXx(JsRaw("this.value+''"), Noop, onChangeClientSide()).toJsCmd + "; return true; }")),
+    ("onkeyup" -> ("{" + "if (window.event.keyCode == 13) {" + setRXx(JsRaw(ValById(id('input)).toJsCmd + "+''"), Noop, onChangeClientSide() & submit()).toJsCmd + "; " + "}}")),
+    ("onkeyup" -> setRX(JsRaw(ValById(id('input)).toJsCmd + "+''")).toJsCmd)
   )
 
-  protected def inputElem: NodeSeq = SHtml.text(value, value = _, textInputAttrs ++ inputElemDefaultAttrs: _*)
+  protected def inputElem: NodeSeq = SHtml.text(getRx, s => setRx(s), textInputAttrs ++ inputElemDefaultAttrs: _*)
 
   override protected def htmlElemRendererTransforms =
     super.htmlElemRendererTransforms andThen (
@@ -46,11 +74,12 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
         ".elem-lbl *" #> wrapName(labelStr) &
         ".elem-error [id]" #> id('error)
       ) andThen
-      ((ns: NodeSeq) => bind("elem", ns, "input" -%> inputElem))
+      ((ns: NodeSeq) => bind("elem", ns, "input" -%> inputElem)) andThen
+      ((ns: NodeSeq) => ns ++ <tail>{Script(OnLoad(initRX()))}</tail>)
 }
 
 trait TextAreaInputElem extends TextInputElem {
-  override protected def inputElem: NodeSeq = SHtml.textarea(value, value = _, textInputAttrs ++ inputElemDefaultAttrs: _*)
+  override protected def inputElem: NodeSeq = SHtml.textarea(getRx, s => setRx(s), textInputAttrs ++ inputElemDefaultAttrs: _*)
 }
 
 trait TextViewerElem extends GenStringValueElem with HTMLViewableElem with LabeledElem {
@@ -141,7 +170,7 @@ trait MultiSelectInputElem extends GenManyOfManyValueElem with HTMLEditableElem 
               (v: JValue) => v match {
                 case JArray(lst) =>
                   val map = getAllManyOfManyValues().map(v => (v.id, v)).toMap
-                  value = lst.collect({case JString(v) => v}).flatMap(map.get(_))
+                  value = lst.collect({ case JString(v) => v}).flatMap(map.get(_))
                   onChangeClientSide()
                 case JNull =>
                   value = Seq()

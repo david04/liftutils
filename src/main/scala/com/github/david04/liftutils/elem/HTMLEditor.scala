@@ -1,3 +1,23 @@
+//  Copyright (c) 2014 David Miguel Antunes <davidmiguel {at} antunes.net>
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
+
 package com.github.david04.liftutils.elem
 
 import net.liftweb.util.Helpers._
@@ -30,19 +50,19 @@ trait HTMLEditor extends HTMLViewer with Loc {
 
   protected def editorAllTemplate = Templates(editorAllTemplatePath).get
 
-  protected lazy val viewableElems = buildElems()
-  protected lazy val elems = viewableElems.collect({case e: HTMLEditableElem => e})
+  protected def viewableElems = buildElems()
+  protected def elems = viewableElems.collect({ case e: HTMLEditableElem => e})
 
   protected def isValid: Boolean = fieldError().isEmpty
 
   protected def fieldError(): Option[NodeSeq] = elems.filter(_.enabled()).flatMap(_.error).headOption
 
   protected def onFailedSaveAttempt(): Unit = {
-    elems.foreach({case e: HTMLEditableElem => e.onFailedSaveAttempt()})
+    elems.foreach({ case e: HTMLEditableElem => e.onFailedSaveAttempt()})
   }
 
   protected def onSucessfulSave(): Unit = {
-    elems.foreach({case e: HTMLEditableElem => e.onSucessfulSave()})
+    elems.foreach({ case e: HTMLEditableElem => e.onSucessfulSave()})
   }
 
   protected def update(): JsCmd = elems.foldLeft(Noop)(_ & _.update())
@@ -69,14 +89,11 @@ trait HTMLEditor extends HTMLViewer with Loc {
 
   lazy val requiresIFrameSubmit: Boolean = viewableElems.exists(_.requiresIFrameSubmit)
 
-  def renderEditor = {
-    ".editor-all" #> editorAllTemplate andThen
-      ".editor-btn-submit" #> submitBtnRenderer andThen
+  protected def editorTransforms() = {
+    ".editor-btn-submit" #> submitBtnRenderer andThen
       ".editor-elems" #> ((_: NodeSeq) => viewableElems.map(elem => <div class={s"editor-elem-${elem.elemName}"}></div>)) andThen
       viewableElems.map(elem => s".editor-elem-${elem.elemName}" #> ((_: NodeSeq) => elem.renderElem)).reduceOption(_ & _).getOrElse(PassThru) andThen
-      ".editor-form [id]" #> id('form) andThen
-      ".editor-btn-lbl *" #> loc("submitBtn") andThen
-      SHtml.makeFormsAjax andThen ({
+      ".editor-btn-lbl *" #> loc("submitBtn") andThen ({
       if (!requiresIFrameSubmit) PassThru
       else (ns: NodeSeq) => {
         ns ++ Script(OnLoad(Run(
@@ -105,7 +122,18 @@ trait HTMLEditor extends HTMLViewer with Loc {
     })
   }
 
+  protected val editorFormRenderer = SHtml.idMemoize(renderer => editorTransforms())
+
+  final def renderEditor =
+    ".editor-all" #> editorAllTemplate andThen
+      ".editor-form [id]" #> id('form) andThen
+      SHtml.makeFormsAjax andThen
+      ".editor-form" #> editorFormRenderer
+
+  @Deprecated
   def renderedNoBtns = (".editor-btn-submit" #> ClearNodes).apply(renderEditor(<div class="editor-all"></div>))
+
+  def rendered = renderEditor(<div class="editor-all"></div>)
 
   protected def savedInternal(): JsCmd = {
     modified = false
@@ -119,6 +147,11 @@ trait HTMLEditor extends HTMLViewer with Loc {
     (viewableElems.map(_.update()) :+ Noop).reduce(_ & _)
   }
 
+}
+
+trait NoSubmitHTMLEditor extends HTMLEditor {
+
+  override protected def editorTransforms() = super.editorTransforms() andThen ".editor-btn-submit" #> ClearNodes
 }
 
 trait GlobalValidatableHTMLEditor extends HTMLEditor {
@@ -150,7 +183,7 @@ trait GlobalValidatableHTMLEditor extends HTMLEditor {
       }
     }
 
-  override def renderEditor = super.renderEditor andThen ".editor-global-validation [id]" #> id('globalVal)
+  override protected def editorTransforms() = super.editorTransforms() andThen ".editor-global-validation [id]" #> id('globalVal)
 }
 
 trait SemanticSubmitButtonHTMLEditor extends HTMLEditor {

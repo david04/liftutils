@@ -1,3 +1,23 @@
+//  Copyright (c) 2014 David Miguel Antunes <davidmiguel {at} antunes.net>
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files (the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions:
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
+
 package com.github.david04.liftutils.modtbl
 
 import scala.xml.NodeSeq
@@ -73,7 +93,10 @@ trait Table extends Loc with ID {
 
   protected def pageTransforms(): NodeSeq => NodeSeq = ".modtbl-table [id]" #> id('table) andThen ".modtbl-table" #> tableRenderer
 
-  protected def tableTransforms(): NodeSeq => NodeSeq = "thead tr th" #> columns.map(col => col.renderHead) & "tbody" #> tableBodyRenderer
+  protected def tableTransforms(): NodeSeq => NodeSeq = "thead tr th" #> columns.map(col => {
+    println("render " + col)
+    col.renderHead
+  }) & "tbody" #> tableBodyRenderer
 
   protected def tableBodyTransforms(): NodeSeq => NodeSeq = "tr" #> rowsTransforms()
 
@@ -90,9 +113,9 @@ trait Table extends Loc with ID {
 
   def renderedTable(): NodeSeq =
     (".modtbl-around [class+]" #> tableClasses.mkString(" ") &
-        ".modtbl-around [modtbl]" #> locPrefix &
-        ".modtbl-around [id]" #> id('around) andThen
-        ".modtbl-around" #> pageRenderer).apply(template)
+      ".modtbl-around [modtbl]" #> locPrefix &
+      ".modtbl-around [id]" #> id('around) andThen
+      ".modtbl-around" #> pageRenderer).apply(template)
 
   def renderTable(): NodeSeq => NodeSeq = (_: NodeSeq) => renderedTable()
 }
