@@ -27,7 +27,7 @@ import net.liftweb.http.js.JsCmds._
 import net.liftweb.util.Helpers._
 import net.liftweb.http.{Templates, SHtml}
 import net.liftweb.util.PassThru
-import com.github.david04.liftutils.Loc.Loc
+import com.github.david04.liftutils.loc.Loc
 
 trait ID {
   private val _id = S.formFuncName

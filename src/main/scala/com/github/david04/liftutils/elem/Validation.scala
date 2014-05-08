@@ -26,7 +26,7 @@ import net.liftweb.util.Helpers._
 import java.net.InetAddress
 import scala.concurrent.duration.Duration
 import java.util.regex.Pattern
-import com.github.david04.liftutils.Loc.Loc
+import com.github.david04.liftutils.loc.Loc
 
 
 object Validation {

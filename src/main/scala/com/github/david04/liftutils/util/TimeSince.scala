@@ -20,7 +20,7 @@
 
 package com.github.david04.liftutils.util
 
-import com.github.david04.liftutils.Loc.Loc
+import com.github.david04.liftutils.loc.Loc
 
 object TimeSince extends Loc {
 

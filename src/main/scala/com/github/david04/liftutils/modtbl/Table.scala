@@ -24,7 +24,7 @@ import scala.xml.NodeSeq
 import net.liftweb.http.{SHtml, Templates, S}
 import net.liftweb.util.{ClearNodes, ClearClearable, PassThru}
 import net.liftweb.util.Helpers._
-import com.github.david04.liftutils.Loc.Loc
+import com.github.david04.liftutils.loc.Loc
 import com.github.david04.liftutils.elem.ID
 
 trait Col {

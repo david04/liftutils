@@ -27,7 +27,7 @@ import net.liftweb.http.js.JsCmds._
 import scala.xml.NodeSeq
 import net.liftweb.http.SHtml
 import net.liftweb.util.{Helpers, ClearNodes, PassThru}
-import com.github.david04.liftutils.Loc.Loc
+import com.github.david04.liftutils.loc.Loc
 
 
 trait HTMLViewer extends ID {

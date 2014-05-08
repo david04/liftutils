@@ -23,7 +23,7 @@ package com.github.david04.liftutils.elem
 import net.liftweb.http.SHtml.ElemAttr
 import scala.xml.NodeSeq
 import net.liftweb.http.{SHtml, S}
-import com.github.david04.liftutils.Loc.Loc
+import com.github.david04.liftutils.loc.Loc
 import net.liftweb.http.js.JsCmds.{Run, OnLoad, Script}
 import net.liftweb.common.Loggable
 import java.util.{Date, TimeZone}

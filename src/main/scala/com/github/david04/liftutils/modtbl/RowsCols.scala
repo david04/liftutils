@@ -22,7 +22,7 @@ package com.github.david04.liftutils.modtbl
 
 import scala.xml.NodeSeq
 import net.liftweb.util.Helpers._
-import com.github.david04.liftutils.Loc.Loc
+import com.github.david04.liftutils.loc.Loc
 
 trait NamedColTable extends Table {
   type C <: NamedCol
