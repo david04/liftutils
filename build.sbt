@@ -1,6 +1,6 @@
 name := "liftutils"
 
-version := "0.1.8"
+version := "0.1.11"
 
 organization := "com.github.david04"
 
@@ -18,7 +18,7 @@ resolvers ++= Seq(
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
 libraryDependencies ++= {
-  val liftVersion = "2.5.1"
+  val liftVersion = "2.6-M2"
   Seq(
     "net.liftweb"       %% "lift-webkit"        % liftVersion        % "compile",
     "net.liftweb"       %% "lift-mapper"        % liftVersion        % "compile",
@@ -31,7 +31,8 @@ libraryDependencies ++= {
     "com.typesafe.akka"           % "akka-actor_2.10"               % "2.2.1",
     "joda-time"                   % "joda-time"                     % "2.3",
     "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.1.3",
-    "commons-lang"                % "commons-lang"                  % "2.6"
+    "commons-lang"                % "commons-lang"                  % "2.6",
+    "com.github.nscala-time"      %% "nscala-time"                  % "1.0.0"
   )
 }
 

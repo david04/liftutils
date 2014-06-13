@@ -21,11 +21,13 @@
 package com.github.david04.liftutils.util
 
 import scala.xml._
+import net.liftweb.util.Helpers._
 import net.liftweb.http.SHtml
 import net.liftweb.http.js.JE.JsNull
 import net.liftweb.json.JsonAST.JValue
 import net.liftweb.http.js.JsCmd
 import scala.Some
+import net.liftweb.http.js.JsCmds.Run
 
 
 object Util {
@@ -58,6 +60,7 @@ object Util {
   }
 
   def printNs = (ns: NodeSeq) => {println(ns); ns}
+  def printNs(s: String) = (ns: NodeSeq) => {println(s + ":\n" + ns); ns}
 
   var idx = 0
   var lastOpen = false
@@ -123,4 +126,9 @@ object Util {
     }
 
   }
+
+  implicit class RichJsCmd(c: JsCmd) {
+    def P = Run("console.log(" + c.toJsCmd.encJs + ");") & c
+  }
+
 }

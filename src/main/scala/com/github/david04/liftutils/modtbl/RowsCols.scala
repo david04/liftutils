@@ -30,11 +30,12 @@ trait NamedColTable extends Table {
   trait NamedCol extends TableCol {
     self: C =>
     def name: String
+    def locPrefix = name
 
-    override def renderHead: NodeSeq => NodeSeq = super.renderHead andThen "th [col-name]" #> name
+    override def renderHead(implicit data: Data): NodeSeq => NodeSeq = super.renderHead andThen "th [col-name]" #> name
 
-    override def renderRow(row: R, rowId: String, idx: Int, colId: String): NodeSeq => NodeSeq =
-      super.renderRow(row, rowId, idx, colId) andThen "td [col-name]" #> name
+    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
+      super.renderRow(row, rowId, rowIdx, colId, colIdx) andThen "td [col-name]" #> name
   }
 
 }
@@ -53,7 +54,7 @@ trait NodeSeqHeadTable extends Table {
     def nodeSeqHeadTableTransforms() =
       "th *" #> headNodeSeqValue()
 
-    override def renderHead: NodeSeq => NodeSeq = super.renderHead andThen nodeSeqHeadTableTransforms()
+    override def renderHead(implicit data: Data): NodeSeq => NodeSeq = super.renderHead andThen nodeSeqHeadTableTransforms()
   }
 
 }
@@ -89,7 +90,7 @@ trait LocStrHeadTable extends StrHeadTable with NamedColTable with Loc {
   trait LocStrHeadCol extends StrHeadCol with NamedCol {
     self: C =>
 
-    def title = loc(name + "-title")
+    def title = loc("title")
   }
 
 }
@@ -102,8 +103,8 @@ trait NodeSeqRowTable extends Table {
 
     def nodeSeqRowTableTransforms(row: R) = "td *" #> rowNodeSeqValue(row)
 
-    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String): NodeSeq => NodeSeq =
-      super.renderRow(row, rowId, rowIdx, colId) andThen
+    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
+      super.renderRow(row, rowId, rowIdx, colId, colIdx) andThen
         nodeSeqRowTableTransforms(row)
   }
 

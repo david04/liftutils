@@ -30,7 +30,7 @@ trait ZebraTable extends Table {
 
   protected def zebraTableOddClass = "odd"
 
-  override protected def rowTransforms(row: R, rowId: String, rowIdx: Int): NodeSeq => NodeSeq =
+  override protected def rowTransforms(row: R, rowId: String, rowIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
     super.rowTransforms(row, rowId, rowIdx) andThen
       "tr [class+]" #> (if (rowIdx % 2 == 0) zebraTableEvenClass else zebraTableOddClass)
 }

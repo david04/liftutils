@@ -27,7 +27,9 @@ import net.liftweb.http.js.JsCmds._
 import scala.xml.NodeSeq
 import net.liftweb.http.SHtml
 import net.liftweb.util.{Helpers, ClearNodes, PassThru}
-import com.github.david04.liftutils.loc.Loc
+import com.github.david04.liftutils.loc.{LocC, Loc}
+import net.liftweb.http.S.SFuncHolder
+import net.liftweb.common.Full
 
 
 trait HTMLViewer extends ID {
@@ -50,7 +52,7 @@ trait HTMLEditor extends HTMLViewer with Loc {
 
   protected def editorAllTemplate = Templates(editorAllTemplatePath).get
 
-  protected def viewableElems = buildElems()
+  protected lazy val viewableElems = buildElems()
   protected def elems = viewableElems.collect({ case e: HTMLEditableElem => e})
 
   protected def isValid: Boolean = fieldError().isEmpty
@@ -67,7 +69,8 @@ trait HTMLEditor extends HTMLViewer with Loc {
 
   protected def update(): JsCmd = elems.foldLeft(Noop)(_ & _.update())
 
-  protected def onSubmit() =
+  protected def onSubmit() = {
+    println("onSubmit")
     if (!isValid) {
       onFailedSaveAttempt()
       update()
@@ -75,17 +78,22 @@ trait HTMLEditor extends HTMLViewer with Loc {
       onSucessfulSave()
       elems.foldLeft(Noop)(_ & _.save()) & savedInternal() & update()
     }
+  }
 
-  def submitBtnTransforms: NodeSeq => NodeSeq = ".editor-btn-submit [onclick]" #> {submitForm()}
+  def submitBtnTransforms: NodeSeq => NodeSeq =
+    ".editor-btn-submit [onclick]" #> submitForm()
 
   protected val iframeId = Helpers.nextFuncName
 
   lazy val submitBtnRenderer = SHtml2.memoizeElem(_ => submitBtnTransforms)
 
   lazy val submitFuncName = S.formFuncName
-  S.addFunctionMap(submitFuncName, () => onSubmit())
+  S.formGroup(1)(S.addFunctionMap(submitFuncName, (() => onSubmit())))
 
-  def submitForm(): JsCmd = Run("liftAjax.lift_uriSuffix = '" + submitFuncName + "=_'; $('#" + id('form) + "').submit();")
+  def submitForm(): JsCmd = Run(
+    (if (requiresIFrameSubmit) "" else "liftAjax.lift_uriSuffix = '" + submitFuncName + "=_';") +
+      "$('#" + id('form) + "').submit();"
+  )
 
   lazy val requiresIFrameSubmit: Boolean = viewableElems.exists(_.requiresIFrameSubmit)
 
@@ -112,7 +120,6 @@ trait HTMLEditor extends HTMLViewer with Loc {
              |  ${'$'}('<iframe id="$iframeId" name="$iframeId" />')
              |  .css('display','none')
              |  .load(function() {
-             |    console.log(${'$'}(this).contents().text());
              |    ${'$'}.globalEval(${'$'}(this).contents().text());
              |  })
              |);
@@ -147,6 +154,16 @@ trait HTMLEditor extends HTMLViewer with Loc {
     (viewableElems.map(_.update()) :+ Noop).reduce(_ & _)
   }
 
+}
+
+trait ImmediateChangesHTMLEditor extends HTMLEditor {
+
+  override private[elem] def elemChanged(elem: E): JsCmd = super.elemChanged(elem) & {
+    elem match {
+      case elem: EditableElem if elem.error().isEmpty => elem.save()
+      case _ =>
+    }
+  }
 }
 
 trait NoSubmitHTMLEditor extends HTMLEditor {
@@ -227,8 +244,10 @@ trait DefaultBS2HTMLEditor extends DefaultHTMLEditor with Bootstrap2 with Loc {
   override protected def saved() = super.saved() & onSave()
 }
 
-trait DefaultBS3HTMLEditor extends DefaultHTMLEditor with Bootstrap3 with Loc {
+trait DefaultBS3HTMLEditor extends DefaultHTMLEditor with Bootstrap3 with LocC {
   def framework = new Bootstrap3 {}
+
+  def n = "editor"
 
   implicit def editor = this
 

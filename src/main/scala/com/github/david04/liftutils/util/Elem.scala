@@ -39,9 +39,7 @@ trait Elem {
 
 object div {
   def apply(b: => NodeSeq) = new Elem {
-    def render: xml.Elem = <div id={id}>
-      {b}
-    </div>
+    def render: xml.Elem = <div id={id}>{b}</div>
   }
 }
 

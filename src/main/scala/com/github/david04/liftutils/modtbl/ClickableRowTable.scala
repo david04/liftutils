@@ -25,9 +25,39 @@ import net.liftweb.http.SHtml
 import net.liftweb.util.Helpers._
 import net.liftweb.http.js.{JsCmds, JsCmd}
 import net.liftweb.util.PassThru
+import net.liftweb.http.js.JsCmds.{Run, OnLoad, Script}
 
 trait ClickableRowTable extends Table {
   type C <: ClickableRowCol
+
+  protected def onClickClientSide(row: R, rowId: String, rowIdx: Int)(implicit data: Data): JsCmd = JsCmds.Noop
+
+  protected def onClick(row: R, rowId: String, rowIdx: Int)(implicit data: Data): JsCmd = JsCmds.Noop
+
+  def isClickable(row: R, rowId: String, rowIdx: Int)(implicit data: Data): Boolean = true
+
+  trait ClickableRowCol extends TableCol {
+    self: C =>
+
+    def clickableRowTransforms(row: R, rowId: String, rowIdx: Int, colId: String)(implicit data: Data): NodeSeq => NodeSeq = {
+      if (isClickable(row, rowId, rowIdx))
+        "td [onclick]" #>
+          (onClickClientSide(row, rowId, rowIdx) &
+            SHtml.onEvent(_ => onClick(row, rowId, rowIdx)).cmd).toJsCmd
+      else PassThru
+    }
+
+    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
+      super.renderRow(row, rowId, rowIdx, colId, colIdx) andThen
+        clickableRowTransforms(row, rowId, rowIdx, colId)
+  }
+
+}
+
+trait ColClickableRowTable extends Table {
+  type C <: ClickableRowCol
+
+  protected def onClickClientSide(row: R, rowId: String, rowIdx: Int, col: C, colId: String): JsCmd = JsCmds.Noop
 
   protected def onClick(row: R, rowId: String, rowIdx: Int, col: C, colId: String): JsCmd = JsCmds.Noop
 
@@ -36,11 +66,17 @@ trait ClickableRowTable extends Table {
   trait ClickableRowCol extends TableCol {
     self: C =>
 
-    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String): NodeSeq => NodeSeq =
-      super.renderRow(row, rowId, rowIdx, colId) andThen
-        (if (isClickable(row, rowId, rowIdx))
-          "td [onclick]" #> SHtml.onEvent(_ => onClick(row, rowId, rowIdx, this, colId)).toJsCmd
-        else PassThru)
+    def clickableRowTransforms(row: R, rowId: String, rowIdx: Int, colId: String): NodeSeq => NodeSeq = {
+      if (isClickable(row, rowId, rowIdx))
+        "td [onclick]" #>
+          (onClickClientSide(row, rowId, rowIdx, this, colId) &
+            SHtml.onEvent(_ => onClick(row, rowId, rowIdx, this, colId)).cmd).toJsCmd
+      else PassThru
+    }
+
+    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
+      super.renderRow(row, rowId, rowIdx, colId, colIdx) andThen
+        clickableRowTransforms(row, rowId, rowIdx, colId)
   }
 
 }

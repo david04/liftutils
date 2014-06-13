@@ -38,10 +38,14 @@ trait Modal {
   protected def action: Option[(String, JsCmd)]
   protected def height: Option[Int]
 
+  protected def cancelBtnClasses = List[String]()
+  protected def actionBtnClasses = List[String]()
+
   def modalActionBtnTransforms: NodeSeq => NodeSeq =
     action.map({
       case (lbl, jsCmd) =>
         ".modal-action *" #> lbl &
+          ".modal-action [class+]" #> actionBtnClasses.mkString(" ") &
           ".modal-action [onclick]" #> jsCmd
     }).getOrElse(".modal-action" #> ClearNodes)
 
@@ -49,6 +53,7 @@ trait Modal {
     cancel.map({
       case (lbl, jsCmd) =>
         ".modal-cancel *" #> lbl &
+          ".modal-cancel [class+]" #> cancelBtnClasses.mkString(" ") &
           ".modal-cancel [onclick]" #> jsCmd
     }).getOrElse(".modal-cancel" #> ClearNodes)
 
@@ -56,6 +61,7 @@ trait Modal {
     ".modal [id]" #> id &
       ".modal-title *" #> title &
       ".modal-contents" #> content &
+      ".modal-close [onclick]" #> cancel.map(_._2.toJsCmd).getOrElse("") andThen
       ".modal-cancel" #> modalCancelBtnTransforms andThen
       ".modal-action" #> modalActionBtnTransforms andThen
       ".modal-body .scroller [style]" #> height.map(h => s"height:${h}px").getOrElse("")

@@ -32,6 +32,7 @@ import net.liftweb.http.SHtml
 import net.liftweb.http.js.JsCmds.Replace
 import net.liftweb.http.js.JE.JsRaw
 import net.liftweb.http.js.JsCmds.Run
+import com.github.david04.liftutils.util.Util.RichJsCmd
 
 // ======== Server side ========
 
@@ -130,11 +131,12 @@ trait RXVar extends RXVal {
 
   protected val initialRX: JsExp
 
-  def getRX(): JsExp = JsRaw(s"window.V$id")
+  def getRX(): JsExp = JsRaw(s"(window.V$id ? window.V$id : ${initialRX.toJsCmd})")
 
   def setRX(v: JsExp) = Run(s"window.V$id = " + v.toJsCmd) & notifyRXDependents()
 
   def initRX() = setRX(initialRX)
+  def initRXScript() = <tail>{Script(setRX(initialRX))}</tail>
 }
 
 class RXFunc(d1: RXVal, f: JsExp => JsExp) extends RXVal {
@@ -188,12 +190,10 @@ trait RxXVar[T] extends RxVar[T] with RXVar {
 
   def setRxX(v: T): JsCmd = setRx(v) & setRX(toRX(v))
 
-  import com.github.david04.liftutils.util.Util._
-
-  def setRXx(v: JsExp, afterSetClientSide: JsCmd = Noop, afterSetServerSide: JsCmd = Noop): JsCmd =
+  def setRXx(v: JsExp, afterSetClientSide: JsCmd = Noop, afterSetServerSide: () => JsCmd = () => Noop): JsCmd =
     setRX(v) &
       afterSetClientSide &
-      SHtml.jsonCall(v, (v: JValue) => super.setRx(fromRX(v.p("V: "))) & afterSetServerSide)
+      SHtml.jsonCall(v, (v: JValue) => super.setRx(fromRX(v)) & afterSetServerSide())
 }
 
 object RxXVar {
@@ -214,18 +214,18 @@ trait RXStr extends RXVal
 object RichRXStr {
 
   implicit class RichRXStr(s: RXStr) {
-    def render(): NodeSeq = {
+    def rXRender(): NodeSeq = {
       val id = Helpers.nextFuncName
       <tail>{Script(OnLoad {
         s.addRXDependent(new RXDependent {
-          override def rXChanged(): JsCmd = Run(s"${'$'}('#$id').text(" + s.getRX.toJsCmd + ");")
-        })
+          override def rXChanged(): JsCmd = Run(s"${'$'}('#$id').text(" + s.getRX.toJsCmd + ");").P
+        }) & Run(s"${'$'}('#$id').text(" + s.getRX.toJsCmd + ");").P
       })}</tail> ++
         <span id={id}></span>
     }
 
     def transform(f: String => String) = new RXFunc(s, jsExp => JsRaw(f(jsExp.toJsCmd))) with RXStr
-    def maxLength(len: Int, ellipsis: String) = transform(s => s"(($s.length < $len) ? ($s) : ($s.substring(0,$len)+${s.encJs})+'')")
+    def maxLength(len: Int, ellipsis: String) = transform(s => s"(($s.length < $len) ? ($s) : ($s.substring(0,$len)+${ellipsis.encJs})+'')")
     def ifEmpty(dflt: String) = transform(s => s"((($s.length == 0) ? ${dflt.encJs} : $s)+'')")
   }
 

@@ -33,6 +33,7 @@ import net.liftweb.json.JsonAST.{JNull, JString, JArray, JValue}
 import net.liftweb.http.js.JsCmds._
 import com.github.david04.liftutils.reactive.{RXStr, RxXVar}
 import net.liftweb.http.js.{JsCmd, JE}
+import com.github.david04.liftutils.util.Util.RichJsCmd
 
 trait PasswordInputElem extends TextInputElem {
 
@@ -42,8 +43,6 @@ trait PasswordInputElem extends TextInputElem {
 trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem with LabeledElem with RxXVar[String] with RXStr {
 
   protected def placeholder: Option[String]
-
-  //  protected var value: String = getStringValue()
 
   protected val initialRx = getStringValue()
   protected val toRX = (s: String) => JE.Str(s)
@@ -60,9 +59,8 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
   protected def inputElemDefaultAttrs: Seq[ElemAttr] = Seq[ElemAttr](
     ("id" -> id('input)),
     ("placeholder" -> placeholder.getOrElse("")),
-    ("onchange" -> ("{" + setRXx(JsRaw("this.value+''"), Noop, onChangeClientSide()).toJsCmd + "; return true; }")),
-    ("onkeyup" -> ("{" + "if (window.event.keyCode == 13) {" + setRXx(JsRaw(ValById(id('input)).toJsCmd + "+''"), Noop, onChangeClientSide() & submit()).toJsCmd + "; " + "}}")),
-    ("onkeyup" -> setRX(JsRaw(ValById(id('input)).toJsCmd + "+''")).toJsCmd)
+    ("onchange" -> ("{" + setRXx(JsRaw("this.value+''"), Noop, () => onChangeClientSide()).toJsCmd + "; return true; }")),
+    ("onkeyup" -> (setRX(JsRaw(ValById(id('input)).toJsCmd + "+''")).toJsCmd))
   )
 
   protected def inputElem: NodeSeq = SHtml.text(getRx, s => setRx(s), textInputAttrs ++ inputElemDefaultAttrs: _*)
@@ -75,7 +73,7 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
         ".elem-error [id]" #> id('error)
       ) andThen
       ((ns: NodeSeq) => bind("elem", ns, "input" -%> inputElem)) andThen
-      ((ns: NodeSeq) => ns ++ <tail>{Script(OnLoad(initRX()))}</tail>)
+      ((ns: NodeSeq) => ns ++ initRXScript())
 }
 
 trait TextAreaInputElem extends TextInputElem {
@@ -203,6 +201,7 @@ trait FileUploadInputElem extends GenFileOptValueElem with HTMLEditableElem with
       ((ns: NodeSeq) => bind("elem", ns, "input" -%>
         SHtml.fileUpload(
           (file: FileParamHolder) => {
+            println("RECEIVED FILE: " + file.fileName)
             value = Some((file.file, file.fileName))
           },
           (fileInputAttrs ++ Seq[ElemAttr](

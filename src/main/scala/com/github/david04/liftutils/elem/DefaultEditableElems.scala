@@ -23,7 +23,7 @@ package com.github.david04.liftutils.elem
 import net.liftweb.http.SHtml.ElemAttr
 import scala.xml.NodeSeq
 import net.liftweb.http.{SHtml, S}
-import com.github.david04.liftutils.loc.Loc
+import com.github.david04.liftutils.loc.{LocP, Loc}
 import net.liftweb.http.js.JsCmds.{Run, OnLoad, Script}
 import net.liftweb.common.Loggable
 import java.util.{Date, TimeZone}
@@ -38,7 +38,7 @@ trait DefaultElems extends Loggable {
               set: String => JsCmd,
               val enabled: () => Boolean = () => true,
               protected val textInputAttrs: Seq[ElemAttr] = Seq()
-              )(implicit protected val editor: DefaultHTMLEditor) extends TextInputElem with EditableElem2DefaultEditorBridge {
+              )(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends TextInputElem with EditableElem2DefaultEditorBridge {
 
     protected val placeholder: Option[String] = labelStrOpt("placeholder")
 
@@ -53,7 +53,7 @@ trait DefaultElems extends Loggable {
                   set: String => JsCmd,
                   val enabled: () => Boolean = () => true,
                   protected val textInputAttrs: Seq[ElemAttr] = Seq()
-                  )(implicit protected val editor: DefaultHTMLEditor) extends TextAreaInputElem with EditableElem2DefaultEditorBridge {
+                  )(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends TextAreaInputElem with EditableElem2DefaultEditorBridge {
 
     protected val placeholder: Option[String] = labelStrOpt("placeholder")
 
@@ -66,7 +66,7 @@ trait DefaultElems extends Loggable {
                   val elemName: String,
                   set: TimeZone => JsCmd,
                   val enabled: () => Boolean = () => true
-                  )(implicit protected val editor: DefaultHTMLEditor) extends HTMLEditableElem with LabeledElem with EditableElem2DefaultEditorBridge {
+                  )(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends HTMLEditableElem with LabeledElem with EditableElem2DefaultEditorBridge {
 
     //    protected def classes: List[String] = Nil
 
@@ -95,7 +95,7 @@ trait DefaultElems extends Loggable {
                  set: String => JsCmd,
                  val enabled: () => Boolean = () => true,
                  protected val textInputAttrs: Seq[ElemAttr] = Seq()
-                 )(implicit protected val editor: DefaultHTMLEditor) extends TextInputElem with EditableElem2DefaultEditorBridge {
+                 )(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends TextInputElem with EditableElem2DefaultEditorBridge {
 
     protected val placeholder: Option[String] = labelStrOpt("placeholder")
 
@@ -110,7 +110,7 @@ trait DefaultElems extends Loggable {
                   set: String => JsCmd,
                   val enabled: () => Boolean = () => true,
                   protected val textInputAttrs: Seq[ElemAttr] = Seq()
-                  )(implicit protected val editor: DefaultHTMLEditor) extends PasswordInputElem with EditableElem2DefaultEditorBridge with Loc {
+                  )(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends PasswordInputElem with EditableElem2DefaultEditorBridge with Loc {
 
     protected val placeholder: Option[String] = labelStrOpt("placeholder")
 
@@ -126,7 +126,7 @@ trait DefaultElems extends Loggable {
                  val enabled: () => Boolean = () => true,
                  val suffix: Option[String] = None,
                  protected val textInputAttrs: Seq[ElemAttr] = Seq()
-                 )(implicit protected val editor: DefaultHTMLEditor) extends GenInt2GenString with TextInputElem with EditableElem2DefaultEditorBridge {
+                 )(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends GenInt2GenString with TextInputElem with EditableElem2DefaultEditorBridge {
 
     protected val placeholder: Option[String] = labelStrOpt("placeholder")
 
@@ -143,7 +143,7 @@ trait DefaultElems extends Loggable {
               val suffix: Option[String] = None,
               val precision: Int = 2,
               protected val textInputAttrs: Seq[ElemAttr] = Seq()
-              )(implicit protected val editor: DefaultHTMLEditor) extends GenDouble2GenString with TextInputElem with EditableElem2DefaultEditorBridge {
+              )(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends GenDouble2GenString with TextInputElem with EditableElem2DefaultEditorBridge {
 
     protected val placeholder: Option[String] = labelStrOpt("placeholder")
 
@@ -158,7 +158,7 @@ trait DefaultElems extends Loggable {
               set: Boolean => JsCmd,
               val enabled: () => Boolean = () => true,
               protected val checkboxInputAttrs: Seq[ElemAttr] = Seq()
-              )(implicit protected val editor: DefaultHTMLEditor) extends GenEditableBooleanValueElem with CheckboxInputElem with EditableElem2DefaultEditorBridge {
+              )(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends GenEditableBooleanValueElem with CheckboxInputElem with EditableElem2DefaultEditorBridge {
 
     def getBooleanValue(): Boolean = get
 
@@ -171,7 +171,7 @@ trait DefaultElems extends Loggable {
                                 set: E#Value => JsCmd,
                                 protected val enum: E,
                                 val enabled: () => Boolean = () => true,
-                                protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenOneOfEnum2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
+                                protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends GenOneOfEnum2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
 
     protected def enumValue2NodeSeq(v: EnumValueType): NodeSeq = scala.xml.Text(S.?(labelStr(v.toString)))
 
@@ -190,7 +190,7 @@ trait DefaultElems extends Loggable {
                                      set: Seq[E#Value] => JsCmd,
                                      protected val enum: E,
                                      val enabled: () => Boolean = () => true,
-                                     protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenManyOfEnum2GenOneOfMany with MultiSelectInputElem with EditableElem2DefaultEditorBridge {
+                                     protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends GenManyOfEnum2GenOneOfMany with MultiSelectInputElem with EditableElem2DefaultEditorBridge {
 
     protected def enumValue2NodeSeq(v: EnumValueType): NodeSeq = scala.xml.Text(S.?(labelStr(v.toString)))
 
@@ -209,11 +209,12 @@ trait DefaultElems extends Loggable {
                    set: T => JsCmd,
                    all: => Seq[T],
                    val enabled: () => Boolean = () => true,
-                   protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenOneOfSeq2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
+                   label: Option[T => String] = None,
+                   protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends GenOneOfSeq2GenOneOfMany with SelectInputElem with EditableElem2DefaultEditorBridge {
 
     type SeqValueType = T
 
-    protected def seqValue2NodeSeq(v: SeqValueType): NodeSeq = scala.xml.Text(labelStr(v.toString))
+    protected def seqValue2NodeSeq(v: SeqValueType): NodeSeq = scala.xml.Text(label.map(_(v)).getOrElse(labelStr(v.toString)))
 
     protected def errorClass = framework.errorClass
 
@@ -230,7 +231,7 @@ trait DefaultElems extends Loggable {
                         set: Seq[T] => JsCmd,
                         all: => Seq[T],
                         val enabled: () => Boolean = () => true,
-                        protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor) extends GenManyOfSeq2GenManyOfMany with MultiSelectInputElem with EditableElem2DefaultEditorBridge {
+                        protected val selectInputAttrs: Seq[ElemAttr] = Seq())(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends GenManyOfSeq2GenManyOfMany with MultiSelectInputElem with EditableElem2DefaultEditorBridge {
 
     type SeqValueType = T
 
@@ -252,7 +253,7 @@ trait DefaultElems extends Loggable {
               _all: => Seq[String],
               val enabled: () => Boolean = () => true,
               protected val allowSelectStar: Boolean = false
-              )(implicit protected val editor: DefaultHTMLEditor) extends FuelUXTree with EditableElem2DefaultEditorBridge {
+              )(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends FuelUXTree with EditableElem2DefaultEditorBridge {
     def get = () => _get
 
     def all: Seq[String] = _all
@@ -264,7 +265,7 @@ trait DefaultElems extends Loggable {
                         _get: => (Long, Long),
                         val set: ((Long, Long)) => JsCmd,
                         val enabled: () => Boolean = () => true
-                        )(implicit protected val editor: DefaultHTMLEditor) extends DateTimePickerInput with EditableElem2DefaultEditorBridge {
+                        )(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends DateTimePickerInput with EditableElem2DefaultEditorBridge {
     def get = () => _get
   }
 
@@ -273,10 +274,11 @@ trait DefaultElems extends Loggable {
                     val set: Option[(Array[Byte], String)] => JsCmd,
                     val enabled: () => Boolean = () => true,
                     protected val fileInputAttrs: Seq[ElemAttr] = Seq()
-                    )(implicit protected val editor: DefaultHTMLEditor) extends FileUploadInputElem with EditableElem2DefaultEditorBridge {
+                    )(implicit protected val editor: DefaultHTMLEditor, protected val p: LocP) extends FileUploadInputElem with EditableElem2DefaultEditorBridge {
 
     private[elem] def save(): JsCmd = set(getFile())
   }
+
 }
 
 object DefaultEditableElems extends DefaultElems

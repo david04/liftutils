@@ -25,12 +25,18 @@ import net.liftweb.util.Helpers._
 
 
 trait KnownSizePaginatedQueryableTable extends PaginatedQueryableTable with KnownSizeTable {
-  protected lazy val nPages = math.ceil(rowsSize / pageSize.toDouble).toInt
 
-  protected def paginationInfoTransforms(): NodeSeq => NodeSeq =
+  type Data <: DataKnownSizePaginatedQueryableTable
+
+  trait DataKnownSizePaginatedQueryableTable extends DataPaginatedQueryableTable with DataKnownSizeTable {
+    lazy val nPages = math.ceil(rowsSize / pageSize.toDouble).toInt
+  }
+
+  protected def paginationInfoTransforms(implicit data: Data): NodeSeq => NodeSeq = {
     ".modtbl-pag-info *" #>
       loc("pagInfo",
-        "from" -> (currentPage * pageSize + 1).toString,
-        "to" -> ((currentPage + 1) * pageSize).toString,
-        "total" -> rowsSize.toString)
+        "from" -> (data.currentPage * data.pageSize + 1).toString,
+        "to" -> ((data.currentPage + 1) * data.pageSize).toString,
+        "total" -> data.rowsSize.toString)
+  }
 }

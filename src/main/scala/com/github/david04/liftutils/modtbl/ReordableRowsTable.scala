@@ -35,11 +35,11 @@ trait ReordableRowsTable extends Table {
 
   override def tableClasses: List[String] = "modtbl-reordable-rows" :: super.tableClasses
 
-  override protected def trStylesFor(row: R, rowId: String, rowIdx: Int): List[String] =
+  override protected def trStylesFor(row: R, rowId: String, rowIdx: Int)(implicit data: Data): List[String] =
     if (isReordable(row)) super.trStylesFor(row, rowId, rowIdx)
     else "reorder-disabled" :: super.trStylesFor(row, rowId, rowIdx)
 
-  override protected def rowTransforms(row: R, rowId: String, rowIdx: Int): NodeSeq => NodeSeq =
+  override protected def rowTransforms(row: R, rowId: String, rowIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
     super.rowTransforms(row, rowId, rowIdx) andThen
       "tr [reorder]" #> SHtml.ajaxCall(JsRaw("idx"), idx => {
         reordered(row, idx.toInt) & rerenderTable()
@@ -47,8 +47,8 @@ trait ReordableRowsTable extends Table {
 
   def reorderRowMinDistancePx = 15
 
-  override protected def tableTransforms(): NodeSeq => NodeSeq =
-    super.tableTransforms() andThen
+  override protected def tableTransforms(implicit data: Data): NodeSeq => NodeSeq =
+    super.tableTransforms(data) andThen
       ((ns: NodeSeq) => ns ++
         <tail>{
           Script(Run(

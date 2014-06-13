@@ -20,6 +20,8 @@
 
 package com.github.david04.liftutils.elem
 
+import com.github.david04.liftutils.loc.LocP
+
 
 object DefaultViewableElems {
 
@@ -27,7 +29,7 @@ object DefaultViewableElems {
               val elemName: String,
               get: => String,
               private[elem] val enabled: () => Boolean = () => true
-              )(implicit val viewer: HTMLViewer) extends TextViewerElem {
+              )(implicit val viewer: HTMLViewer, protected val p: LocP) extends TextViewerElem {
 
     override def locPrefix = viewer.locPrefix
 

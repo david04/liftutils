@@ -21,13 +21,12 @@
 package com.github.david04.liftutils.elem
 
 import scala.xml.NodeSeq
-import net.liftweb.http.S
+import net.liftweb.http.{SHtml2, S, Templates, SHtml}
 import net.liftweb.http.js.JsCmd
 import net.liftweb.http.js.JsCmds._
 import net.liftweb.util.Helpers._
-import net.liftweb.http.{Templates, SHtml}
 import net.liftweb.util.PassThru
-import com.github.david04.liftutils.loc.Loc
+import com.github.david04.liftutils.loc.{LocC, Loc}
 
 trait ID {
   private val _id = S.formFuncName
@@ -49,7 +48,8 @@ trait NodeSeqViewableElem extends ViewableElem {def renderNodeSeqView: NodeSeq}
 
 trait NamedElem extends ViewableElem {def elemName: String}
 
-trait LabeledElem extends NamedElem with Loc {
+trait LabeledElem extends NamedElem with LocC {
+  def n = elemName
   def labelStr: String = withPrefix("elemLbl").loc(elemName)
   def labelStrOpt(suffix: String): Option[String] = withPrefix("elemLbl").withPrefix(elemName).locOpt(suffix)
   def labelStr(suffix: String): String = withPrefix("elemLbl").withPrefix(elemName).loc(suffix)
@@ -70,13 +70,13 @@ trait UpdatableElem extends ViewableElem {
   def update(): JsCmd
 }
 
-trait HTMLViewableElem extends ViewableElem with NamedElem with UpdatableElem with Loc {
+trait HTMLViewableElem extends ViewableElem with NamedElem with UpdatableElem with LocC {
 
   protected def htmlElemTemplatePath: List[String] = "templates-hidden" :: "elem-view-dflt" :: Nil
 
   protected lazy val htmlElemTemplate = Templates(htmlElemTemplatePath).get
 
-  protected lazy val htmlElemRenderer = SHtml.idMemoize(_ => htmlElemRendererTransforms)
+  protected lazy val htmlElemRenderer = SHtml2.memoizeElem(_ => htmlElemRendererTransforms)
 
   protected def htmlElemRendererTransforms: NodeSeq => NodeSeq = PassThru
 

@@ -28,5 +28,9 @@ import com.github.david04.liftutils.elem.ID
 
 trait KnownSizeTable extends Table {
 
-  protected def rowsSize: Long
+  trait DataKnownSizeTable extends TableData {
+    val rowsSize: Long
+  }
+
+  type Data <: DataKnownSizeTable
 }

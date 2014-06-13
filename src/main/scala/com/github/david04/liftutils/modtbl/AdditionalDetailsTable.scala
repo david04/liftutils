@@ -35,13 +35,13 @@ trait AdditionalDetailsTable extends Table {
 
   protected def rowDetailsContents(row: R, rowId: String, rowIdx: Int): NodeSeq = NodeSeq.Empty
 
-  protected def rowDetails(row: R, rowId: String, rowIdx: Int): NodeSeq => NodeSeq =
+  protected def rowDetails(row: R, rowId: String, rowIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
     "tr [id]" #> (rowId + "_details") &
-      "td [colspan]" #> columns.size &
+      "td [colspan]" #> data.cols.size &
       "td *" #> rowDetailsContents(row, rowId, rowIdx)
 
-  override protected def rowsTransforms(): Seq[NodeSeq => NodeSeq] =
-    rows.zipWithIndex.flatMap(row => {
+  override protected def rowsTransforms(implicit data: Data): Seq[NodeSeq => NodeSeq] =
+    data.rows.zipWithIndex.flatMap(row => {
       val id = Helpers.nextFuncName
       rowTransforms(row._1, id, row._2) ::
         rowDetails(row._1, id, row._2) :: Nil

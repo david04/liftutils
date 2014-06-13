@@ -20,9 +20,9 @@
 
 package com.github.david04.liftutils.util
 
-import com.github.david04.liftutils.loc.Loc
+import com.github.david04.liftutils.loc.{LocP, Loc}
 
-object TimeSince extends Loc {
+object TimeSince extends LocP {
 
   val scales = List((1000L, loc("milli")), (60L, loc("second")), (60L, loc("minute")), (24L, loc("hour")), (7L, loc("day")), (10000L, loc("week")))
 

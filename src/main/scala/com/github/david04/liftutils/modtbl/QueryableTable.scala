@@ -29,9 +29,9 @@ trait QueryableTable extends Table {
 
   protected def query(params: Q): Seq[R]
 
-  protected def createQuery(): Q
+  protected def createQuery()(implicit data: Data): Q
 
-  protected def prepareQuery(query: Q): Q = query
+  protected def prepareQuery(query: Q)(implicit data: Data): Q = query
 
-  protected def rows = query(prepareQuery(createQuery()))
+  protected def executeQuery()(implicit data: Data) = query(prepareQuery(createQuery()))
 }
