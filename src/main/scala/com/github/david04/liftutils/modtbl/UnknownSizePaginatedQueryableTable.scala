@@ -29,15 +29,11 @@ import com.github.david04.liftutils.props.Props
 
 trait UnknownSizePaginatedQueryableTable extends PaginatedQueryableTable {
 
-  type Data <: DataPaginatedQueryableTable with DataUnknownSizePaginatedQueryableTable
+  protected lazy val nPages = Int.MaxValue / 2
 
-  trait DataUnknownSizePaginatedQueryableTable extends TableData {
-    protected lazy val nPages = Int.MaxValue / 2
-  }
-
-  protected def paginationInfoTransforms(implicit data: Data): NodeSeq => NodeSeq =
+  protected def paginationInfoTransforms(): NodeSeq => NodeSeq =
     ".modtbl-pag-info *" #>
       loc("pagInfo",
-        "from" -> (data.currentPage * data.pageSize + 1).toString,
-        "to" -> ((data.currentPage + 1) * data.pageSize).toString)
+        "from" -> (currentPage * pageSize + 1).toString,
+        "to" -> ((currentPage + 1) * pageSize).toString)
 }

@@ -32,9 +32,9 @@ trait NamedColTable extends Table {
     def name: String
     def locPrefix = name
 
-    override def renderHead(implicit data: Data): NodeSeq => NodeSeq = super.renderHead andThen "th [col-name]" #> name
+    override def renderHead: NodeSeq => NodeSeq = super.renderHead andThen "th [col-name]" #> name
 
-    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
+    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int): NodeSeq => NodeSeq =
       super.renderRow(row, rowId, rowIdx, colId, colIdx) andThen "td [col-name]" #> name
   }
 
@@ -54,7 +54,7 @@ trait NodeSeqHeadTable extends Table {
     def nodeSeqHeadTableTransforms() =
       "th *" #> headNodeSeqValue()
 
-    override def renderHead(implicit data: Data): NodeSeq => NodeSeq = super.renderHead andThen nodeSeqHeadTableTransforms()
+    override def renderHead: NodeSeq => NodeSeq = super.renderHead andThen nodeSeqHeadTableTransforms()
   }
 
 }
@@ -103,7 +103,7 @@ trait NodeSeqRowTable extends Table {
 
     def nodeSeqRowTableTransforms(row: R) = "td *" #> rowNodeSeqValue(row)
 
-    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
+    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int): NodeSeq => NodeSeq =
       super.renderRow(row, rowId, rowIdx, colId, colIdx) andThen
         nodeSeqRowTableTransforms(row)
   }

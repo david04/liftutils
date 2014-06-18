@@ -30,12 +30,12 @@ trait ClientSideSearchableTable extends Table {
 
   override def keepClasses = "modtbl-search-around" :: super.keepClasses
 
-  override protected def rowTransforms(row: R, rowId: String, rowIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
+  override protected def rowTransforms(row: R, rowId: String, rowIdx: Int): NodeSeq => NodeSeq =
     super.rowTransforms(row, rowId, rowIdx) andThen
       "tr [class+]" #> "modtbl-searchable"
 
-  override protected def pageTransforms(implicit data: Data): NodeSeq => NodeSeq =
-    super.pageTransforms(data) andThen
+  override protected def pageTransforms(): NodeSeq => NodeSeq =
+    super.pageTransforms() andThen
       ".modtbl-search" #> {
         val inputId = Helpers.nextFuncName
         ".modtbl-search [id]" #> inputId &

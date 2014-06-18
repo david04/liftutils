@@ -30,24 +30,24 @@ import net.liftweb.http.js.JsCmds.{Run, OnLoad, Script}
 trait ClickableRowTable extends Table {
   type C <: ClickableRowCol
 
-  protected def onClickClientSide(row: R, rowId: String, rowIdx: Int)(implicit data: Data): JsCmd = JsCmds.Noop
+  protected def onClickClientSide(row: R, rowId: String, rowIdx: Int, col: C): JsCmd = JsCmds.Noop
 
-  protected def onClick(row: R, rowId: String, rowIdx: Int)(implicit data: Data): JsCmd = JsCmds.Noop
+  protected def onClick(row: R, rowId: String, rowIdx: Int): JsCmd = JsCmds.Noop
 
-  def isClickable(row: R, rowId: String, rowIdx: Int)(implicit data: Data): Boolean = true
+  def isClickable(row: R, rowId: String, rowIdx: Int, col: C): Boolean = true
 
   trait ClickableRowCol extends TableCol {
     self: C =>
 
-    def clickableRowTransforms(row: R, rowId: String, rowIdx: Int, colId: String)(implicit data: Data): NodeSeq => NodeSeq = {
-      if (isClickable(row, rowId, rowIdx))
+    def clickableRowTransforms(row: R, rowId: String, rowIdx: Int, colId: String): NodeSeq => NodeSeq = {
+      if (isClickable(row, rowId, rowIdx, this))
         "td [onclick]" #>
-          (onClickClientSide(row, rowId, rowIdx) &
+          (onClickClientSide(row, rowId, rowIdx, this) &
             SHtml.onEvent(_ => onClick(row, rowId, rowIdx)).cmd).toJsCmd
       else PassThru
     }
 
-    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
+    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int): NodeSeq => NodeSeq =
       super.renderRow(row, rowId, rowIdx, colId, colIdx) andThen
         clickableRowTransforms(row, rowId, rowIdx, colId)
   }
@@ -74,7 +74,7 @@ trait ColClickableRowTable extends Table {
       else PassThru
     }
 
-    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
+    override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int): NodeSeq => NodeSeq =
       super.renderRow(row, rowId, rowIdx, colId, colIdx) andThen
         clickableRowTransforms(row, rowId, rowIdx, colId)
   }

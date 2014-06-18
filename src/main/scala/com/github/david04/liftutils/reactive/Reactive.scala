@@ -32,7 +32,6 @@ import net.liftweb.http.SHtml
 import net.liftweb.http.js.JsCmds.Replace
 import net.liftweb.http.js.JE.JsRaw
 import net.liftweb.http.js.JsCmds.Run
-import com.github.david04.liftutils.util.Util.RichJsCmd
 
 // ======== Server side ========
 
@@ -218,8 +217,8 @@ object RichRXStr {
       val id = Helpers.nextFuncName
       <tail>{Script(OnLoad {
         s.addRXDependent(new RXDependent {
-          override def rXChanged(): JsCmd = Run(s"${'$'}('#$id').text(" + s.getRX.toJsCmd + ");").P
-        }) & Run(s"${'$'}('#$id').text(" + s.getRX.toJsCmd + ");").P
+          override def rXChanged(): JsCmd = Run(s"${'$'}('#$id').text(" + s.getRX.toJsCmd + ");")
+        }) & Run(s"${'$'}('#$id').text(" + s.getRX.toJsCmd + ");")
       })}</tail> ++
         <span id={id}></span>
     }

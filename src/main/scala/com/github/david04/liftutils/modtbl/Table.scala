@@ -21,7 +21,7 @@
 package com.github.david04.liftutils.modtbl
 
 import scala.xml.NodeSeq
-import net.liftweb.http.{SHtml2, SHtml, Templates, S}
+import net.liftweb.http.{SHtml, Templates, S}
 import net.liftweb.util.{ClearNodes, ClearClearable, PassThru}
 import net.liftweb.util.Helpers._
 import com.github.david04.liftutils.loc.Loc
@@ -52,11 +52,11 @@ trait Table extends Loc with ID {
     self: C =>
     override def parentLoc = table
 
-    def renderHead(implicit data: Data): NodeSeq => NodeSeq =
+    def renderHead: NodeSeq => NodeSeq =
       "th [class+]" #> thClasses &
         "th [style+]" #> thStyle
 
-    def renderRow(row: R, rowId: String, idx: Int, colId: String, colIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
+    def renderRow(row: R, rowId: String, idx: Int, colId: String, colIdx: Int): NodeSeq => NodeSeq =
       "td [class+]" #> tdClasses &
         "td [style+]" #> tdStyle &
         "td [id]" #> colId
@@ -67,14 +67,11 @@ trait Table extends Loc with ID {
   /** Column type */
   type C <: TableCol
 
-  trait TableData {
-    lazy val rows: Seq[R] = Nil
-    lazy val cols: Seq[C] = Nil
-  }
+  /** Get all rows. */
+  protected def rows: Seq[R]
 
-  type Data <: TableData
-
-  def renderArgs(): Data
+  /** Get all columns. */
+  protected def columns: Seq[C]
 
   protected def templatePath: List[String] = "templates-hidden" :: "modtbl-dflt" :: Nil
 
@@ -86,36 +83,36 @@ trait Table extends Loc with ID {
     (".modtbl-clearable" #> ClearNodes).apply(pass2)
   }
 
-  protected lazy val pageRenderer = SHtml2.idMemoize[Data]((_, data) => pageTransforms(data))
-  protected lazy val tableRenderer = SHtml2.idMemoize[Data]((_, data) => tableTransforms(data))
-  protected lazy val tableBodyRenderer = SHtml2.idMemoize[Data]((_, data) => tableBodyTransforms(data))
+  protected lazy val pageRenderer = SHtml.idMemoize(_ => pageTransforms())
+  protected lazy val tableRenderer = SHtml.idMemoize(_ => tableTransforms())
+  protected lazy val tableBodyRenderer = SHtml.idMemoize(_ => tableBodyTransforms())
 
-  def rerenderPage() = pageRenderer.setHtml(renderArgs())
-  def rerenderTable() = tableRenderer.setHtml(renderArgs())
-  def rerenderTableBody() = tableBodyRenderer.setHtml(renderArgs())
+  def rerenderPage() = pageRenderer.setHtml()
+  def rerenderTable() = tableRenderer.setHtml()
+  def rerenderTableBody() = tableBodyRenderer.setHtml()
 
-  protected def pageTransforms(implicit data: Data): NodeSeq => NodeSeq = ".modtbl-table [id]" #> id('table) andThen ".modtbl-table" #> tableRenderer(data)
+  protected def pageTransforms(): NodeSeq => NodeSeq = ".modtbl-table [id]" #> id('table) andThen ".modtbl-table" #> tableRenderer
 
-  protected def tableTransforms(implicit data: Data): NodeSeq => NodeSeq = "thead tr th" #> data.cols.map(_.renderHead) & "tbody" #> tableBodyRenderer(data)
+  protected def tableTransforms(): NodeSeq => NodeSeq = "thead tr th" #> columns.map(_.renderHead) & "tbody" #> tableBodyRenderer
 
-  protected def tableBodyTransforms(implicit data: Data): NodeSeq => NodeSeq = "tr" #> rowsTransforms(data)
+  protected def tableBodyTransforms(): NodeSeq => NodeSeq = "tr" #> rowsTransforms()
 
-  protected def rowsTransforms(implicit data: Data): Seq[NodeSeq => NodeSeq] = data.rows.zipWithIndex.map(row => rowTransforms(row._1, S.formFuncName, row._2))
+  protected def rowsTransforms(): Seq[NodeSeq => NodeSeq] = rows.zipWithIndex.map(row => rowTransforms(row._1, S.formFuncName, row._2))
 
   protected def trStyle = List[String]()
 
-  protected def trStylesFor(row: R, rowId: String, rowIdx: Int)(implicit data: Data): List[String] = trStyle
+  protected def trStylesFor(row: R, rowId: String, rowIdx: Int): List[String] = trStyle
 
-  protected def rowTransforms(row: R, rowId: String, rowIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
+  protected def rowTransforms(row: R, rowId: String, rowIdx: Int): NodeSeq => NodeSeq =
     "tr [class+]" #> trStylesFor(row, rowId, rowIdx).mkString(" ") &
       "tr [id]" #> rowId &
-      "td" #> data.cols.zipWithIndex.map(col => col._1.renderRow(row, rowId, rowIdx, S.formFuncName, col._2))
+      "td" #> columns.zipWithIndex.map(col => col._1.renderRow(row, rowId, rowIdx, S.formFuncName, col._2))
 
   def renderedTable(): NodeSeq = {
     (".modtbl-around [class+]" #> tableClasses.mkString(" ") &
       ".modtbl-around [modtbl]" #> locPrefix &
       ".modtbl-around [id]" #> id('around) andThen
-      ".modtbl-around" #> pageRenderer(renderArgs())).apply(template)
+      ".modtbl-around" #> pageRenderer).apply(template)
   }
 
   def renderTable(): NodeSeq => NodeSeq = (_: NodeSeq) => renderedTable()

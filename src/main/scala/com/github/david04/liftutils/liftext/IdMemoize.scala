@@ -28,13 +28,6 @@ import http.js._
 import JsCmds._
 import scala.xml._
 
-trait Param1IdMemoizeTransform[A1] {
-
-  def apply(arg: A1): NodeSeq => NodeSeq
-  def latestId: String
-  def setHtml(arg: A1): JsCmd
-}
-
 object SHtml2 {
 
   def memoizeElem(f: IdMemoizeTransform => NodeSeqFuncOrSeqNodeSeqFunc): IdMemoizeTransform = new IdMemoizeTransform {
@@ -67,37 +60,4 @@ object SHtml2 {
   }
 
   def textMemoize(txt: => String) = SHtml.idMemoize(_ => (_: NodeSeq) => Text(txt))
-
-  def idMemoize[A1](f: (Param1IdMemoizeTransform[A1], A1) => NodeSeqFuncOrSeqNodeSeqFunc): Param1IdMemoizeTransform[A1] = {
-    new Param1IdMemoizeTransform[A1] {
-      var latestElem: Elem = <span/>
-
-      var latestKids: NodeSeq = NodeSeq.Empty
-
-      var latestId = Helpers.nextFuncName
-
-      private def fixElem(e: Elem): Elem = {
-        e.attribute("id") match {
-          case Some(id) => latestId = id.text; e
-          case None => e % ("id" -> latestId)
-        }
-      }
-
-      def apply(arg: A1): NodeSeq => NodeSeq =
-        (ns: NodeSeq) =>
-          Helpers.findBox(ns) { e => latestElem = fixElem(e);
-            latestKids = e.child;
-            Full(e)
-          }.map(ignore => applyAgain(arg)).openOr(NodeSeq.Empty)
-
-      def applyAgain(arg: A1): NodeSeq =
-        new Elem(latestElem.prefix,
-          latestElem.label,
-          latestElem.attributes,
-          latestElem.scope,
-          f(this, arg)(latestKids): _*)
-
-      def setHtml(arg: A1): JsCmd = SetHtml(latestId, f(this, arg)(latestKids))
-    }
-  }
 }

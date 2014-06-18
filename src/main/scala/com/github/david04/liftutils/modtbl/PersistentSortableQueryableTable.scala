@@ -25,16 +25,11 @@ trait PersistentSortableQueryableTable extends SortableQueryableTable with Named
 
   type C <: SortCol with NamedCol
 
-  type Data <: PersistentSortableQueryableTableData
-
-  trait PersistentSortableQueryableTableData extends DataSortableTable {
-
-    protected lazy val _currentSortColNameVar = props.strVar("sortCol", cols.head.name)
-    override def currentSortCol: C = cols.find(_.name == _currentSortColNameVar.get).getOrElse(cols.head)
-    override def currentSortCol_=(c: C): Unit = {
-      _currentSortColNameVar() = c.name
-    }
-    override val currentSortAsc = props.boolVar("sortAsc", currentSortCol.defaultSortAsc)
-
+  protected lazy val _currentSortColNameVar = props.strVar("sortCol", columns.head.name)
+  override protected def currentSortCol: C = columns.find(_.name == _currentSortColNameVar.get).getOrElse(columns.head)
+  override protected def currentSortCol_=(c: C): Unit = {
+    _currentSortColNameVar() = c.name
   }
+
+  override protected val currentSortAsc = props.boolVar("sortAsc", currentSortCol.defaultSortAsc)
 }

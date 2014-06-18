@@ -32,7 +32,10 @@ trait RowDetailsTable extends ClickableRowTable {
 
   protected def rowDetailsTemplatePath: List[String] = "templates-hidden" :: "modtbl-rowDetails-dflt" :: Nil
 
-  protected def rowDetailsTemplate = Templates(rowDetailsTemplatePath).get(0).descendant(3)
+  /**
+   * Template must contain: <tr><td><div class='details-contents'></div></td></tr>
+   */
+  protected def rowDetailsTemplate: NodeSeq = Templates(rowDetailsTemplatePath).get(0).descendant(3)
 
   protected var currentDetailsRow: Option[(R, JsCmd)] = None
 
@@ -40,8 +43,8 @@ trait RowDetailsTable extends ClickableRowTable {
 
   protected def rowDetailsContentClass: String = "details-contents"
 
-  protected def openDetailsRow(row: R, rowId: String, rowIdx: Int)(implicit data: Data): JsCmd = Run {
-    sel(rowId, ".after(" + rowDetailsTransforms(row, rowId, rowIdx, false)(data)(rowDetailsTemplate).toString().encJs + ");") +
+  protected def openDetailsRow(row: R, rowId: String, rowIdx: Int): JsCmd = Run {
+    sel(rowId, ".after(" + rowDetailsTransforms(row, rowId, rowIdx, false)(rowDetailsTemplate).toString().encJs + ");") +
       sel(s"$rowId-details .$rowDetailsContentClass", ".slideDown(400);")
   }
 
@@ -51,7 +54,7 @@ trait RowDetailsTable extends ClickableRowTable {
       "});")
   }
 
-  override protected def onClick(row: R, rowId: String, rowIdx: Int)(implicit data: Data): JsCmd = {
+  override protected def onClick(row: R, rowId: String, rowIdx: Int): JsCmd = {
     currentDetailsRow match {
       case Some((prev, close)) if prev == row =>
         currentDetailsRow = None
@@ -65,21 +68,21 @@ trait RowDetailsTable extends ClickableRowTable {
     }
   }
 
-  protected def rowDetailsTransforms(row: R)(implicit data: Data): NodeSeq => NodeSeq
+  protected def rowDetailsTransforms(row: R): NodeSeq => NodeSeq
 
-  protected def rowDetailsTransforms(row: R, rowId: String, rowIdx: Int, visible: Boolean)(implicit data: Data): NodeSeq => NodeSeq =
+  protected def rowDetailsTransforms(row: R, rowId: String, rowIdx: Int, visible: Boolean): NodeSeq => NodeSeq =
     "tr [id]" #> s"$rowId-details" &
       s"tr .$rowDetailsContentClass [style+]" #> (if (visible) "" else ";display:none;") andThen
-      "td [colspan]" #> data.cols.size &
+      "td [colspan]" #> columns.size &
         "td [class+]" #> rowDetailsClasses.mkString(" ") &
         "td" #> rowDetailsTransforms(row)
 
-  override protected def rowTransforms(row: R, rowId: String, rowIdx: Int)(implicit data: Data): NodeSeq => NodeSeq =
+  override protected def rowTransforms(row: R, rowId: String, rowIdx: Int): NodeSeq => NodeSeq =
     super.rowTransforms(row, rowId, rowIdx) andThen {
       currentDetailsRow match {
         case Some((open, _)) if open == row =>
           currentDetailsRow = Some((row, closeDetailsRow(row, rowId, rowIdx)))
-          (ns: NodeSeq) => ns ++ rowDetailsTransforms(row, rowId, rowIdx, true)(data)(rowDetailsTemplate)
+          (ns: NodeSeq) => ns ++ rowDetailsTransforms(row, rowId, rowIdx, true)(rowDetailsTemplate)
         case _ =>
           PassThru
       }

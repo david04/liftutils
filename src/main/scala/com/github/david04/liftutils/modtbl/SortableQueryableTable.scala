@@ -42,10 +42,10 @@ trait SortableQueryableTable extends QueryableTable with NamedColTable {
 
     def sortable: Boolean
 
-    override def renderHead(implicit data: Data): NodeSeq => NodeSeq =
+    override def renderHead: NodeSeq => NodeSeq =
       super.renderHead andThen
         (if (sortable)
-          "th [class+]" #> (if (name == data.currentSortCol.name) (if (data.currentSortAsc.get) sortThAsc else sortThDesc) else sortThNone) &
+          "th [class+]" #> (if (name == currentSortCol.name) (if (currentSortAsc.get) sortThAsc else sortThDesc) else sortThNone) &
             "th [onclick]" #> clickedSortableHeader(this)
         else PassThru)
   }
@@ -57,37 +57,32 @@ trait SortableQueryableTable extends QueryableTable with NamedColTable {
 
   type C <: SortCol
   type Q <: SortQuery
-  type Data <: DataSortableTable
 
-  trait DataSortableTable extends TableData {
+  protected def defaultSortCol = columns.head
+  protected var _currentSortColName: String = defaultSortCol.name
+  protected def currentSortCol: C = columns.find(_.name == _currentSortColName).getOrElse(defaultSortCol)
+  protected def currentSortCol_=(c: C): Unit = _currentSortColName = c.name
+  protected val currentSortAsc: FatLazy[Boolean] = FatLazy(currentSortCol.defaultSortAsc)
 
-    def defaultSortCol = cols.head
-    var _currentSortColName: String = defaultSortCol.name
-    def currentSortCol: C = cols.find(_.name == _currentSortColName).getOrElse(defaultSortCol)
-    def currentSortCol_=(c: C): Unit = _currentSortColName = c.name
-    val currentSortAsc: FatLazy[Boolean] = FatLazy(currentSortCol.defaultSortAsc)
+  protected def clickedSortableHeader(col: C) = SHtml.onEvent(_ => {
+    val before = currentSortCol
 
-  }
-
-  protected def clickedSortableHeader(col: C)(implicit data: Data) = SHtml.onEvent(_ => {
-    val before = data.currentSortCol
-
-    if (col.name == data.currentSortCol.name) {
-      data.currentSortAsc() = !data.currentSortAsc.get
+    if (col.name == currentSortCol.name) {
+      currentSortAsc() = !currentSortAsc.get
     } else {
-      data.currentSortCol = col
-      data.currentSortAsc() = col.defaultSortAsc
+      currentSortCol = col
+      currentSortAsc() = col.defaultSortAsc
     }
 
     Run("$('[col-name=\"" + before.name + "\"]')" + s".removeClass('$sortThAsc').removeClass('$sortThDesc').addClass('$sortThNone')") &
-      Run("$('[col-name=\"" + col.name + "\"]')" + s".removeClass('$sortThNone').addClass('" + (if (data.currentSortAsc.get) sortThAsc else sortThDesc) + "')") &
+      Run("$('[col-name=\"" + col.name + "\"]')" + s".removeClass('$sortThNone').addClass('" + (if (currentSortAsc.get) sortThAsc else sortThDesc) + "')") &
       rerenderTableBody()
   })
 
-  override protected def prepareQuery(_query: Q)(implicit data: Data): Q = {
+  override protected def prepareQuery(_query: Q): Q = {
     val query = super.prepareQuery(_query)
-    query.sortColumn = data.currentSortCol
-    query.sortAsc = data.currentSortAsc.get
+    query.sortColumn = currentSortCol
+    query.sortAsc = currentSortAsc.get
     query
   }
 }

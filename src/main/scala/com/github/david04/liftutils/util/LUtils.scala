@@ -30,7 +30,7 @@ import scala.Some
 import net.liftweb.http.js.JsCmds.Run
 
 
-object Util {
+object LUtils {
 
   var enableProfiling = true
 
@@ -43,9 +43,9 @@ object Util {
                           | """.stripMargin)
 
   implicit def __print[T](v: T) = new {
-    def p(s: String = "", t: T => String = _.toString): T = { println(s + t(v)); v }
+    def #!(s: String = "", t: T => String = _.toString): T = { println(s + t(v)); v }
 
-    def p: T = p("")
+    def #! : T = #!("")
   }
 
   def run(b: => JsCmd) = SHtml.jsonCall(JsNull, (_: JValue) => b).toJsCmd + ";"

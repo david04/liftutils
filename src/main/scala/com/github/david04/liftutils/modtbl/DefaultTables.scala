@@ -33,7 +33,6 @@ abstract class DefaultTable extends Table
                                     with ZebraTable {
   type Q = DefaultQuery
   type C <: DefaultColumn
-  type Data <: DataSortableTable with DataPaginatedQueryableTable
 
   case class DefaultQuery(
                            var pageSize: Int,
@@ -43,7 +42,7 @@ abstract class DefaultTable extends Table
                                                          with PagQuery
                                                          with SortQuery
 
-  def createQuery = DefaultQuery(0, 0, null.asInstanceOf[C], false)
+  def createQuery = DefaultQuery(0, 0, columns.head, false)
 
   abstract class DefaultColumn(
                                 name: String,
@@ -88,48 +87,6 @@ abstract class DefaultSimpleTable extends Table
 
 }
 
-abstract class DefaultQurSortPagTable extends Table
-                                              with NamedTable
-                                              with LocStrHeadTable
-                                              with StrRowTable
-                                              with SortableQueryableTable
-                                              with KnownSizePaginatedQueryableTable {
-
-  override protected def templatePath: List[String] = "templates-hidden" :: "modtbl-simple" :: Nil
-
-  trait DefaultColumn extends TableCol with LocStrHeadCol with SortCol {}
-
-  type Data = DataSortableTable with DataKnownSizePaginatedQueryableTable
-
-  type C = DefaultColumn
-
-  type Q = PagQuery with SortQuery
-
-  case class DefaultStringColumn(
-                                  name: String,
-                                  rowValue: R => String,
-                                  sortable: Boolean) extends DefaultColumn
-                                                                 with StrRowCol
-                                                                 with SortCol {
-    self: C =>
-
-    def rowStrValue: R => String = rowValue
-  }
-
-  case class DefaultNodeSeqColumn(
-                                   name: String,
-                                   rowValue: R => NodeSeq,
-                                   sortable: Boolean) extends DefaultColumn
-                                                                   with NodeSeqRowCol
-                                                                   with SortCol {
-    self: C =>
-
-    def rowNodeSeqValue: R => NodeSeq = rowValue
-  }
-
-}
-
-
 abstract class DefaultOpenableTable extends Table
                                             with NamedTable
                                             with QueryableTable
@@ -140,9 +97,6 @@ abstract class DefaultOpenableTable extends Table
                                             with StrRowTable
                                             with ZebraTable {
   type Q = DefaultQuery
-
-  type Data = DataSortableTable with DataPaginatedQueryableTable
-
   type C <: DefaultColumn
 
   case class DefaultQuery(
@@ -153,7 +107,7 @@ abstract class DefaultOpenableTable extends Table
                                                          with PagQuery
                                                          with SortQuery
 
-  def createQuery(implicit data: Data) = DefaultQuery(0, 0, null.asInstanceOf[C], false)
+  def createQuery = DefaultQuery(0, 0, columns.head, false)
 
   abstract class DefaultColumn(
                                 name: String,

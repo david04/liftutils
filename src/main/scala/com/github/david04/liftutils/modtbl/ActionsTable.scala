@@ -28,8 +28,8 @@ import net.liftweb.util.PassThru
 
 trait NamedTable extends Table {
 
-  override protected def pageTransforms(implicit data: Data): NodeSeq => NodeSeq =
-    super.pageTransforms andThen
+  override protected def pageTransforms(): NodeSeq => NodeSeq =
+    super.pageTransforms() andThen
       ".modtbl-name *" #> loc("name")
 }
 
@@ -38,8 +38,8 @@ trait ActionsTable extends Table {
   protected def actionsTemplatePath: List[String] = Nil
   protected def actionsTemplate = Templates(actionsTemplatePath).get
 
-  override protected def pageTransforms(implicit data: Data): NodeSeq => NodeSeq =
-    super.pageTransforms andThen
+  override protected def pageTransforms(): NodeSeq => NodeSeq =
+    super.pageTransforms() andThen
       ".modtbl-actions" #> actionsRenderer
 
   protected lazy val actionsRenderer = (_: NodeSeq) => SHtml.idMemoize(_ => actionsTransforms()).apply(actionsTemplate)

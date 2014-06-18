@@ -29,10 +29,10 @@ trait EmptyTable extends KnownSizeTable {
 
   protected def emptyTableContent: NodeSeq = Text(loc("empty"))
 
-  override protected def rowsTransforms(implicit data: Data): Seq[NodeSeq => NodeSeq] =
-    if (data.rowsSize == 0)
+  override protected def rowsTransforms(): Seq[NodeSeq => NodeSeq] =
+    if (rowsSize == 0)
       ("td [class+]" #> emptyTableClass &
-        "td [colspan]" #> data.cols.size &
+        "td [colspan]" #> columns.size &
         "td *" #> emptyTableContent) :: Nil
-    else super.rowsTransforms
+    else super.rowsTransforms()
 }

@@ -33,7 +33,6 @@ import net.liftweb.json.JsonAST.{JNull, JString, JArray, JValue}
 import net.liftweb.http.js.JsCmds._
 import com.github.david04.liftutils.reactive.{RXStr, RxXVar}
 import net.liftweb.http.js.{JsCmd, JE}
-import com.github.david04.liftutils.util.Util.RichJsCmd
 
 trait PasswordInputElem extends TextInputElem {
 

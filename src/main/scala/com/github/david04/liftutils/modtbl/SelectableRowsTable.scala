@@ -35,37 +35,38 @@ trait SelectableRowsTable extends ClickableRowTable {
 
   override protected def tableClasses: List[String] = "selectable-rows-table" :: super.tableClasses
 
-  type Data <: DataSelectableRowsTable
-
-  trait DataSelectableRowsTable extends TableData {
-
-    def initialSelectedRows = Set[R]()
-    var selectedRows = initialSelectedRows
-  }
-
   protected def selectedRowClass = "selected"
+  protected def initialSelectedRows = Set[R]()
+  protected var selectedRows = initialSelectedRows
 
   protected def selectedRow(row: R): JsCmd = Noop
   protected def diselectedRow(row: R): JsCmd = Noop
   protected def changedSelection(selected: Set[R]): JsCmd = Noop
 
-  override protected def trStylesFor(row: R, rowId: String, rowIdx: Int)(implicit data: Data): List[String] =
-    if (data.selectedRows.contains(row)) selectedRowClass :: super.trStylesFor(row, rowId, rowIdx)
+  override protected def trStylesFor(row: R, rowId: String, rowIdx: Int): List[String] =
+    if (selectedRows.contains(row)) selectedRowClass :: super.trStylesFor(row, rowId, rowIdx)
     else super.trStylesFor(row, rowId, rowIdx)
 
-  override protected def onClickClientSide(row: R, rowId: String, rowIdx: Int)(implicit data: Data): JsCmd = Run(s"${'$'}('#$rowId').toggleClass('$selectedRowClass');")
+  override protected def onClickClientSide(row: R, rowId: String, rowIdx: Int, col: C): JsCmd = Run(s"${'$'}('#$rowId').toggleClass('$selectedRowClass');")
 
   def onSelectClientSide(row: R, rowId: String, rowIdx: Int): JsCmd = Run(s"${'$'}('#$rowId').addClass('$selectedRowClass')")
 
   def onDiselectClientSide(row: R, rowId: String, rowIdx: Int): JsCmd = Run(s"${'$'}('#$rowId').removeClass('$selectedRowClass')")
 
-  override protected def onClick(row: R, rowId: String, rowIdx: Int)(implicit data: Data): JsCmd = {
-    if (data.selectedRows.contains(row)) {
-      data.selectedRows = data.selectedRows - row
-      diselectedRow(row) & changedSelection(data.selectedRows) & onDiselectClientSide(row, rowId, rowIdx)
+  override protected def onClick(row: R, rowId: String, rowIdx: Int): JsCmd = {
+    println("selectedRows.contains(row)=" + selectedRows.contains(row))
+    if (selectedRows.contains(row)) {
+      println("diselected")
+      selectedRows = selectedRows - row
+      val r = diselectedRow(row) & changedSelection(selectedRows) & onDiselectClientSide(row, rowId, rowIdx)
+      println("selectedRows.contains(row)=" + selectedRows.contains(row))
+      r
     } else {
-      data.selectedRows = data.selectedRows + row
-      selectedRow(row) & changedSelection(data.selectedRows) & onSelectClientSide(row, rowId, rowIdx)
+      println("selected")
+      selectedRows = selectedRows + row
+      val r = selectedRow(row)
+      println("selectedRows.contains(row)=" + selectedRows.contains(row))
+      r & changedSelection(selectedRows) & onSelectClientSide(row, rowId, rowIdx)
     }
   }
 }
@@ -77,27 +78,26 @@ trait MouseSelectableRowsTable extends SelectableRowsTable with RowIdsTable {
 
   trait MouseSelectableRowsCol extends ClickableRowCol {
     self: C =>
-    override def clickableRowTransforms(row: R, rowId: String, rowIdx: Int, colId: String)(implicit data: Data): NodeSeq => NodeSeq = PassThru
+    override def clickableRowTransforms(row: R, rowId: String, rowIdx: Int, colId: String): NodeSeq => NodeSeq = PassThru
   }
 
-  override protected def rowTransforms(row: R, rId: String, rowIdx: Int)(implicit data: Data): NodeSeq => NodeSeq = {
+  protected val selectCallback = SHtml.jsonCall(JsRaw("window.selected"), (v: JValue) => v match {
+    case JArray(indexes) =>
+      val selected = rowsForIds(indexes.collect({ case JString(s) => s}))
+      selectedRows = selectedRows ++ selected
+      selected.map(selectedRow(_)).foldLeft(Noop)(_ & _) & changedSelection(selectedRows)
+  })
 
-    val selectCallback = SHtml.jsonCall(JsRaw("window.selected"), (v: JValue) => v match {
-      case JArray(indexes) =>
-        val selected = rowsForIds(indexes.collect({ case JString(s) => s}))
-        data.selectedRows = data.selectedRows ++ selected
-        selected.map(selectedRow(_)).foldLeft(Noop)(_ & _) & changedSelection(data.selectedRows)
-    })
+  protected val diselectCallback = SHtml.jsonCall(JsRaw("window.selected"), (v: JValue) => v match {
+    case JArray(indexes) =>
+      val selected = rowsForIds(indexes.collect({ case JString(s) => s}))
+      selectedRows = selectedRows -- selected
+      selected.map(diselectedRow(_)).foldLeft(Noop)(_ & _) & changedSelection(selectedRows)
+  })
 
-    val diselectCallback = SHtml.jsonCall(JsRaw("window.selected"), (v: JValue) => v match {
-      case JArray(indexes) =>
-        val selected = rowsForIds(indexes.collect({ case JString(s) => s}))
-        data.selectedRows = data.selectedRows -- selected
-        selected.map(diselectedRow(_)).foldLeft(Noop)(_ & _) & changedSelection(data.selectedRows)
-    })
-
+  override protected def rowTransforms(row: R, rId: String, rowIdx: Int): NodeSeq => NodeSeq =
     super.rowTransforms(row, rId, rowIdx) andThen {
-      if (isClickable(row, rId, rowIdx)) {
+      if (isClickable(row, rId, rowIdx, columns.head)) {
         val id = rowId(row).encJs
         (ns: NodeSeq) => (ns ++ <tail>{Script(Run({
           "" +
@@ -157,5 +157,4 @@ trait MouseSelectableRowsTable extends SelectableRowsTable with RowIdsTable {
         PassThru
       }
     }
-  }
 }
