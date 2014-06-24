@@ -28,7 +28,6 @@ import net.liftweb.http.js.JE.{JsRaw, ValById}
 import scala.xml.NodeSeq
 import java.util.regex.Pattern
 import net.liftweb.json.JsonAST.{JString, JValue}
-import org.squeryl.Session
 import net.liftweb.http.js.JsCmd
 
 class InPlace[T](

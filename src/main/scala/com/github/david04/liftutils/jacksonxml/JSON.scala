@@ -1,4 +1,5 @@
 import com.github.david04.liftutils.jacksonxml.{JsonSerializable, JSON}
+
 //  Copyright (c) 2014 David Miguel Antunes <davidmiguel {at} antunes.net>
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -61,8 +62,10 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind._
 import com.fasterxml.jackson.databind.ser.Serializers
 import java.{util => ju}
-import com.fasterxml.jackson.module.scala.deser.UntypedObjectDeserializerModule
+import com.fasterxml.jackson.module.scala.deser.{ScalaStdValueInstantiatorsModule, UntypedObjectDeserializerModule}
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.module.scala.introspect.ScalaClassIntrospectorModule
+import com.fasterxml.jackson.datatype.joda.JodaModule
 
 trait JsonSerializable {
   def json(): Option[String]
@@ -89,9 +92,10 @@ trait JsonSerializableSerializerModule extends JacksonModule {
   this += (_ addSerializers JsonSerializableSerializerResolver)
 }
 
+import com.fasterxml.jackson.module.scala._
+
 object JSON extends ObjectMapper {
 
-  import com.fasterxml.jackson.module.scala._
 
   registerModule(
     new JacksonModule
@@ -102,13 +106,38 @@ object JSON extends ObjectMapper {
         with IterableModule
         with TupleModule
         with MapModule
-        with CaseClassModule
         with SetModule
-        with JsonSerializableSerializerModule
-        with UntypedObjectDeserializerModule {
+        with ScalaStdValueInstantiatorsModule
+        with ScalaClassIntrospectorModule
+        with UntypedObjectDeserializerModule
+        with JsonSerializableSerializerModule {
       override def getModuleName = "DefaultScalaModule"
     })
+  registerModule(new JodaModule)
   setSerializationInclusion(JsonInclude.Include.NON_NULL)
+  enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL)
+
+  val L = new ObjectMapper {
+
+    registerModule(
+      new JacksonModule
+          with IteratorModule
+          with EnumerationModule
+          with OptionModule
+          with SeqModule
+          with IterableModule
+          with TupleModule
+          with MapModule
+          with SetModule
+          with ScalaStdValueInstantiatorsModule
+          with ScalaClassIntrospectorModule
+          with UntypedObjectDeserializerModule
+          with JsonSerializableSerializerModule {
+        override def getModuleName = "DefaultScalaModule"
+      })
+    registerModule(new JodaModule)
+  }
+
 }
 
 }
