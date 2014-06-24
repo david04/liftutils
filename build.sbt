@@ -1,10 +1,10 @@
 name := "liftutils"
 
-version := "0.1.13"
+version := "0.1.14"
 
 organization := "com.github.david04"
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.10.4"
 
 resolvers ++= Seq(
   "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-releases/",
@@ -18,23 +18,26 @@ resolvers ++= Seq(
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
+crossScalaVersions := Seq("2.10.4", "2.11.1")
+
 libraryDependencies ++= {
   val liftVersion = "2.6-SNAPSHOT"
   Seq(
-    "net.liftweb" %% "lift-webkit" % "2.6-SNAPSHOT" % "compile",
-    "net.liftweb" %% "lift-mapper" % "2.6-SNAPSHOT" % "compile",
-    "com.typesafe.akka" %% "akka-actor" % "2.3.3",
-    "javax.servlet" % "javax.servlet-api" % "3.0.1",
-    "javax.servlet" % "servlet-api" % "2.5" % "provided",
-    "ch.qos.logback" % "logback-classic" % "1.0.6",
-    "org.postgresql" % "postgresql" % "9.3-1101-jdbc41",
-    "org.squeryl" %% "squeryl" % "0.9.5-7",
-    "com.zaxxer" % "HikariCP" % "1.3.8" % "compile",
-    "com.googlecode.usc" % "jdbcdslog" % "1.0.6.2",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.4.0-rc2",
-    "com.fasterxml.jackson.datatype" % "jackson-datatype-joda" % "2.4.0-rc3",
-    "com.github.nscala-time" %% "nscala-time" % "1.2.0",
-    "org.apache.commons" % "commons-lang3" % "3.3.2"
+    "net.liftweb"                     %% "lift-webkit"                  % liftVersion        % "compile",
+    "net.liftweb"                     %% "lift-mapper"                  % liftVersion        % "compile",
+    "net.liftweb"                     %% "lift-util"                    % liftVersion        % "compile",
+    "net.liftmodules"                 % "lift-jquery-module_2.5_2.10"   % "2.4",
+    "com.googlecode.json-simple"      % "json-simple"                   % "1.1.1",
+    "javax.servlet"                   % "javax.servlet-api"             % "3.0.1",
+    "ch.qos.logback"                  % "logback-classic"               % "1.0.6",
+    "log4j"                           % "log4j"                         % "1.2.17",
+    "com.typesafe.akka"               %% "akka-actor"                   % "2.3.3",
+    "joda-time"                       % "joda-time"                     % "2.3",
+    "com.fasterxml.jackson.module"    %% "jackson-module-scala"         % "2.4.0-rc2",
+    "com.fasterxml.jackson.datatype"  % "jackson-datatype-joda"         % "2.4.0-rc3",
+    "commons-lang"                    % "commons-lang"                  % "2.6",
+    "com.github.nscala-time"          %% "nscala-time"                  % "1.0.0",
+    "org.apache.commons"              % "commons-lang3"                 % "3.3.2"
   )
 }
 
