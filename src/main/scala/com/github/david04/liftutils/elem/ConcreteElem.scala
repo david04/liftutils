@@ -28,7 +28,7 @@ import net.liftweb.util.Helpers._
 import net.liftweb.http.SHtml.ElemAttr
 import net.liftweb.http.js.JE.{ValById, JsRaw}
 import net.liftweb.http.S.{SFuncHolder, LFuncHolder}
-import org.apache.commons.lang.StringEscapeUtils
+import org.apache.commons.lang3.StringEscapeUtils
 import net.liftweb.json.JsonAST.{JNull, JString, JArray, JValue}
 import net.liftweb.http.js.JsCmds._
 import com.github.david04.liftutils.reactive.{RXStr, RxXVar}
@@ -106,7 +106,7 @@ trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with L
     attrs.foldLeft(S.fmapFunc(testFunc)(fn => <select name={fn}>
       {opts.flatMap {
         case (value, text) => (<option value={value}>
-          {StringEscapeUtils.unescapeHtml(text.text)}
+          {StringEscapeUtils.unescapeHtml4(text.text)}
         </option>) % selected(deflt.exists(_ == value))
       }}
     </select>))(_ % _)

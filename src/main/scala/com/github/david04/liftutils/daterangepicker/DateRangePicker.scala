@@ -58,7 +58,7 @@ case class DateRangePicker(
       ).apply(template) ++
       <tail>
         {Script(OnLoad(Run("$('#" + id + "').daterangepicker(" +
-        JSON.writeValueAsString(options) + ",\n" +
+        JSON.L.writeValueAsString(options) + ",\n" +
         "function (_start, _end) {" +
         "var start = _start.toDate().getTime();" +
         "var end = _end.toDate().getTime();" +
@@ -99,7 +99,7 @@ case class CustomRange(name: String, onSelection: () => JsCmd) extends RangeOpti
 
 case class Ranges(ranges: RangeOption*) extends JsonSerializable {
   def json(): Option[String] =
-    Some(JSON.writeValueAsString(SortedMap(ranges.map(r => (r.name, r.value)): _*)(Ordering.by(v => ranges.indexWhere(_.name == v)))))
+    Some(JSON.L.writeValueAsString(SortedMap(ranges.map(r => (r.name, r.value)): _*)(Ordering.by(v => ranges.indexWhere(_.name == v)))))
 }
 
 case class Locale(
