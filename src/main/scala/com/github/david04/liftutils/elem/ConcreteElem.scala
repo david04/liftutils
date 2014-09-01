@@ -112,9 +112,13 @@ trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with L
     </select>))(_ % _)
   }
 
-  private var value = getOneOfManyValue()
+  private var value: OneOfManyValue = getOneOfManyValue()
 
   def getCurrentOneOfManyValue() = value
+
+  def setCurrentOneOfManyValue(p: OneOfManyValue => Boolean): JsCmd = {
+    value = getAllOneOfManyValues().find(p).get
+  }
 
   protected def selectInputAttrs: Seq[ElemAttr]
 
@@ -234,6 +238,43 @@ trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableEle
               v => {value = v.toBoolean; onChangeClientSide()}).toJsCmd + "; return true; }"))
           )): _*)
       ))
+}
+
+trait MultiCheckboxInputElem extends GenManyOfManyValueElem with HTMLEditableElem with LabeledElem {
+
+  override protected def htmlElemTemplatePath: List[String] = "templates-hidden" :: "elem-edit-multi-checkbox-dflt" :: Nil
+
+  private var value = getManyOfManyValue()
+
+  def getCurrentManyOfManyValue() = value
+
+  protected def checkboxInputAttrs: Seq[ElemAttr]
+
+  override protected def htmlElemRendererTransforms =
+    super.htmlElemRendererTransforms andThen (
+      ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
+        ".elem-wrap [id]" #> id('wrapper) &
+        ".elem-lbl *" #> wrapName(labelStr) &
+        ".elem-error [id]" #> id('error)
+      ) andThen {
+      ".elem-repeat" #> getAllManyOfManyValues().zipWithIndex.map(e => (ns: NodeSeq) => {
+        val (v, idx) = e
+        bind("elem", (".elem-label *" #> v.name.toString()).apply(ns), "input" -%>
+          SHtml.checkbox(
+            value.contains(v),
+            selected => if (selected) value = value :+ v else value = value.filter(_ != v),
+            (checkboxInputAttrs ++ Seq[ElemAttr](
+              ("id" -> id(Symbol("input" + idx))),
+              ("onchange" -> ("{" + SHtml.ajaxCall(JsRaw(sel(Symbol("input" + idx)) + ".is(':checked')"),
+                selected => {
+                  println("selected: " + selected)
+                  if (selected == "true") value = value :+ v else value = value.filter(_ != v)
+                  onChangeClientSide()
+                }).toJsCmd + "; return true; }"))
+            )): _*))
+      })
+    }
+
 }
 
 trait IconElem extends HTMLEditableElem {def icon: String}

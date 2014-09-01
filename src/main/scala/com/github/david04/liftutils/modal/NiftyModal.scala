@@ -26,7 +26,7 @@ import net.liftweb.http._
 import scala.xml.NodeSeq
 import net.liftweb.http.js.JsCmds.Run
 import net.liftweb.http.js.JsCmd
-import com.github.david04.liftutils.loc.LocC
+import com.github.david04.liftutils.loc.{LocP, LocC}
 
 trait NiftyModal extends LocC {
   def n = "modal"
@@ -75,8 +75,7 @@ case class DefaultNiftyModal(
                               protected val content: NodeSeq,
                               protected val cancelLbl: String,
                               protected val action: Option[(String, JsCmd)],
-                              protected val height: Option[Int] = None
-                              ) extends Modal {
+                              protected val height: Option[Int] = None)(implicit protected val p: LocP) extends NiftyModal {
 
   def cancel = Some(cancelLbl, hide())
 }

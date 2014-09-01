@@ -37,7 +37,7 @@ trait SelectableRowsTable extends ClickableRowTable {
 
   protected def selectedRowClass = "selected"
   protected def initialSelectedRows = Set[R]()
-  protected var selectedRows = initialSelectedRows
+  var selectedRows = initialSelectedRows
 
   protected def selectedRow(row: R): JsCmd = Noop
   protected def diselectedRow(row: R): JsCmd = Noop
@@ -78,7 +78,9 @@ trait MouseSelectableRowsTable extends SelectableRowsTable with RowIdsTable {
 
   trait MouseSelectableRowsCol extends ClickableRowCol {
     self: C =>
-    override def clickableRowTransforms(row: R, rowId: String, rowIdx: Int, colId: String): NodeSeq => NodeSeq = PassThru
+    override def clickableRowTransforms(row: R, rowId: String, rowIdx: Int, colId: String): NodeSeq => NodeSeq =
+      if (isClickable(row, rowId, rowIdx, this)) "td [clickable]" #> "true"
+      else PassThru
   }
 
   protected val selectCallback = SHtml.jsonCall(JsRaw("window.selected"), (v: JValue) => v match {
@@ -107,8 +109,8 @@ trait MouseSelectableRowsTable extends SelectableRowsTable with RowIdsTable {
             "  $(document).mouseup  (function(e){ if(e.which === 1) window.__mouseBtnPressed = false; });" +
             "}" +
             "" +
-            "$('#" + rId + "').on('mousedown', function(e) {" +
-            "  var before = $(this).hasClass('" + selectedRowClass + "');" +
+            "$('#" + rId + " [clickable=true]').on('mousedown', function(e) {" +
+            "  var before = $(this).parent('tr').hasClass('" + selectedRowClass + "');" +
             "  window.selecting = !e.shiftKey;" +
             "  if(e.shiftKey) {" +
             "    console.log('mousedown - diselecting');" +

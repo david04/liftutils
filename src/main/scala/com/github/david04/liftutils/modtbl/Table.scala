@@ -29,9 +29,9 @@ import com.github.david04.liftutils.elem.ID
 
 trait Col {
 
-  def tdClasses = ""
+  def tdClasses = List[String]()
 
-  def thClasses = ""
+  def thClasses = List[String]()
 
   def tdStyle = List[String]()
 
@@ -53,12 +53,12 @@ trait Table extends Loc with ID {
     override def parentLoc = table
 
     def renderHead: NodeSeq => NodeSeq =
-      "th [class+]" #> thClasses &
-        "th [style+]" #> thStyle
+      "th [class+]" #> thClasses.mkString(" ") &
+        "th [style+]" #> thStyle.mkString(";", ";", ";")
 
     def renderRow(row: R, rowId: String, idx: Int, colId: String, colIdx: Int): NodeSeq => NodeSeq =
-      "td [class+]" #> tdClasses &
-        "td [style+]" #> tdStyle &
+      "td [class+]" #> tdClasses.mkString(" ") &
+        "td [style+]" #> tdStyle.mkString(";", ";", ";") &
         "td [id]" #> colId
   }
 

@@ -34,16 +34,23 @@ trait ClickableRowTable extends Table {
 
   protected def onClick(row: R, rowId: String, rowIdx: Int): JsCmd = JsCmds.Noop
 
-  def isClickable(row: R, rowId: String, rowIdx: Int, col: C): Boolean = true
+  trait NonClickableCol {
+    self: C =>
+  }
+
+  def isClickable(row: R, rowId: String, rowIdx: Int, col: C): Boolean = !col.isInstanceOf[NonClickableCol]
+
+  def clickableTdClasses: List[String] = "clickable" :: Nil
 
   trait ClickableRowCol extends TableCol {
     self: C =>
 
     def clickableRowTransforms(row: R, rowId: String, rowIdx: Int, colId: String): NodeSeq => NodeSeq = {
       if (isClickable(row, rowId, rowIdx, this))
-        "td [onclick]" #>
-          (onClickClientSide(row, rowId, rowIdx, this) &
-            SHtml.onEvent(_ => onClick(row, rowId, rowIdx)).cmd).toJsCmd
+        "td [class+]" #> clickableTdClasses.mkString(" ") &
+          "td [onclick]" #>
+            (onClickClientSide(row, rowId, rowIdx, this) &
+              SHtml.onEvent(_ => onClick(row, rowId, rowIdx)).cmd).toJsCmd
       else PassThru
     }
 

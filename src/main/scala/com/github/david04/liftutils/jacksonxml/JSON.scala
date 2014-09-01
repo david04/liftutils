@@ -57,12 +57,13 @@ trait JsonSerializableTypeModifierModule extends JacksonModule {
 
 package com.github.david04.liftutils.jacksonxml {
 
+import com.fasterxml.jackson.databind.jsontype.TypeSerializer
 import com.fasterxml.jackson.module.scala.JacksonModule
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind._
-import com.fasterxml.jackson.databind.ser.Serializers
+import com.fasterxml.jackson.databind.ser.{ContextualSerializer, Serializers}
 import java.{util => ju}
-import com.fasterxml.jackson.module.scala.deser.{ScalaStdValueInstantiatorsModule, UntypedObjectDeserializerModule}
+import com.fasterxml.jackson.module.scala.deser.{EnumerationDeserializerModule, ScalaStdValueInstantiatorsModule, UntypedObjectDeserializerModule}
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.module.scala.introspect.ScalaClassIntrospectorModule
 import com.fasterxml.jackson.datatype.joda.JodaModule
@@ -94,25 +95,12 @@ trait JsonSerializableSerializerModule extends JacksonModule {
 
 import com.fasterxml.jackson.module.scala._
 
+
 object JSON extends ObjectMapper {
 
 
-  registerModule(
-    new JacksonModule
-        with IteratorModule
-        with EnumerationModule
-        with OptionModule
-        with SeqModule
-        with IterableModule
-        with TupleModule
-        with MapModule
-        with SetModule
-        with ScalaStdValueInstantiatorsModule
-        with ScalaClassIntrospectorModule
-        with UntypedObjectDeserializerModule
-        with JsonSerializableSerializerModule {
-      override def getModuleName = "DefaultScalaModule"
-    })
+  registerModule(DefaultScalaModule)
+  registerModule(new JsonSerializableSerializerModule {})
   registerModule(new JodaModule)
   setSerializationInclusion(JsonInclude.Include.NON_NULL)
   enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL)

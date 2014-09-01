@@ -100,11 +100,11 @@ trait HTMLListableC extends ListableC {
 }
 
 trait Editable {
-  def editElems()(implicit editor: HTMLEditor): List[HTMLEditableElem]
+  def editElems()(implicit editor: HTMLEditorImpl): List[HTMLEditableElem]
 }
 
 trait Creatable {
-  def createElems()(implicit editor: HTMLEditor): List[HTMLEditableElem]
+  def createElems()(implicit editor: HTMLEditorImpl): List[HTMLEditableElem]
 }
 
 trait DataTableListableC extends CrudChildC with HTMLListableC with NamedCrudC {

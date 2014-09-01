@@ -33,7 +33,7 @@ trait Modal {
   protected lazy val template = modalTransforms.apply(Templates(templateLoc).get)
 
   protected def title: String
-  protected def content: NodeSeq
+  protected def content: Modal => NodeSeq
   protected def cancel: Option[(String, JsCmd)]
   protected def action: Option[(String, JsCmd)]
   protected def height: Option[Int]
@@ -60,7 +60,7 @@ trait Modal {
   def modalTransforms: NodeSeq => NodeSeq =
     ".modal [id]" #> id &
       ".modal-title *" #> title &
-      ".modal-contents" #> content &
+      ".modal-contents" #> content(this) &
       ".modal-close [onclick]" #> cancel.map(_._2.toJsCmd).getOrElse("") andThen
       ".modal-cancel" #> modalCancelBtnTransforms andThen
       ".modal-action" #> modalActionBtnTransforms andThen
@@ -76,11 +76,10 @@ trait Modal {
 
 case class DefaultModal(
                          protected val title: String,
-                         protected val content: NodeSeq,
+                         protected val content: Modal => NodeSeq,
                          protected val cancelLbl: String,
                          protected val action: Option[(String, JsCmd)],
                          protected val height: Option[Int] = None
                          ) extends Modal {
-
   def cancel = Some(cancelLbl, hide())
 }

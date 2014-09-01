@@ -30,21 +30,17 @@ import net.liftweb.http.js.JsCmds.Run
 
 trait RowDetailsTable extends ClickableRowTable {
 
-  protected def rowDetailsTemplatePath: List[String] = "templates-hidden" :: "modtbl-rowDetails-dflt" :: Nil
-
-  /**
-   * Template must contain: <tr><td><div class='details-contents'></div></td></tr>
-   */
-  protected def rowDetailsTemplate: NodeSeq = Templates(rowDetailsTemplatePath).get(0).descendant(3)
-
   protected var currentDetailsRow: Option[(R, JsCmd)] = None
 
   protected def rowDetailsClasses: List[String] = "details" :: Nil
 
   protected def rowDetailsContentClass: String = "details-contents"
 
+  protected def rowDetailsContents(row: R, rowId: String, rowIdx: Int): NodeSeq
+
   protected def openDetailsRow(row: R, rowId: String, rowIdx: Int): JsCmd = Run {
-    sel(rowId, ".after(" + rowDetailsTransforms(row, rowId, rowIdx, false)(rowDetailsTemplate).toString().encJs + ");") +
+    val ns = <tr><td><div class={rowDetailsContentClass}>{rowDetailsContents(row, rowId, rowIdx)}</div></td></tr>
+    sel(rowId, ".after(" + rowDetailsTransforms(row, rowId, rowIdx, false)(ns).toString().encJs + ");") +
       sel(s"$rowId-details .$rowDetailsContentClass", ".slideDown(400);")
   }
 
@@ -68,7 +64,7 @@ trait RowDetailsTable extends ClickableRowTable {
     }
   }
 
-  protected def rowDetailsTransforms(row: R): NodeSeq => NodeSeq
+  protected def rowDetailsTransforms(row: R): NodeSeq => NodeSeq = PassThru
 
   protected def rowDetailsTransforms(row: R, rowId: String, rowIdx: Int, visible: Boolean): NodeSeq => NodeSeq =
     "tr [id]" #> s"$rowId-details" &
@@ -81,8 +77,9 @@ trait RowDetailsTable extends ClickableRowTable {
     super.rowTransforms(row, rowId, rowIdx) andThen {
       currentDetailsRow match {
         case Some((open, _)) if open == row =>
+          val detailsNs = <tr><td><div class={rowDetailsContentClass}>{rowDetailsContents(row, rowId, rowIdx)}</div></td></tr>
           currentDetailsRow = Some((row, closeDetailsRow(row, rowId, rowIdx)))
-          (ns: NodeSeq) => ns ++ rowDetailsTransforms(row, rowId, rowIdx, true)(rowDetailsTemplate)
+          (ns: NodeSeq) => ns ++ rowDetailsTransforms(row, rowId, rowIdx, true)(detailsNs)
         case _ =>
           PassThru
       }

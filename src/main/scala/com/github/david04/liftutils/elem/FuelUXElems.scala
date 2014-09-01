@@ -69,7 +69,7 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
   var inited = false
   var selected: Option[Node] = None
 
-  private[elem] def save(): JsCmd = set(getCurrentValue())
+  def save(): JsCmd = set(getCurrentValue())
 
   def getCurrentValue(): Option[String] = if (inited) selected.map(_.value) else initialValue
 
@@ -172,7 +172,7 @@ trait FuelUXModalEditTree extends FuelUXTree with ModalEditElem {
 
   protected def getCurrentViewString(): String = getCurrentValue().getOrElse(labelStr("none"))
 
-  override protected def onChangeClientSide(): JsCmd =
+  override def onChangeClientSide(): JsCmd =
     super.onChangeClientSide() & setCurrentViewString(getCurrentValue().getOrElse(labelStr("none")))
 
 }

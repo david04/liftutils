@@ -21,6 +21,7 @@
 package com.github.david04.liftutils.util
 
 import net.liftweb.http.SHtml
+import net.liftweb.http.S
 import net.liftweb.util.Helpers
 import net.liftweb.util.Helpers._
 import net.liftweb.http.js.JsCmds._
@@ -37,7 +38,8 @@ class InPlace[T](
                   fromStr: String => Option[T],
                   ifEmpty: String = "",
                   setParentWidth: Boolean = false,
-                  serverVal: Boolean = true
+                  serverVal: Boolean = true,
+                  startSelected: Boolean = false
                   ) {
 
   def render = {
@@ -61,13 +63,29 @@ class InPlace[T](
         |  };
       """.stripMargin
 
+    val selectText2 =
+      s"""
+        |  var range, selection;
+        |  if (document.body.createTextRange) {
+        |    range = document.body.createTextRange();
+        |    range.moveToElementText(document.getElementById("$id"));
+        |    range.select();
+        |  } else if (window.getSelection) {
+        |    selection = window.getSelection();
+        |    range = document.createRange();
+        |    range.selectNodeContents(document.getElementById("$id"));
+        |    selection.removeAllRanges();
+        |    selection.addRange(range);
+        |  };
+      """.stripMargin
+
     lazy val save: String = {
       Run(s"${'$'}('#$id')" +
         s".attr('contenteditable','false')" +
         s".attr('class','inplace-display')" +
         s".removeAttr('onblur');") &
         SHtml.ajaxCall(JsRaw(s"${'$'}('#$id').text()"), v => {
-          fromStr(Some(v).filter(_ != ifEmpty).getOrElse("")).map(set).foldLeft(Noop)(_ & _) &
+          Some(v).filter(_ != ifEmpty || ifEmpty == "").flatMap(fromStr(_)).map(set(_)).getOrElse(Noop) &
             Run(s"${'$'}('#$id')" +
               s".attr('onfocus'," + edit.encJs + ")" +
               s".attr('onclick'," + (selectText + edit).encJs + ")" +
@@ -83,16 +101,36 @@ class InPlace[T](
     }.toJsCmd
 
     <span tabindex="0" id={id} class="inplace-display" onfocus={edit} onclick={selectText + edit}>{current}</span> ++
-      Script(OnLoad(Run(s"${'$'}('#$id').keydown(function(event){if(event.keyCode == 13){" + save + "; return false;}});")))
+      <tail>{Script(OnLoad(Run(s"${'$'}('#$id').keydown(function(event){if(event.keyCode == 13){" + save + "; return false;}});") & (if (startSelected) Run(edit + selectText2) else Noop)))}</tail>
   }
 
 }
+
+
+class InPlaceOpt[T](
+                     get: => Option[T],
+                     toStr: T => String,
+                     set: Option[T] => JsCmd,
+                     fromStr: String => Option[T],
+                     ifEmpty: String = "",
+                     setParentWidth: Boolean = false,
+                     serverVal: Boolean = true
+                     ) extends
+InPlace[Option[T]](
+  get,
+  _.map(toStr).getOrElse(""),
+  set,
+  s => if (s == "") Some(None) else fromStr(s).map(Some(_)),
+  ifEmpty,
+  setParentWidth,
+  serverVal)
 
 class InPlaceSelect[T](
                         all: Seq[T],
                         toStr: T => String,
                         selected: => T,
-                        set: T => JsCmd
+                        set: T => JsCmd,
+                        displayRenderer: T => String
                         ) {
 
   def render = {
@@ -104,40 +142,69 @@ class InPlaceSelect[T](
 
     val onselect =
       SHtml.ajaxCall(
-        JsRaw("$(this).val()"),
+        JsRaw(s"$$('#$editId').val()"),
         (v: String) => {
           tryo(v.toInt).map(v => {
             set(all(v)) &
               SetValById(editId, JString(all.indexOf(selected).toString)) &
-              Run(s"console.log('Value is: '+${toStr(selected).encJs});") &
-              Run(s"${'$'}('#$displayId').text(${toStr(selected).encJs});") &
+              Run(s"${'$'}('#$displayId').text(${displayRenderer(selected).encJs});") &
               display
           }).getOrElse(Noop)
         }).toJsCmd
 
-    <span class="inplace-display" onclick={edit} id={displayId}>{toStr(selected)}</span> ++
-      <select class="inplace-edit" id={editId} onblurr={display.toJsCmd} style="display:none">{
+    <span class="inplace-display" onclick={edit} id={displayId}>{displayRenderer(selected)}</span> ++
+      <select class="inplace-edit" id={editId} onblur={display.toJsCmd} style="display:none">{
         all.zipWithIndex.map({
           case (v, idx) if selected == v => <option selected="selected" value={idx.toString}>{toStr(v)}</option>
           case (v, idx) => <option value={idx.toString}>{toStr(v)}</option>
         })
       }</select> ++
-      Script(OnLoad(Run(s"${'$'}('#$editId').change(function(event){console.log('here');" + onselect + "});")))
+     <tail>{Script(OnLoad(Run(s"${'$'}('#$editId').change(function(event){" + onselect + "});")))}</tail>
   }
 }
 
 object InPlace {
 
-  def str(get: => String, set: String => JsCmd, ifEmpty: String = "", setParentWidth: Boolean = false, serverVal: Boolean = true) =
-    new InPlace[String](get, s => s, set, s => Some(s), ifEmpty, setParentWidth, serverVal).render
+  def str(get: => String, set: String => JsCmd, ifEmpty: String = "", setParentWidth: Boolean = false, serverVal: Boolean = true, startSelected: Boolean = false) =
+    if (S.inStatefulScope_?)
+      new InPlace[String](get, s => s, set, s => Some(s), ifEmpty, setParentWidth, serverVal, startSelected).render
+    else <span>{get}</span>
+
+  def strOpt(get: => Option[String], set: Option[String] => JsCmd, ifEmpty: String = "", setParentWidth: Boolean = false, serverVal: Boolean = true) =
+    if (S.inStatefulScope_?)
+      new InPlaceOpt[String](get, s => s, set, s => Some(s), ifEmpty, setParentWidth, serverVal).render
+    else <span>{get}</span>
+
+  def pw(set: String => JsCmd, ifEmpty: String = "", setParentWidth: Boolean = false, serverVal: Boolean = true) =
+    if (S.inStatefulScope_?)
+      new InPlace[String]("", s => s, set, s => Some(s), ifEmpty, setParentWidth, serverVal).render
+    else <span>······</span>
 
   def double(get: => Double, set: Double => JsCmd, ifEmpty: String = "", setParentWidth: Boolean = false, serverVal: Boolean = true, append: String = "", fmt: String = "%.2f") =
-    new InPlace[Double](get, _.formatted(fmt) + append, set, s => tryo(s.replaceAll(Pattern.quote(append) + "$", "").toDouble).toOption, ifEmpty, setParentWidth, serverVal).render
+    if (S.inStatefulScope_?)
+      new InPlace[Double](get, _.formatted(fmt) + append, set, s => tryo(s.replaceAll(Pattern.quote(append) + "$", "").toDouble).toOption, ifEmpty, setParentWidth, serverVal).render
+    else <span>{get.formatted(fmt) + append}</span>
+
+  def select[T](all: Seq[T], toStr: T => String, selected: => T, set: T => JsCmd, displayRenderer: T => String) =
+    if (S.inStatefulScope_?)
+      new InPlaceSelect[T](all, toStr, selected, set, displayRenderer).render
+    else <span>{toStr(selected)}</span>
 
   def select[T](all: Seq[T], toStr: T => String, selected: => T, set: T => JsCmd) =
-    new InPlaceSelect[T](all, toStr, selected, set).render
+    if (S.inStatefulScope_?)
+      new InPlaceSelect[T](all, toStr, selected, set, toStr).render
+    else <span>{toStr(selected)}</span>
 
   def enum[E <: Enumeration](enum: E, selected: => E#Value, set: E#Value => JsCmd) =
-    new InPlaceSelect[E#Value](enum.values.toSeq, _.toString, selected, set).render
+    if (S.inStatefulScope_?)
+      new InPlaceSelect[E#Value](enum.values.toSeq, _.toString, selected, set, _.toString).render
+    else <span>{selected.toString}</span>
+
+  def enumOpt[E <: Enumeration](enum: E, selected: => Option[E#Value], set: Option[E#Value] => JsCmd, none: String) =
+    if (S.inStatefulScope_?) {
+      new InPlaceSelect[Option[E#Value]](enum.values.toSeq.map(Some(_)) :+ None, _.map(_.toString).getOrElse(none), selected, set, _.map(_.toString).getOrElse(none)).render
+    } else {
+      <span>{selected.map(_.toString).getOrElse(none)}</span>
+    }
 
 }

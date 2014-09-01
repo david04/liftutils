@@ -94,7 +94,7 @@ trait GenManyOfSeqValueElem extends Elem {
 trait GenEditableManyOfSeqValueElem extends GenManyOfSeqValueElem with ValidatableElem {def getCurrentManyOfSeqValue(): Seq[SeqValueType]}
 
 trait GenOneOfManyValueElem extends Elem {
-  protected type OneOfManyValue <: Object {def name: NodeSeq; def id: String}
+  protected type OneOfManyValue <: {def name: NodeSeq; def id: String}
 
   def getOneOfManyValue(): OneOfManyValue
 

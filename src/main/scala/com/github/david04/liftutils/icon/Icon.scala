@@ -69,7 +69,7 @@ class IconModal(
 
   def getCurrentViewString = getCurrentValue().map(_.name).getOrElse(loc("none"))
 
-  override protected def onChangeClientSide(): JsCmd =
+  override def onChangeClientSide(): JsCmd =
     super.onChangeClientSide() & setCurrentViewString(getCurrentValue().map(_.name).getOrElse(labelStr("none")))
 
 }

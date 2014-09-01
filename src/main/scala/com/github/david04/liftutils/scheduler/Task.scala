@@ -20,10 +20,9 @@
 
 package com.github.david04.liftutils.scheduler
 
-import com.github.nscala_time.time.Imports._
 import org.joda.time._
 import DateTimeConstants._
-import java.util.{TimerTask, Timer}
+import java.util.{TimeZone, TimerTask, Timer}
 import scala.annotation.tailrec
 
 sealed trait Ends
@@ -57,6 +56,11 @@ trait Task {
 
   def recurrence: Recurrence
   def start: DateTime
+  def timeZone: TimeZone
+
+  def run(): Unit
+
+  def enabled: Boolean
 
   def lastRun: DateTime
   def lastRun_=(v: DateTime): Unit
@@ -73,13 +77,13 @@ trait Scheduler {
   val started = System.currentTimeMillis()
   val SPEEDUP = 5000.0
   //  def getNow() = new DateTime((started + (System.currentTimeMillis() - started) * SPEEDUP).toLong)
-  def getNow() = org.joda.time.DateTime.now
+  def now(tz: TimeZone) = org.joda.time.DateTime.now(DateTimeZone.forTimeZone(tz))
 
 
   def calcWithSpeedup(ts: Long) = ts - System.currentTimeMillis() + 1 //(((v - started) / SPEEDUP).toLong / 20)
 
-  def scheduleTask(task: Task, run: () => Unit) = synchronized {
-    tasks += ((task, run))
+  def scheduleTask(task: Task) = synchronized {
+    tasks += ((task, task.run))
     thread.int()
   }
 
@@ -104,13 +108,12 @@ trait Scheduler {
       scheduler.synchronized {
         while (true) {
 
-          val now = getNow()
           val nextRuns = scheduler.synchronized(tasks.flatMap(t => t._1.nextRun(t._1.lastRun).map(next => (t._1, t._2, next))).toList)
-          val runNow = nextRuns.filter(!_._3.isAfter(now))
+          val runNow = nextRuns.filter(r => !r._3.isAfter(now(r._1.timeZone)))
 
           runNow.sortBy(_._3.getMillis).foreach(task => {
             try {
-              println(s"[${now.toString("yyyy-MM-dd HH:mm:ss.SSSZZ")}]: Run task (${task._3.toString("yyyy-MM-dd EE")})")
+              println(s"[${DateTime.now.toString("yyyy-MM-dd HH:mm:ss.SSSZZ")}]: Run task (${task._3.toString("yyyy-MM-dd EE")})")
               task._2()
             } catch {
               case e: Exception =>
@@ -121,9 +124,9 @@ trait Scheduler {
 
           scheduler
             .synchronized(tasks.flatMap(t => t._1.nextRun(t._1.lastRun).map(next => (t._1, t._2, next))).toList)
-            .filter(_._3.isAfter(now)).map(_._3.getMillis).reduceOption[Long](math.min) match {
+            .filter(r => r._3.isAfter(now(r._1.timeZone))).map(_._3.getMillis).reduceOption[Long](math.min) match {
             case Some(nextTime) =>
-              println(s"[${now.toString("yyyy-MM-dd HH:mm:ss.SSSZZ")}]: Next task to be run at ${new DateTime(nextTime).toString("yyyy-MM-dd EE")}")
+              println(s"[${DateTime.now.toString("yyyy-MM-dd HH:mm:ss.SSSZZ")}]: Next task to be run at ${new DateTime(nextTime).toString("yyyy-MM-dd EE")}")
               scheduler.wait(calcWithSpeedup(nextTime))
             case None => scheduler.wait(100)
           }
@@ -237,7 +240,7 @@ abstract class WeeklyBase extends Recurrence {
           forDay(THURSDAY, thursday) ::
           forDay(FRIDAY, friday) ::
           forDay(SUNDAY, saturday) :: Nil
-      }.flatten.min)
+      }.flatten.minBy(_.getMillis))
     } else None
 }
 
@@ -331,56 +334,56 @@ object TaskTest extends App {
     if (cnt > 0) testYearly(task, now.plusDays(294), cnt - 1)
   }
 
-  case class DefaultTask(val recurrence: Recurrence, val start: DateTime, var lastRun: DateTime = org.joda.time.DateTime.now) extends Task
-
-
-  println("Daily (every: 1)")
-  testDaily(new DefaultTask(Daily(1), start))
-
-  println("Daily (every: 3)")
-  testDaily(new DefaultTask(Daily(3), start))
-
-  println("Weekly - Monday (every: 1)")
-  testWeekly(new DefaultTask(Weekly(wednesday = true), start))
-
-  println("Weekly - Monday (every: 2)")
-  testWeekly(new DefaultTask(Weekly(every = 2, wednesday = true), start))
-
-  println("Weekly - Tuesday & Thursday (every: 1)")
-  testWeekly(new DefaultTask(Weekly(tuesday = true, thursday = true), start))
-
-  println("Weekly - Tuesday & Thursday (every: 2)")
-  testWeekly(new DefaultTask(Weekly(every = 2, tuesday = true, thursday = true), start))
-
-  println("Monthly - 15th (every: 1)")
-  testMonthly(new DefaultTask(Monthly(atDayOfTheMonth = true), new DateTime(2000, 1, 15, 0, 0)))
-
-  println("Monthly - 1st (every: 1)")
-  testMonthly(new DefaultTask(Monthly(atDayOfTheMonth = true), new DateTime(2000, 1, 1, 0, 0)))
-
-  println("Monthly - 15th (every: 2)")
-  testMonthly(new DefaultTask(Monthly(every = 2, atDayOfTheMonth = true), new DateTime(2000, 1, 15, 0, 0)))
-
-  println("Monthly - 31th")
-  testMonthly(new DefaultTask(Monthly(atDayOfTheMonth = true), new DateTime(2000, 1, 31, 0, 0)))
-
-  println("Monthly - 1st Saturday (every: 1)")
-  testMonthly(new DefaultTask(Monthly(atDayOfTheMonth = false), new DateTime(2000, 1, 1, 0, 0)))
-
-  println("Monthly - 2nd Wednesday (every: 1)")
-  testMonthly(new DefaultTask(Monthly(atDayOfTheMonth = false), new DateTime(2000, 1, 12, 0, 0)))
-
-  println("Monthly - 5th Monday (every: 1)")
-  testMonthly(new DefaultTask(Monthly(atDayOfTheMonth = false), new DateTime(2000, 1, 31, 0, 0)))
-
-  println("Yearly - 1st January (every: 1)")
-  testMonthly(new DefaultTask(Yearly(), new DateTime(2000, 1, 1, 0, 0)))
-
-  println("Yearly - 29th February (every: 1)")
-  testMonthly(new DefaultTask(Yearly(), new DateTime(2000, 2, 29, 0, 0)))
-
-  println("Yearly - 29th February (every: 3)")
-  testMonthly(new DefaultTask(Yearly(every = 3), new DateTime(2000, 2, 29, 0, 0)))
+  //  case class DefaultTask(val recurrence: Recurrence, val start: DateTime, var lastRun: DateTime = org.joda.time.DateTime.now, val timeZone: TimeZone = TimeZone.getDefault) extends Task
+  //
+  //
+  //  println("Daily (every: 1)")
+  //  testDaily(new DefaultTask(Daily(1), start))
+  //
+  //  println("Daily (every: 3)")
+  //  testDaily(new DefaultTask(Daily(3), start))
+  //
+  //  println("Weekly - Monday (every: 1)")
+  //  testWeekly(new DefaultTask(Weekly(wednesday = true), start))
+  //
+  //  println("Weekly - Monday (every: 2)")
+  //  testWeekly(new DefaultTask(Weekly(every = 2, wednesday = true), start))
+  //
+  //  println("Weekly - Tuesday & Thursday (every: 1)")
+  //  testWeekly(new DefaultTask(Weekly(tuesday = true, thursday = true), start))
+  //
+  //  println("Weekly - Tuesday & Thursday (every: 2)")
+  //  testWeekly(new DefaultTask(Weekly(every = 2, tuesday = true, thursday = true), start))
+  //
+  //  println("Monthly - 15th (every: 1)")
+  //  testMonthly(new DefaultTask(Monthly(atDayOfTheMonth = true), new DateTime(2000, 1, 15, 0, 0)))
+  //
+  //  println("Monthly - 1st (every: 1)")
+  //  testMonthly(new DefaultTask(Monthly(atDayOfTheMonth = true), new DateTime(2000, 1, 1, 0, 0)))
+  //
+  //  println("Monthly - 15th (every: 2)")
+  //  testMonthly(new DefaultTask(Monthly(every = 2, atDayOfTheMonth = true), new DateTime(2000, 1, 15, 0, 0)))
+  //
+  //  println("Monthly - 31th")
+  //  testMonthly(new DefaultTask(Monthly(atDayOfTheMonth = true), new DateTime(2000, 1, 31, 0, 0)))
+  //
+  //  println("Monthly - 1st Saturday (every: 1)")
+  //  testMonthly(new DefaultTask(Monthly(atDayOfTheMonth = false), new DateTime(2000, 1, 1, 0, 0)))
+  //
+  //  println("Monthly - 2nd Wednesday (every: 1)")
+  //  testMonthly(new DefaultTask(Monthly(atDayOfTheMonth = false), new DateTime(2000, 1, 12, 0, 0)))
+  //
+  //  println("Monthly - 5th Monday (every: 1)")
+  //  testMonthly(new DefaultTask(Monthly(atDayOfTheMonth = false), new DateTime(2000, 1, 31, 0, 0)))
+  //
+  //  println("Yearly - 1st January (every: 1)")
+  //  testMonthly(new DefaultTask(Yearly(), new DateTime(2000, 1, 1, 0, 0)))
+  //
+  //  println("Yearly - 29th February (every: 1)")
+  //  testMonthly(new DefaultTask(Yearly(), new DateTime(2000, 2, 29, 0, 0)))
+  //
+  //  println("Yearly - 29th February (every: 3)")
+  //  testMonthly(new DefaultTask(Yearly(every = 3), new DateTime(2000, 2, 29, 0, 0)))
 }
 
 /*

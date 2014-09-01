@@ -20,6 +20,8 @@
 
 package com.github.david04.liftutils.modtbl
 
+import net.liftweb.common.Box
+
 import scala.xml.NodeSeq
 import net.liftweb.http.SHtml
 import net.liftweb.util.Helpers._
@@ -43,6 +45,7 @@ trait PaginatedQueryableTable extends QueryableTable {
   protected def defaultPageSize = 40
 
   protected var currentPage = 0
+  protected def pageSizes = 10 :: 20 :: 40 :: 60 :: 100 :: Nil
   protected var pageSize = defaultPageSize
   protected def nPages: Int
 
@@ -56,7 +59,11 @@ trait PaginatedQueryableTable extends QueryableTable {
   override protected def pageTransforms() =
     super.pageTransforms() andThen
       ".modtbl-pag-btns-around" #> paginationButtonsRenderer &
-        ".modtbl-pag-info-around" #> paginationInfoRenderer
+        ".modtbl-pag-info-around" #> paginationInfoRenderer &
+        ".modtbl-page-size" #> SHtml.ajaxSelectElem[Int](pageSizes, Box(pageSizes.find(_ == pageSize)))(s => {
+          pageSize = s
+          rerenderPage()
+        })
 
   protected def firstPage() = SHtml.onEvent(_ => {
     currentPage = 0

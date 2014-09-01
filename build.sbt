@@ -35,7 +35,6 @@ libraryDependencies ++= {
     "joda-time"                       % "joda-time"                     % "2.3",
     "com.fasterxml.jackson.module"    %% "jackson-module-scala"         % "2.4.0-rc2",
     "com.fasterxml.jackson.datatype"  % "jackson-datatype-joda"         % "2.4.0-rc3",
-    "commons-lang"                    % "commons-lang"                  % "2.6",
     "com.github.nscala-time"          %% "nscala-time"                  % "1.0.0",
     "org.apache.commons"              % "commons-lang3"                 % "3.3.2"
   )

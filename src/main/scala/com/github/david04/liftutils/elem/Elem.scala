@@ -60,9 +60,9 @@ trait EditableElem extends ViewableElem with ValidatableElem with NamedElem {
 
   protected def framework: Framework
 
-  private[elem] val enabled: () => Boolean
+  val enabled: () => Boolean
 
-  private[elem] def save(): JsCmd
+  def save(): JsCmd
 }
 
 trait UpdatableElem extends ViewableElem {
@@ -70,7 +70,7 @@ trait UpdatableElem extends ViewableElem {
   def update(): JsCmd
 }
 
-trait HTMLViewableElem extends ViewableElem with NamedElem with UpdatableElem with LocC {
+trait HTMLViewableElem extends ViewableElem with NamedElem with UpdatableElem {
 
   protected def htmlElemTemplatePath: List[String] = "templates-hidden" :: "elem-view-dflt" :: Nil
 
@@ -80,9 +80,9 @@ trait HTMLViewableElem extends ViewableElem with NamedElem with UpdatableElem wi
 
   protected def htmlElemRendererTransforms: NodeSeq => NodeSeq = PassThru
 
-  protected def rerenderHtmlElem(): JsCmd = htmlElemRenderer.setHtml()
+  def rerenderHtmlElem(): JsCmd = htmlElemRenderer.setHtml()
 
-  private[elem] def renderElem: NodeSeq = htmlElemRenderer.apply(htmlElemTemplate)
+  def renderElem: NodeSeq = htmlElemRenderer.apply(htmlElemTemplate)
 
   protected def wrapName(name: String) = name + ": "
 
@@ -91,11 +91,11 @@ trait HTMLViewableElem extends ViewableElem with NamedElem with UpdatableElem wi
   def requiresIFrameSubmit: Boolean = false
 }
 
-trait HTMLEditableElem extends HTMLViewableElem with EditableElem {
+trait HTMLEditableElem extends HTMLViewableElem with EditableElem with LocC {
 
   override protected def htmlElemTemplatePath: List[String] = "templates-hidden" :: "elem-edit-dflt" :: Nil
 
-  protected def onChangeClientSide(): JsCmd = {
+  def onChangeClientSide(): JsCmd = {
     if (error().isDefined) htmlEditableElemShowValidation = true
     else htmlEditableElemShowValidation = false
     update()
@@ -106,9 +106,9 @@ trait HTMLEditableElem extends HTMLViewableElem with EditableElem {
   def onFailedSaveAttempt(): Unit = htmlEditableElemShowValidation = true
   def onSucessfulSave(): Unit = htmlEditableElemShowValidation = false
 
-  protected def submit(): JsCmd = Noop
+  def submit(): JsCmd = Noop
 
-  protected def updateValidation(): JsCmd = error match {
+  def updateValidation(): JsCmd = error match {
     case Some(error) if htmlEditableElemShowValidation =>
       Run(
         sel('error) + ".html(" + error.toString.encJs + "); " +
@@ -121,10 +121,17 @@ trait HTMLEditableElem extends HTMLViewableElem with EditableElem {
 
   protected def enableDisableTransitionTime = 300
 
+  import com.github.david04.liftutils.util.LUtils._
+
   override def update() =
     super.update() &
       (if (enabled())
-        Run(sel('wrapper) + s".slideDown($enableDisableTransitionTime);") & updateValidation()
+        Run(sel('wrapper) + s".show();") & updateValidation()
       else
-        Run(sel('wrapper) + s".slideUp($enableDisableTransitionTime);"))
+        Run(sel('wrapper) + s".hide();"))
+  //  super.update() &
+  //    (if (enabled())
+  //      Run(sel('wrapper) + s".slideDown($enableDisableTransitionTime);").P & updateValidation().P
+  //    else
+  //      Run(sel('wrapper) + s".slideUp($enableDisableTransitionTime);")).P
 }

@@ -42,6 +42,8 @@ object LUtils {
                           |
                           | """.stripMargin)
 
+  implicit class MAp[T](v: T) {def mAp(f: T => T) = f(v)}
+
   implicit def __print[T](v: T) = new {
     def #!(s: String = "", t: T => String = _.toString): T = { println(s + t(v)); v }
 
@@ -108,12 +110,18 @@ object LUtils {
 
       idx = idx - 2
 
-      val exception = ex match {case Some(t) => s" ! {Exception: '${t.getMessage}'}" case None => ""}
+      val exception = ex match {
+        case Some(t) => {
+          s" !! {Exception: '${t.getMessage}'} @ " + Thread.currentThread().getStackTrace.mkString("\n", "\n", "\n")
+        }
+        case None => ""
+      }
 
       val rsltStr = ret.flatMap(ret => Option(rslt).map(_(ret))).map(" [" + _ + "]").getOrElse("")
       println(
         if (lastOpen) s" [${took}ms]$exception$rsltStr" else s"${space}Finished '$s' [${took}ms]$exception$rsltStr"
       )
+      ex.foreach(_.printStackTrace())
       lastOpen = false
 
       (ret, ex) match {
