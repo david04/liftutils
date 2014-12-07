@@ -52,7 +52,8 @@ trait Props {
     override def defined_? = synchronized(value != None)
     override def get: T = synchronized {value.getOrElse({value = Some(initial); get})}
     override def set(n: T): T = synchronized {value = Some(n); setter(Some(n)); n}
-    def := (n: T): T = set(n)
+    def :=(n: T): T = set(n)
+    def apply() = get
     override def setFrom(other: FatLazy[T]): Unit = ???
     override def reset = synchronized {value = None}
     override def calculated_? = synchronized {value.isDefined}
@@ -75,7 +76,7 @@ trait JSonProps extends Props {
   protected def getJSon: String
   protected def setJSon(value: String): Unit
 
-  def get(key: String): Option[String] = json.get.obj.collectFirst({case JField(`key`, JString(s)) => s})
+  def get(key: String): Option[String] = json.get.obj.collectFirst({ case JField(`key`, JString(s)) => s})
   def set(key: String, value: Option[String]): Unit = {
     json set JObject(value.map(v => JField(key, JString(v)) :: Nil).getOrElse(Nil) ::: json.get.obj.filter(_.name != key))
     setJSon(compactRender(json.get))

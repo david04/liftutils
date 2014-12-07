@@ -42,7 +42,10 @@ object LUtils {
                           |
                           | """.stripMargin)
 
-  implicit class MAp[T](v: T) {def mAp(f: T => T) = f(v)}
+  implicit class MAp[T](v: T) {
+    def $$(f: T => Unit): T = { f(v); v }
+    def -->[U](f: T => U): U = f(v)
+  }
 
   implicit def __print[T](v: T) = new {
     def #!(s: String = "", t: T => String = _.toString): T = { println(s + t(v)); v }
@@ -72,6 +75,8 @@ object LUtils {
    * Profile
    */
   def %?[T](s: String)(b: => T): T = %?[T](s, null)(b)
+
+  def %??[T1, T2](s: String)(f: T1 => T2): T1 => T2 = (v: T1) => %?(s)(f(v))
 
   def disableProfiling[T](b: => T): T = {
     enabled = false

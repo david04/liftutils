@@ -21,6 +21,7 @@
 package com.github.david04.liftutils.modtbl
 
 import net.liftweb.common.Box
+import net.liftweb.util.{PassThru, ClearNodes}
 
 import scala.xml.NodeSeq
 import net.liftweb.http.SHtml
@@ -41,12 +42,16 @@ trait PaginatedQueryableTable extends QueryableTable {
 
   protected def pagBtnsCurrentClass: String
   protected def pagBtnsDisabledClass: String
+  protected def pagBtnsShowFirstAndLast: Boolean = true
+  protected def pagShowPagInfo: Boolean = true
   protected lazy val pagNBtns = 5
-  protected def defaultPageSize = 40
+  protected def pagPageSize = 40
+
+  def hidePaginationForOnePage: Boolean = false
 
   protected var currentPage = 0
   protected def pageSizes = 10 :: 20 :: 40 :: 60 :: 100 :: Nil
-  protected var pageSize = defaultPageSize
+  protected var pageSize = pagPageSize
   protected def nPages: Int
 
   override protected def prepareQuery(_query: Q): Q = {
@@ -59,7 +64,7 @@ trait PaginatedQueryableTable extends QueryableTable {
   override protected def pageTransforms() =
     super.pageTransforms() andThen
       ".modtbl-pag-btns-around" #> paginationButtonsRenderer &
-        ".modtbl-pag-info-around" #> paginationInfoRenderer &
+        ".modtbl-pag-info-around" #> (if (pagShowPagInfo) paginationInfoRenderer else ClearNodes) &
         ".modtbl-page-size" #> SHtml.ajaxSelectElem[Int](pageSizes, Box(pageSizes.find(_ == pageSize)))(s => {
           pageSize = s
           rerenderPage()
@@ -98,19 +103,24 @@ trait PaginatedQueryableTable extends QueryableTable {
 
   protected lazy val paginationButtonsRenderer = SHtml.idMemoize(_ => paginationButtonsTransforms())
 
-  protected def paginationButtonsTransforms(): NodeSeq => NodeSeq =
-    ".modtbl-pag-first [class+]" #> (if (currentPage == 0) pagBtnsDisabledClass else "") &
-      ".modtbl-pag-first" #> {".modtbl-pag-btn [onclick]" #> firstPage()} &
-      ".modtbl-pag-prev [class+]" #> (if (currentPage == 0) pagBtnsDisabledClass else "") &
-      ".modtbl-pag-prev" #> {".modtbl-pag-btn [onclick]" #> prevPage()} &
-      ".modtbl-pag-next [class+]" #> (if (currentPage == nPages - 1) pagBtnsDisabledClass else "") &
-      ".modtbl-pag-next" #> {".modtbl-pag-btn [onclick]" #> nextPage()} &
-      ".modtbl-pag-last [class+]" #> (if (currentPage == nPages - 1) pagBtnsDisabledClass else "") &
-      ".modtbl-pag-last" #> {".modtbl-pag-btn [onclick]" #> lastPage()} andThen
-      ".modtbl-pag-n" #> currentButtons().map(n =>
-        ".modtbl-pag-n [class+]" #> (if (currentPage == n) pagBtnsCurrentClass else "") &
-          ".modtbl-pag-btn *" #> (n + 1).toString &
-          ".modtbl-pag-btn [onclick]" #> toPage(n))
+  protected def paginationButtonsTransforms(): NodeSeq => NodeSeq = {
+    if (nPages == 1 && hidePaginationForOnePage) ClearNodes
+    else {
+      (if (!pagBtnsShowFirstAndLast) ".modtbl-pag-first" #> ClearNodes & ".modtbl-pag-last" #> ClearNodes else PassThru) andThen
+        ".modtbl-pag-first [class+]" #> (if (currentPage == 0) pagBtnsDisabledClass else "") &
+          ".modtbl-pag-first" #> {".modtbl-pag-btn [onclick]" #> firstPage()} &
+          ".modtbl-pag-prev [class+]" #> (if (currentPage == 0) pagBtnsDisabledClass else "") &
+          ".modtbl-pag-prev" #> {".modtbl-pag-btn [onclick]" #> prevPage()} &
+          ".modtbl-pag-next [class+]" #> (if (currentPage == nPages - 1) pagBtnsDisabledClass else "") &
+          ".modtbl-pag-next" #> {".modtbl-pag-btn [onclick]" #> nextPage()} &
+          ".modtbl-pag-last [class+]" #> (if (currentPage == nPages - 1) pagBtnsDisabledClass else "") &
+          ".modtbl-pag-last" #> {".modtbl-pag-btn [onclick]" #> lastPage()} andThen
+        ".modtbl-pag-n" #> currentButtons().map(n =>
+          ".modtbl-pag-n [class+]" #> (if (currentPage == n) pagBtnsCurrentClass else "") &
+            ".modtbl-pag-btn *" #> (n + 1).toString &
+            ".modtbl-pag-btn [onclick]" #> toPage(n))
+    }
+  }
 
   protected lazy val paginationInfoRenderer = SHtml.idMemoize(_ => paginationInfoTransforms())
 

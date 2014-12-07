@@ -28,6 +28,7 @@ object Loc {
   private val _missing = collection.mutable.HashSet[String]()
 
   def missing(loc: String) = {
+//    println("Missing: " + loc)
     _missing += loc
     val fromFile = if (new File("missing.properties").exists()) {
       val s = scala.io.Source.fromFile("missing.properties")

@@ -46,9 +46,11 @@ sealed trait Recurrence {
   def hasEnded(start: DateTime, cur: DateTime): Boolean = ends match {
     case EndsNever() => false
     case EndsAfterNOccurrences(n) =>
-      (1 to n).toIterator.scanLeft[Option[DateTime]](Some(cur))((cur, _) => cur.flatMap(cur => nextRun(start, cur))).exists(n => n.map(_.isAfter(cur)).getOrElse(true))
-    case EndsOn(date) => nextRun(start, cur).map(!_.isAfter(date)).getOrElse(true)
+      (1 to n).toIterator.scanLeft[Option[DateTime]](Some(cur))((cur, _) => cur.flatMap(cur => nextRun(start, cur))).forall(n => n.map(_.isBefore(cur)).getOrElse(true))
+    case EndsOn(date) => nextRun(start, cur).map(_.isAfter(date)).getOrElse(true)
   }
+
+  def scheduleString(start: DateTime): String
 }
 
 
@@ -58,6 +60,8 @@ trait Task {
   def start: DateTime
   def timeZone: TimeZone
 
+  def runOffsetTime: Long = 0L
+
   def run(): Unit
 
   def enabled: Boolean
@@ -65,9 +69,13 @@ trait Task {
   def lastRun: DateTime
   def lastRun_=(v: DateTime): Unit
 
-  def nextRun(cur: DateTime): Option[DateTime] =
+  def lastRunWZone = lastRun.withZone(DateTimeZone.forTimeZone(timeZone))
+
+  def nextRun(cur: DateTime = lastRun): Option[DateTime] =
     if (recurrence.hasEnded(start.withTimeAtStartOfDay(), cur.withTimeAtStartOfDay())) None
     else recurrence.nextRun(start.withTimeAtStartOfDay(), cur.withTimeAtStartOfDay())
+
+  def nextRunWOffset(cur: DateTime = lastRunWZone) = nextRun(cur).map(_.plus(runOffsetTime))
 }
 
 trait Scheduler {
@@ -77,7 +85,6 @@ trait Scheduler {
   val started = System.currentTimeMillis()
   val SPEEDUP = 5000.0
   //  def getNow() = new DateTime((started + (System.currentTimeMillis() - started) * SPEEDUP).toLong)
-  def now(tz: TimeZone) = org.joda.time.DateTime.now(DateTimeZone.forTimeZone(tz))
 
 
   def calcWithSpeedup(ts: Long) = ts - System.currentTimeMillis() + 1 //(((v - started) / SPEEDUP).toLong / 20)
@@ -105,31 +112,38 @@ trait Scheduler {
     def int() = scheduler.synchronized(scheduler.notifyAll())
 
     override def run(): Unit = {
-      scheduler.synchronized {
-        while (true) {
+      while (true) {
 
-          val nextRuns = scheduler.synchronized(tasks.flatMap(t => t._1.nextRun(t._1.lastRun).map(next => (t._1, t._2, next))).toList)
-          val runNow = nextRuns.filter(r => !r._3.isAfter(now(r._1.timeZone)))
+        val runNow =
+          scheduler.synchronized(
+            tasks.flatMap(t => t._1.nextRun(t._1.lastRunWZone).map(next => (t._1, t._2, next, t._1.runOffsetTime, t._1.enabled))).toList
+              .filter(r => !r._3.plus(r._4).isAfter(System.currentTimeMillis()))
+          )
 
-          runNow.sortBy(_._3.getMillis).foreach(task => {
-            try {
-              println(s"[${DateTime.now.toString("yyyy-MM-dd HH:mm:ss.SSSZZ")}]: Run task (${task._3.toString("yyyy-MM-dd EE")})")
+        runNow.sortBy(_._3.getMillis).foreach(task => {
+          try {
+            if (task._5) {
+              println(s"[${DateTime.now.toString("yyyy-MM-dd HH:mm:ss.SSSZZ")}]: RUN task $task (${task._3.toString("yyyy-MM-dd EE")})")
               task._2()
-            } catch {
-              case e: Exception =>
-                println(e.getClass.getSimpleName + " when running task: " + Option(e.getMessage).getOrElse("<no message>"))
+            } else {
+              println(s"[${DateTime.now.toString("yyyy-MM-dd HH:mm:ss.SSSZZ")}]: (Not running disabled task '$task' at ${task._3.toString("yyyy-MM-dd EE")})")
             }
-            task._1.lastRun = task._3
-          })
-
-          scheduler
-            .synchronized(tasks.flatMap(t => t._1.nextRun(t._1.lastRun).map(next => (t._1, t._2, next))).toList)
-            .filter(r => r._3.isAfter(now(r._1.timeZone))).map(_._3.getMillis).reduceOption[Long](math.min) match {
-            case Some(nextTime) =>
-              println(s"[${DateTime.now.toString("yyyy-MM-dd HH:mm:ss.SSSZZ")}]: Next task to be run at ${new DateTime(nextTime).toString("yyyy-MM-dd EE")}")
-              scheduler.wait(calcWithSpeedup(nextTime))
-            case None => scheduler.wait(100)
+          } catch {
+            case e: Exception =>
+              println(e.getClass.getSimpleName + " when running task: " + Option(e.getMessage).getOrElse("<no message>"))
           }
+          task._1.lastRun = task._3
+        })
+
+        scheduler.synchronized(
+          tasks.flatMap(t => t._1.nextRun(t._1.lastRunWZone).map(next => (t._1, t._2, next, t._1.runOffsetTime))).toList
+        )
+          .filter(r => r._3.plus(r._4).isAfter(System.currentTimeMillis()))
+          .map(t => t._3.plus(t._4).getMillis).reduceOption[Long](math.min) match {
+          case Some(nextTime) =>
+            println(s"[${DateTime.now.toString("yyyy-MM-dd HH:mm:ss.SSSZZ")}]: Next task to be run at ${new DateTime(nextTime).withZone(DateTimeZone.forID("Europe/Lisbon")).toString("yyyy-MM-dd HH:mm:ss EE ZZZ")}")
+            scheduler.synchronized(scheduler.wait(calcWithSpeedup(nextTime)))
+          case None => scheduler.synchronized(scheduler.wait(100))
         }
       }
     }
@@ -146,6 +160,21 @@ case class Daily(every: Int = 1, ends: Ends = EndsNever()) extends Recurrence {
   }
 
   def withEnds(ends: Ends): Recurrence = copy(ends = ends)
+
+  def scheduleString(start: DateTime): String = {
+    ends match {
+      case EndsAfterNOccurrences(1) => "Once"
+      case _ =>
+        (every match {
+          case 1 => "Daily"
+          case n => s"Every $n days"
+        }) + (ends match {
+          case EndsNever() => ""
+          case EndsAfterNOccurrences(n) => s", $n times"
+          case EndsOn(until) => s", until ${until.toString("d 'of' MMM, yyyy")}"
+        })
+    }
+  }
 }
 
 case class Weekly5(ends: Ends = EndsNever()) extends WeeklyBase {
@@ -160,6 +189,18 @@ case class Weekly5(ends: Ends = EndsNever()) extends WeeklyBase {
   val saturday: Boolean = false
 
   def withEnds(ends: Ends): Recurrence = copy(ends = ends)
+
+  def scheduleString(start: DateTime): String = {
+    ends match {
+      case EndsAfterNOccurrences(1) => "Once"
+      case _ =>
+        "On weekdays" + (ends match {
+          case EndsNever() => ""
+          case EndsAfterNOccurrences(n) => s", $n times"
+          case EndsOn(until) => s", until ${until.toString("d 'of' MMM, yyyy")}"
+        })
+    }
+  }
 }
 
 case class Weekly3(ends: Ends = EndsNever()) extends WeeklyBase {
@@ -174,6 +215,18 @@ case class Weekly3(ends: Ends = EndsNever()) extends WeeklyBase {
   val saturday: Boolean = false
 
   def withEnds(ends: Ends): Recurrence = copy(ends = ends)
+
+  def scheduleString(start: DateTime): String = {
+    ends match {
+      case EndsAfterNOccurrences(1) => "Once"
+      case _ =>
+        "On Mondays, Wednesdays, and Fridays" + (ends match {
+          case EndsNever() => ""
+          case EndsAfterNOccurrences(n) => s", $n times"
+          case EndsOn(until) => s", until ${until.toString("d 'of' MMM, yyyy")}"
+        })
+    }
+  }
 }
 
 case class Weekly2(ends: Ends = EndsNever()) extends WeeklyBase {
@@ -188,6 +241,18 @@ case class Weekly2(ends: Ends = EndsNever()) extends WeeklyBase {
   val saturday: Boolean = false
 
   def withEnds(ends: Ends): Recurrence = copy(ends = ends)
+
+  def scheduleString(start: DateTime): String = {
+    ends match {
+      case EndsAfterNOccurrences(1) => "Once"
+      case _ =>
+        "On Tuesdays and Thursdays" + (ends match {
+          case EndsNever() => ""
+          case EndsAfterNOccurrences(n) => s", $n times"
+          case EndsOn(until) => s", until ${until.toString("d 'of' MMM, yyyy")}"
+        })
+    }
+  }
 }
 
 case class Weekly(
@@ -203,9 +268,40 @@ case class Weekly(
                    ) extends WeeklyBase {
 
   def withEnds(ends: Ends): Recurrence = copy(ends = ends)
+
+  def days = List(
+    (if (sunday) Some("Sunday") else None),
+    (if (monday) Some("Monday") else None),
+    (if (tuesday) Some("Tuesday") else None),
+    (if (wednesday) Some("Wednesday") else None),
+    (if (thursday) Some("Thursday") else None),
+    (if (friday) Some("Friday") else None),
+    (if (saturday) Some("Saturday") else None)
+  ).flatten
+
+  def scheduleString(start: DateTime): String = {
+    ends match {
+      case EndsAfterNOccurrences(1) => "Once"
+      case _ =>
+        val before = every match {
+          case 1 => "On "
+          case n => s"Every $n weeks, on"
+        }
+        val str = days match {
+          case Nil => "Never"
+          case day :: Nil => s"$before ${day}s"
+          case days => s"$before " + days.dropRight(1).map(_ + "s").mkString(", ") + " and " + days.last + "s"
+        }
+        str + (ends match {
+          case EndsNever() => ""
+          case EndsAfterNOccurrences(n) => s", $n times"
+          case EndsOn(until) => s", until ${until.toString("d 'of' MMM, yyyy")}"
+        })
+    }
+  }
 }
 
-abstract class WeeklyBase extends Recurrence {
+sealed abstract class WeeklyBase extends Recurrence {
 
   val every: Int
   def sunday: Boolean
@@ -286,6 +382,43 @@ case class Monthly(
   }
 
   def withEnds(ends: Ends): Recurrence = copy(ends = ends)
+
+  def scheduleString(start: DateTime): String = {
+    ends match {
+      case EndsAfterNOccurrences(1) => "Once"
+      case _ =>
+        val before = every match {
+          case 1 => "Monthly on"
+          case n => s"Every $n months, on"
+        }
+        val str = if (atDayOfTheMonth) {
+          s"$before day ${start.getDayOfMonth}"
+        } else {
+          s"$before the " +
+            (Weeks.weeksBetween(start.withDayOfMonth(1), start).getWeeks match {
+              case 0 => "first "
+              case 1 => "second "
+              case 2 => "third "
+              case 3 => "fourth "
+              case 4 => "fifth "
+            }) + " " +
+            (start.getDayOfWeek() match {
+              case 1 => "Monday"
+              case 2 => "Tuesday"
+              case 3 => "Wednesday"
+              case 4 => "Thursday"
+              case 5 => "Friday"
+              case 6 => "Saturday"
+              case 7 => "Sunday"
+            })
+        }
+        str + (ends match {
+          case EndsNever() => ""
+          case EndsAfterNOccurrences(n) => s", $n times"
+          case EndsOn(until) => s", until ${until.toString("d 'of' MMM, yyyy")}"
+        })
+    }
+  }
 }
 
 case class Yearly(every: Int = 1, ends: Ends = EndsNever()) extends Recurrence {
@@ -308,6 +441,36 @@ case class Yearly(every: Int = 1, ends: Ends = EndsNever()) extends Recurrence {
   }
 
   def withEnds(ends: Ends): Recurrence = copy(ends = ends)
+
+  def scheduleString(start: DateTime): String = {
+    ends match {
+      case EndsAfterNOccurrences(1) => "Once"
+      case _ =>
+        val before = every match {
+          case 1 => "Annually on "
+          case n => s"Every $n years, on "
+        }
+        val str = (start.getMonthOfYear match {
+          case 1 => "January "
+          case 2 => "February "
+          case 3 => "March "
+          case 4 => "April "
+          case 5 => "May "
+          case 6 => "June "
+          case 7 => "July "
+          case 8 => "August "
+          case 9 => "September "
+          case 10 => "October "
+          case 11 => "November "
+          case 12 => "December "
+        }) + start.getDayOfMonth.toString
+        str + (ends match {
+          case EndsNever() => ""
+          case EndsAfterNOccurrences(n) => s", $n times"
+          case EndsOn(until) => s", until ${until.toString("d 'of' MMM, yyyy")}"
+        })
+    }
+  }
 }
 
 object TaskTest extends App {

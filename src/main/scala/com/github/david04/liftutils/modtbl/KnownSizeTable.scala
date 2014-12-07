@@ -26,7 +26,7 @@ import net.liftweb.http.js.JsCmds.Run
 import com.github.david04.liftutils.elem.ID
 
 
-trait KnownSizeTable extends Table {
+trait KnownSizeTable extends PaginatedQueryableTable {
 
   protected def rowsSize: Long
 }

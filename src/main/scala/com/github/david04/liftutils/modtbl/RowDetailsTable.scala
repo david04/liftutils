@@ -30,7 +30,7 @@ import net.liftweb.http.js.JsCmds.Run
 
 trait RowDetailsTable extends ClickableRowTable {
 
-  protected var currentDetailsRow: Option[(R, JsCmd)] = None
+  var currentDetailsRow: Option[(R, JsCmd)] = None
 
   protected def rowDetailsClasses: List[String] = "details" :: Nil
 
@@ -38,16 +38,18 @@ trait RowDetailsTable extends ClickableRowTable {
 
   protected def rowDetailsContents(row: R, rowId: String, rowIdx: Int): NodeSeq
 
+  def openDetailsJs(sel: String) = sel + ".slideDown(400);"
+
+  def closeDetailsJs(sel: String, andThen: String) = sel + ".slideUp(400, function() {" + andThen + "});"
+
   protected def openDetailsRow(row: R, rowId: String, rowIdx: Int): JsCmd = Run {
     val ns = <tr><td><div class={rowDetailsContentClass}>{rowDetailsContents(row, rowId, rowIdx)}</div></td></tr>
     sel(rowId, ".after(" + rowDetailsTransforms(row, rowId, rowIdx, false)(ns).toString().encJs + ");") +
-      sel(s"$rowId-details .$rowDetailsContentClass", ".slideDown(400);")
+      openDetailsJs(sel(s"$rowId-details .$rowDetailsContentClass"))
   }
 
   protected def closeDetailsRow(row: R, rowId: String, rowIdx: Int): JsCmd = Run {
-    sel(s"$rowId-details .$rowDetailsContentClass", ".slideUp(400, function() {" +
-      sel(s"$rowId-details", ".remove();") +
-      "});")
+    closeDetailsJs(sel(s"$rowId-details .$rowDetailsContentClass"), sel(s"$rowId-details", ".remove();"))
   }
 
   override protected def onClick(row: R, rowId: String, rowIdx: Int): JsCmd = {

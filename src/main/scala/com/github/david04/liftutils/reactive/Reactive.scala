@@ -35,30 +35,30 @@ import net.liftweb.http.js.JsCmds.Run
 
 // ======== Server side ========
 
-trait RxVal[T] {
+trait SxVal[T] {
 
-  protected var dependents: ListBuffer[WeakReference[RxDependent]] = ListBuffer()
-  def addRxDependent(d: RxDependent): JsCmd = { dependents += WeakReference(d); Noop }
-  protected def notifyRxDependents() = dependents.map(_.underlying.get()).filter(_ != null).map(_.rxChanged()).foldLeft(JsCmds.Noop)(_ & _)
+  protected var dependents: ListBuffer[WeakReference[SxDependent]] = ListBuffer()
+  def addRxDependent(d: SxDependent): JsCmd = { dependents += WeakReference(d); Noop }
+  protected def sxNotifyDependents(): JsCmd = dependents.map(_.underlying.get()).filter(_ != null).map(_.rxChanged()).foldLeft(JsCmds.Noop)(_ & _)
 
   def getRx: T
 }
 
-trait RxDependent {
+trait SxDependent {
 
   def rxChanged(): JsCmd
 }
 
-class RxFunc[D1, T](d1: RxVal[D1], f: D1 => T) extends RxVal[T] with RxDependent {
+class SxFunc[D1, T](d1: SxVal[D1], f: D1 => T) extends SxVal[T] with SxDependent {
 
   d1.addRxDependent(this)
 
-  def rxChanged(): JsCmd = notifyRxDependents()
+  def rxChanged(): JsCmd = sxNotifyDependents()
 
   def getRx: T = f(d1.getRx)
 }
 
-trait RxVar[T] extends RxVal[T] {
+trait SxVar[T] extends SxVal[T] {
   protected val initialRx: T
   protected def extSet: Option[T => JsCmd] = None
 
@@ -66,17 +66,20 @@ trait RxVar[T] extends RxVal[T] {
 
   def setRx(v: T): JsCmd = {
     current = Some(v)
-    extSet.map(_(v)).getOrElse(JsCmds.Noop) & notifyRxDependents()
+    extSet.map(_(v)).getOrElse(JsCmds.Noop) & sxNotifyDependents()
   }
 
   def getRx(): T = {
     if (current.isEmpty) current = Some(initialRx)
     current.get
   }
+
+  def apply() = getRx()
+  def update(v: T) = setRx(v)
 }
 
-object RxVar {
-  def apply[T](_initial: T, _extSet: T => JsCmd) = new RxVar[T] {
+object SxVar {
+  def apply[T](_initial: T, _extSet: T => JsCmd) = new SxVar[T] {
     protected lazy val initialRx = _initial
     override protected val extSet: Option[T => JsCmd] = Some(_extSet)
   }
@@ -84,7 +87,7 @@ object RxVar {
 
 object RxRender {
 
-  def apply[T](v: RxVal[T])(f: T => NodeSeq => NodeSeq): NodeSeq => NodeSeq = (ns: NodeSeq) => {
+  def apply[T](v: SxVal[T])(f: T => NodeSeq => NodeSeq): NodeSeq => NodeSeq = (ns: NodeSeq) => {
 
     val elem: Elem = ns.find {
       case e: Elem => true
@@ -93,7 +96,7 @@ object RxRender {
 
     val (withId: Elem, id: String) = Helpers.findOrAddId(elem)
 
-    v.addRxDependent(new RxDependent {
+    v.addRxDependent(new SxDependent {
       def rxChanged() = Replace(id, f(v.getRx)(withId))
     })
 
@@ -103,127 +106,127 @@ object RxRender {
 
 // ======== Client side ========
 
-trait RXVal {
+trait JxVal {
 
   val id = Helpers.nextFuncName
 
-  def addRXDependent(d: RXDependent): JsCmd = {
+  def jxAddDependent(d: JxDependent): JsCmd = {
     Run {
       s"{" +
         s"  var cur = window.change$id || (function() {});" +
-        s"  window.change$id = function() {cur(); ${d.rXChanged().toJsCmd}};" +
+        s"  window.change$id = function() {cur(); ${d.jxChanged().toJsCmd}};" +
         s"};"
     }
   }
 
-  protected def notifyRXDependents() = Run(s"if(window.change$id) {window.change$id();}")
+  protected def jxNotifyDependents(): JsCmd = Run(s"if(window.change$id) {window.change$id();}")
 
-  def getRX: JsExp
+  def getJx: JsExp
 }
 
-trait RXDependent {
+trait JxDependent {
 
-  def rXChanged(): JsCmd
+  def jxChanged(): JsCmd
 }
 
-trait RXVar extends RXVal {
+trait JxVar extends JxVal {
 
-  protected val initialRX: JsExp
+  protected val jxInitial: JsExp
 
-  def getRX(): JsExp = JsRaw(s"(window.V$id ? window.V$id : ${initialRX.toJsCmd})")
+  def getJx(): JsExp = JsRaw(s"(window.V$id ? window.V$id : ${jxInitial.toJsCmd})")
 
-  def setRX(v: JsExp) = Run(s"window.V$id = " + v.toJsCmd) & notifyRXDependents()
+  def setJx(v: JsExp) = Run(s"window.V$id = " + v.toJsCmd) & jxNotifyDependents()
 
-  def initRX() = setRX(initialRX)
-  def initRXScript() = <tail>{Script(setRX(initialRX))}</tail>
+  def initRX() = setJx(jxInitial)
+  def initRXScript() = <tail>{Script(setJx(jxInitial))}</tail>
 }
 
-class RXFunc(d1: RXVal, f: JsExp => JsExp) extends RXVal {
+class JxFunc(d1: JxVal, f: JsExp => JsExp) extends JxVal {
 
-  override def addRXDependent(d: RXDependent): JsCmd = d1.addRXDependent(d)
+  override def jxAddDependent(d: JxDependent): JsCmd = d1.jxAddDependent(d)
 
-  override protected def notifyRXDependents() = ???
+  override protected def jxNotifyDependents() = ???
 
-  def getRX: JsExp = f(d1.getRX)
+  def getJx: JsExp = f(d1.getJx)
 }
 
-object RXVar {
-  def apply[X](initial: JsExp) = new RXVar {
-    protected lazy val initialRX = initial
+object JxVar {
+  def apply[X](initial: JsExp) = new JxVar {
+    protected lazy val jxInitial = initial
   }
 }
 
 // ======== Server & Client side ========
 
-trait RxXVal[T] extends RxVal[T] with RXVal {
+trait SJxVal[T] extends SxVal[T] with JxVal {
 
   /**
    * To be called on the server side.
    */
-  def addRxXDependent(d: RxXDependent): JsCmd = addRxDependent(d) & addRXDependent(d)
+  def sxAddDependent(d: SJxDependent): JsCmd = addRxDependent(d) & jxAddDependent(d)
 
   /**
    * To be called on the client side.
    */
-  def addRXxDependent(d: RxXDependent): JsCmd = addRXDependent(d) & SHtml.ajaxInvoke(() => addRxDependent(d))
+  def jxAddDependent(d: SJxDependent): JsCmd = jxAddDependent(d) & SHtml.ajaxInvoke(() => addRxDependent(d))
 
   /**
    * To be called on the server side.
    */
-  protected def notifyRxXDependents() = notifyRxDependents() & notifyRXDependents()
+  override protected def sxNotifyDependents() = super.sxNotifyDependents() & jxNotifyDependents()
 
   /**
    * To be called on the client side.
    */
-  protected def notifyRXxDependents() = notifyRXDependents() & SHtml.ajaxInvoke(() => notifyRxDependents())
+  override protected def jxNotifyDependents() = super.jxNotifyDependents() & SHtml.ajaxInvoke(() => sxNotifyDependents())
 }
 
-trait RxXDependent extends RxDependent with RXDependent {}
+trait SJxDependent extends SxDependent with JxDependent {}
 
-trait RxXVar[T] extends RxVar[T] with RXVar {
+trait SJxVar[T] extends SxVar[T] with JxVar {
 
-  protected val toRX: T => JsExp
-  protected val fromRX: JValue => T
+  protected val toJx: T => JsExp
+  protected val fromJx: JValue => T
 
-  protected lazy val initialRX: JsExp = toRX(initialRx)
+  protected lazy val jxInitial: JsExp = toJx(initialRx)
 
-  def setRxX(v: T): JsCmd = setRx(v) & setRX(toRX(v))
+  def setSx(v: T): JsCmd = setRx(v) & setJx(toJx(v))
 
-  def setRXx(v: JsExp, afterSetClientSide: JsCmd = Noop, afterSetServerSide: () => JsCmd = () => Noop): JsCmd =
-    setRX(v) &
+  def setJx(v: JsExp, afterSetClientSide: JsCmd = Noop, afterSetServerSide: () => JsCmd = () => Noop): JsCmd =
+    setJx(v) &
       afterSetClientSide &
-      SHtml.jsonCall(v, (v: JValue) => super.setRx(fromRX(v)) & afterSetServerSide())
+      SHtml.jsonCall(v, (v: JValue) => super.setRx(fromJx(v)) & afterSetServerSide())
 }
 
-object RxXVar {
+object SJxVar {
   def apply[T](
                 initial: T,
                 _toRX: T => JsExp,
                 _fromRX: JValue => T,
-                _extSet: Option[T => JsCmd] = None) = new RxXVar[T] {
+                _extSet: Option[T => JsCmd] = None) = new SJxVar[T] {
     protected val initialRx = initial
-    protected val toRX = _toRX
-    protected val fromRX = _fromRX
+    protected val toJx = _toRX
+    protected val fromJx = _fromRX
     override protected val extSet = _extSet
   }
 }
 
-trait RXStr extends RXVal
+trait JxStr extends JxVal
 
-object RichRXStr {
+object RichJxStr {
 
-  implicit class RichRXStr(s: RXStr) {
-    def rXRender(): NodeSeq = {
+  implicit class JxRichStr(s: JxStr) {
+    def jxRender(): NodeSeq = {
       val id = Helpers.nextFuncName
       <tail>{Script(OnLoad {
-        s.addRXDependent(new RXDependent {
-          override def rXChanged(): JsCmd = Run(s"${'$'}('#$id').text(" + s.getRX.toJsCmd + ");")
-        }) & Run(s"${'$'}('#$id').text(" + s.getRX.toJsCmd + ");")
+        s.jxAddDependent(new JxDependent {
+          override def jxChanged(): JsCmd = Run(s"${'$'}('#$id').text(" + s.getJx.toJsCmd + ");")
+        }) & Run(s"${'$'}('#$id').text(" + s.getJx.toJsCmd + ");")
       })}</tail> ++
         <span id={id}></span>
     }
 
-    def transform(f: String => String) = new RXFunc(s, jsExp => JsRaw(f(jsExp.toJsCmd))) with RXStr
+    def transform(f: String => String) = new JxFunc(s, jsExp => JsRaw(f(jsExp.toJsCmd))) with JxStr
     def maxLength(len: Int, ellipsis: String) = transform(s => s"(($s.length < $len) ? ($s) : ($s.substring(0,$len)+${ellipsis.encJs})+'')")
     def ifEmpty(dflt: String) = transform(s => s"((($s.length == 0) ? ${dflt.encJs} : $s)+'')")
   }

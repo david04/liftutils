@@ -74,8 +74,8 @@ trait SortableQueryableTable extends QueryableTable with NamedColTable {
       currentSortAsc() = col.defaultSortAsc
     }
 
-    Run("$('[col-name=\"" + before.name + "\"]')" + s".removeClass('$sortThAsc').removeClass('$sortThDesc').addClass('$sortThNone')") &
-      Run("$('[col-name=\"" + col.name + "\"]')" + s".removeClass('$sortThNone').addClass('" + (if (currentSortAsc.get) sortThAsc else sortThDesc) + "')") &
+    Run(s"""$$('#${id('table)} [col-name="${before.name}"]').removeClass('$sortThAsc $sortThDesc').addClass('$sortThNone')""") &
+      Run(s"""$$('#${id('table)} [col-name="${col.name}"]').removeClass('$sortThNone').addClass('${if (currentSortAsc.get) sortThAsc else sortThDesc}')""") &
       rerenderTableBody()
   })
 

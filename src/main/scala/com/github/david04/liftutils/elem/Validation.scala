@@ -29,13 +29,20 @@ import java.util.regex.Pattern
 import com.github.david04.liftutils.loc.Loc
 
 
-object Validation {
+trait Validation {
+
+  trait GtThanZero extends GenEditableIntValueElem with Loc {
+
+    override def error: Option[NodeSeq] =
+      super.error.map(Some(_)).getOrElse(
+        if (getCurrentIntValue() < 0) Some(Text(loc("must-be-gt-zero"))) else None)
+  }
 
   trait ReqStrVal extends GenEditableStringValueElem with Loc {
 
     override def error: Option[NodeSeq] =
       super.error.map(Some(_)).getOrElse(
-        if (getCurrentStringValue().isEmpty) Some(Text(loc("error-required"))) else None)
+        if (getCurrentStringValue() == null || getCurrentStringValue().isEmpty) Some(Text(loc("error-required"))) else None)
   }
 
   trait HostnameVal extends ReqStrVal {
@@ -72,4 +79,21 @@ object Validation {
         else None)
   }
 
+  trait ReqPasswordVal extends GenEditableStringValueElem with Loc {
+    override def error: Option[NodeSeq] =
+      super.error.map(Some(_)).getOrElse(
+        if (getCurrentStringValue().size < 6)
+          Some(Text(loc("error-atLeast6Chars")))
+        else None)
+  }
+
+  trait ReqOneOfMany extends GenEditableManyOfManyValueElem with HTMLEditableElem {
+    override def error(): Option[NodeSeq] = super.error() orElse
+      Some(getCurrentManyOfManyValue().size)
+        .filter(_ == 0)
+        .map(_ => Text(loc("error-selectionCannotBeEmpty")))
+  }
+
 }
+
+object Validation extends Validation

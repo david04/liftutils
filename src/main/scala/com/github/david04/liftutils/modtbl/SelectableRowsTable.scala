@@ -54,18 +54,13 @@ trait SelectableRowsTable extends ClickableRowTable {
   def onDiselectClientSide(row: R, rowId: String, rowIdx: Int): JsCmd = Run(s"${'$'}('#$rowId').removeClass('$selectedRowClass')")
 
   override protected def onClick(row: R, rowId: String, rowIdx: Int): JsCmd = {
-    println("selectedRows.contains(row)=" + selectedRows.contains(row))
     if (selectedRows.contains(row)) {
-      println("diselected")
       selectedRows = selectedRows - row
       val r = diselectedRow(row) & changedSelection(selectedRows) & onDiselectClientSide(row, rowId, rowIdx)
-      println("selectedRows.contains(row)=" + selectedRows.contains(row))
       r
     } else {
-      println("selected")
       selectedRows = selectedRows + row
       val r = selectedRow(row)
-      println("selectedRows.contains(row)=" + selectedRows.contains(row))
       r & changedSelection(selectedRows) & onSelectClientSide(row, rowId, rowIdx)
     }
   }

@@ -44,6 +44,8 @@ trait ValidatableElem extends Elem {
 
 trait ViewableElem extends Elem {}
 
+trait FocusableElem extends Elem { def focusId: String}
+
 trait NodeSeqViewableElem extends ViewableElem {def renderNodeSeqView: NodeSeq}
 
 trait NamedElem extends ViewableElem {def elemName: String}
@@ -72,9 +74,11 @@ trait UpdatableElem extends ViewableElem {
 
 trait HTMLViewableElem extends ViewableElem with NamedElem with UpdatableElem {
 
+  def reloadValue(): JsCmd = Noop
+
   protected def htmlElemTemplatePath: List[String] = "templates-hidden" :: "elem-view-dflt" :: Nil
 
-  protected lazy val htmlElemTemplate = Templates(htmlElemTemplatePath).get
+  protected def htmlElemTemplate = Templates(htmlElemTemplatePath).get
 
   protected lazy val htmlElemRenderer = SHtml2.memoizeElem(_ => htmlElemRendererTransforms)
 
@@ -126,9 +130,9 @@ trait HTMLEditableElem extends HTMLViewableElem with EditableElem with LocC {
   override def update() =
     super.update() &
       (if (enabled())
-        Run(sel('wrapper) + s".show();") & updateValidation()
+        Run(sel('wrapper) + s".show();").P & updateValidation()
       else
-        Run(sel('wrapper) + s".hide();"))
+        Run(sel('wrapper) + s".hide();").P)
   //  super.update() &
   //    (if (enabled())
   //      Run(sel('wrapper) + s".slideDown($enableDisableTransitionTime);").P & updateValidation().P

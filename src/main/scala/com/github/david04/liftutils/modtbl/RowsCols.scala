@@ -99,13 +99,13 @@ trait NodeSeqRowTable extends Table {
 
   trait NodeSeqRowCol extends TableCol {
     self: C =>
-    def rowNodeSeqValue: R => NodeSeq
+    def rowNodeSeqValue(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int): NodeSeq
 
-    def nodeSeqRowTableTransforms(row: R) = "td *" #> rowNodeSeqValue(row)
+    def nodeSeqRowTableTransforms(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int) = "td *" #> rowNodeSeqValue(row, rowId, rowIdx, colId, colIdx)
 
     override def renderRow(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int): NodeSeq => NodeSeq =
       super.renderRow(row, rowId, rowIdx, colId, colIdx) andThen
-        nodeSeqRowTableTransforms(row)
+        nodeSeqRowTableTransforms(row, rowId, rowIdx, colId, colIdx)
   }
 
 }
@@ -118,8 +118,8 @@ trait CachedNodeSeqRowTable extends NodeSeqRowTable {
 
     protected val nodeSeqRowCache = collection.mutable.Map[R, NodeSeq]()
 
-    override def nodeSeqRowTableTransforms(row: R) =
-      "td *" #> nodeSeqRowCache.getOrElseUpdate(row, rowNodeSeqValue(row))
+    override def nodeSeqRowTableTransforms(row: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int) =
+      "td *" #> nodeSeqRowCache.getOrElseUpdate(row, rowNodeSeqValue(row, rowId, rowIdx, colId, colIdx))
   }
 
 }
@@ -130,7 +130,7 @@ trait StrRowTable extends NodeSeqRowTable {
     self: C =>
     def rowStrValue: R => String
 
-    def rowNodeSeqValue: R => NodeSeq = (r: R) => scala.xml.Text(rowStrValue(r))
+    def rowNodeSeqValue(r: R, rowId: String, rowIdx: Int, colId: String, colIdx: Int): NodeSeq = scala.xml.Text(rowStrValue(r))
   }
 
 }

@@ -20,18 +20,27 @@
 
 package com.github.david04.liftutils.modtbl
 
+import net.liftweb.util.Helpers._
+import scala.xml._
 
-trait QueryableTable extends Table {
+trait EmptyTable extends Table {
 
-  trait Query {}
+  protected def emptyTableClass = "table-empty"
 
-  type Q <: Query
+  protected def emptyTableContent: NodeSeq = Text(loc("empty"))
 
-  protected def query(params: Q): Seq[R]
+  def tableIsEmpty: Boolean
 
-  protected def createQuery(): Q
-
-  protected def prepareQuery(query: Q): Q = query
-
-  protected def rows: Seq[R] = query(prepareQuery(createQuery()))
+  override protected def rowsTransforms(): Seq[NodeSeq => NodeSeq] = {
+    if (tableIsEmpty) {
+      ("td [class+]" #> emptyTableClass &
+        "td [colspan]" #> columns.size &
+        "td *" #> emptyTableContent) :: Nil
+    } else {
+      super.rowsTransforms()
+    }
+  }
 }
+
+trait EmptyKnownSizeTable extends EmptyTable with KnownSizeTable {def tableIsEmpty: Boolean = rowsSize == 0}
+

@@ -42,7 +42,7 @@ trait ClientSideSearchableTable extends Table {
           ".modtbl-search [onkeyup]" #>
             Run("" +
               "(function(){" +
-              "  var query = $('#" + inputId + "').val();" +
+              "  var query = $('#" + inputId + "').val().toLowerCase();" +
               "  $('#" + id('table) + " tbody tr')" +
               "    .each(function(){" +
               "      if($(this).text().toLowerCase().indexOf(query) == -1) $(this).hide();" +

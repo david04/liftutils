@@ -20,19 +20,16 @@
 
 package com.github.david04.liftutils.modtbl
 
+import net.liftweb.http.S
 import net.liftweb.util.Helpers._
 import scala.xml._
 
-trait EmptyTable extends KnownSizeTable {
+trait SectionedTable extends KnownSizeTable {
 
-  protected def emptyTableClass = "table-empty"
+  case class Section(name: String, size: Long, var open: Boolean = false)
 
-  protected def emptyTableContent: NodeSeq = Text(loc("empty"))
+  def sections: List[Section]
 
-  override protected def rowsTransforms(): Seq[NodeSeq => NodeSeq] =
-    if (rowsSize == 0)
-      ("td [class+]" #> emptyTableClass &
-        "td [colspan]" #> columns.size &
-        "td *" #> emptyTableContent) :: Nil
-    else super.rowsTransforms()
+  override def rowsTransforms(): Seq[NodeSeq => NodeSeq] = rows.zipWithIndex.map(row => rowTransforms(row._1, S.formFuncName, row._2))
+
 }

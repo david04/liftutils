@@ -78,9 +78,8 @@ trait Table extends Loc with ID {
   def keepClasses: List[String] = Nil
 
   protected lazy val template = {
-    val pass1 = ClearClearable(Templates(templatePath).openOrThrowException("Not found: " + templatePath.mkString("/", "/", "")))
-    val pass2 = (keepClasses.map(clas => s".$clas [class!]" #> "modtbl-clearable").reduceOption(_ & _).getOrElse(PassThru)).apply(pass1)
-    (".modtbl-clearable" #> ClearNodes).apply(pass2)
+    val ns = Templates(templatePath).openOrThrowException("Not found: " + templatePath.mkString("/", "/", ""))
+    templateTransforms()(ns)
   }
 
   protected lazy val pageRenderer = SHtml.idMemoize(_ => pageTransforms())
@@ -90,6 +89,14 @@ trait Table extends Loc with ID {
   def rerenderPage() = pageRenderer.setHtml()
   def rerenderTable() = tableRenderer.setHtml()
   def rerenderTableBody() = tableBodyRenderer.setHtml()
+
+  def templateTransforms(): NodeSeq => NodeSeq =
+    (ns: NodeSeq) => {
+      val pass1 = ClearClearable(ns)
+      val pass2 = (keepClasses.map(clas => s".$clas [class!]" #> "modtbl-clearable").reduceOption(_ & _).getOrElse(PassThru)).apply(pass1)
+      (".modtbl-clearable" #> ClearNodes).apply(pass2)
+    }
+
 
   protected def pageTransforms(): NodeSeq => NodeSeq = ".modtbl-table [id]" #> id('table) andThen ".modtbl-table" #> tableRenderer
 

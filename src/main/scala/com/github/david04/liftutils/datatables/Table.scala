@@ -27,6 +27,7 @@ import net.liftweb.http.js.JsCmds._
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import net.liftweb.json.Serialization.write
+import scala.xml._
 
 import scala.collection.mutable.ListBuffer
 

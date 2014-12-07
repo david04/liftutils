@@ -38,9 +38,15 @@ import net.liftweb.http.js.JsCmds.Run
  */
 
 object LazyLoader {
-  val defaultInterval = 200
+  val defaultInterval = 1000
   val defaultPoolSize = 6
   def createDefaultPool(): ExecutorService = Executors.newFixedThreadPool(defaultPoolSize)
+}
+
+object DfltLL extends LazyLoader(<div></div>) {
+
+  override def blockUI(id: String): JsCmd = Noop
+  override def unblockUI(id: String): JsCmd = Noop
 }
 
 class LazyLoader(
@@ -62,9 +68,13 @@ class LazyLoader(
         s"if(!$running) {" +
         s"  $running = true;" +
         SHtml.ajaxInvoke(() => {
-          val toRemove = left.filter(f => f.isDone || f.isCancelled)
-          val updates = left.filter(_.isDone).flatMap(f => tryo(f.get())).foldLeft(JsCmds.Noop)(_ & _)
-          left --= toRemove
+          val finished =
+            left.synchronized({
+              val toRemove = left.filter(f => f.isDone || f.isCancelled).toList
+              left --= toRemove
+              toRemove
+            })
+          val updates = finished.filter(_.isDone).flatMap(f => tryo(f.get())).foldLeft(JsCmds.Noop)(_ & _)
           Run(s"$running = false;") & updates
           //& Run(if (left.isEmpty) s";window.clearTimeout(window.$variable);" else "")
         }).toJsCmd +
@@ -104,7 +114,7 @@ class LazyLoader(
           map(ignore => applyAgain()).openOr(NodeSeq.Empty)
 
       def load() = {
-        left += pool.submit(new Callable[JsCmd] {def call(): JsCmd = try {SetHtml(latestId, f(self)(latestKids))} finally {loadedOnce = true}})
+        left.synchronized(left += pool.submit(new Callable[JsCmd] {def call(): JsCmd = try {SetHtml(latestId, f(self)(latestKids))} finally {loadedOnce = true}}))
 
         <div id={latestId}>{loadingTemplate}</div>
       }
@@ -117,9 +127,9 @@ class LazyLoader(
           load(): _*)
 
       def setHtml(): JsCmd = {
-        left += pool.submit(new Callable[JsCmd] {
+        left.synchronized(left += pool.submit(new Callable[JsCmd] {
           def call(): JsCmd = SetHtml(latestId, f(self)(latestKids)) & unblockUI(latestId)
-        })
+        }))
         if (loadedOnce) blockUI(latestId) else Noop
       }
     }

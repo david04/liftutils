@@ -31,7 +31,7 @@ import net.liftweb.http.S.{SFuncHolder, LFuncHolder}
 import org.apache.commons.lang3.StringEscapeUtils
 import net.liftweb.json.JsonAST.{JNull, JString, JArray, JValue}
 import net.liftweb.http.js.JsCmds._
-import com.github.david04.liftutils.reactive.{RXStr, RxXVar}
+import com.github.david04.liftutils.reactive.{JxStr, SJxVar}
 import net.liftweb.http.js.{JsCmd, JE}
 
 trait PasswordInputElem extends TextInputElem {
@@ -39,13 +39,13 @@ trait PasswordInputElem extends TextInputElem {
   override protected def inputElem: NodeSeq = ("input [type]" #> "password").apply(super.inputElem)
 }
 
-trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem with LabeledElem with RxXVar[String] with RXStr {
+trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem with LabeledElem with SJxVar[String] with JxStr with FocusableElem {
 
   protected def placeholder: Option[String]
 
   protected val initialRx = getStringValue()
-  protected val toRX = (s: String) => JE.Str(s)
-  protected val fromRX = (v: JValue) => v.asInstanceOf[JString].s
+  protected val toJx = (s: String) => JE.Str(s)
+  protected val fromJx = (v: JValue) => v.asInstanceOf[JString].s
 
   def getCurrentStringValue(): String = getRx()
 
@@ -55,11 +55,14 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
 
   import ElemAttr._
 
+  override def focusId: String = id('input)
+
   protected def inputElemDefaultAttrs: Seq[ElemAttr] = Seq[ElemAttr](
     ("id" -> id('input)),
     ("placeholder" -> placeholder.getOrElse("")),
-    ("onchange" -> ("{" + setRXx(JsRaw("this.value+''"), Noop, () => onChangeClientSide()).toJsCmd + "; return true; }")),
-    ("onkeyup" -> (setRX(JsRaw(ValById(id('input)).toJsCmd + "+''")).toJsCmd))
+    ("onchange" -> ("{" + setJx(JsRaw("this.value+''"), Noop, () => onChangeClientSide()).toJsCmd + "; return true; }")),
+    ("onkeyup" -> (setJx(JsRaw(ValById(id('input)).toJsCmd + "+''")).toJsCmd)),
+    ("onkeydown" -> s"if (event.keyCode == 13) {${SHtml.ajaxInvoke(() => submit()).toJsCmd}}; return true;")
   )
 
   protected def inputElem: NodeSeq = SHtml.text(getRx, s => setRx(s), textInputAttrs ++ inputElemDefaultAttrs: _*)
@@ -92,7 +95,15 @@ trait TextViewerElem extends GenStringValueElem with HTMLViewableElem with Label
         ".elem-value *" #> getStringValue()
 }
 
-trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with LabeledElem {
+trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with LabeledElem with FocusableElem {
+
+  override def reloadValue() = {
+    val v = getOneOfManyValue()
+    setCurrentOneOfManyValue(_.id == v.id)
+    Run(s"$$('#${id('input)}').val(${v.id.encJs});")
+  }
+
+  override def focusId: String = id('input)
 
   def select(opts: Seq[(String, NodeSeq)], deflt: Box[String],
              _func: String => Any, attrs: ElemAttr*): scala.xml.Elem = {
@@ -140,7 +151,43 @@ trait SelectInputElem extends GenOneOfManyValueElem with HTMLEditableElem with L
       ))
 }
 
-trait MultiSelectInputElem extends GenManyOfManyValueElem with HTMLEditableElem with LabeledElem {
+trait RadioInputElem extends GenOneOfManyValueElem with HTMLEditableElem with LabeledElem {
+
+  override protected def htmlElemTemplatePath: List[String] = "templates-hidden" :: "elem-edit-radio-dflt" :: Nil
+
+  private var value: OneOfManyValue = getOneOfManyValue()
+
+  def getCurrentOneOfManyValue() = value
+
+  def setCurrentOneOfManyValue(p: OneOfManyValue => Boolean): JsCmd = {
+    value = getAllOneOfManyValues().find(p).get
+  }
+
+  def radioStartsUninitialized = false
+
+  override protected def htmlElemRendererTransforms =
+    super.htmlElemRendererTransforms andThen (
+      ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
+        ".elem-wrap [id]" #> id('wrapper) &
+        ".elem-lbl *+" #> wrapName(labelStr) &
+        ".elem-error [id]" #> id('error)
+      ) andThen {
+      ".elem-repeat" #> getAllOneOfManyValues().map(v => (v.id, v.name)).map(e => (ns: NodeSeq) => {
+        val (id, name) = e
+        bind("elem", (".elem-label *+" #> name.toString()).apply(ns), "input" -%>
+          <input type="radio"
+            name={this.id('name)}
+            checked={if (!radioStartsUninitialized && value.id == id) "true" else null}
+            onclick={
+              SHtml.ajaxInvoke(() => {getAllOneOfManyValues().find(_.id == id).foreach(value = _); onChangeClientSide()}).toJsCmd
+            }
+            value=""></input>
+        )
+      })
+    }
+}
+
+trait MultiSelectInputElem extends GenManyOfManyValueElem with HTMLEditableElem with LabeledElem with FocusableElem {
 
   private var value = getManyOfManyValue()
 
@@ -149,6 +196,8 @@ trait MultiSelectInputElem extends GenManyOfManyValueElem with HTMLEditableElem 
   protected def selectInputAttrs: Seq[ElemAttr]
 
   override def requiresIFrameSubmit(): Boolean = true
+
+  override def focusId: String = id('input)
 
   override protected def htmlElemRendererTransforms =
     super.htmlElemRendererTransforms andThen (
@@ -184,7 +233,7 @@ trait MultiSelectInputElem extends GenManyOfManyValueElem with HTMLEditableElem 
       ))
 }
 
-trait FileUploadInputElem extends GenFileOptValueElem with HTMLEditableElem with LabeledElem {
+trait FileUploadInputElem extends GenFileOptValueElem with HTMLEditableElem with LabeledElem with FocusableElem {
 
   private var value: Option[(Array[Byte], String)] = None
 
@@ -193,6 +242,8 @@ trait FileUploadInputElem extends GenFileOptValueElem with HTMLEditableElem with
   protected def fileInputAttrs: Seq[ElemAttr]
 
   override def requiresIFrameSubmit = true
+
+  override def focusId: String = id('input)
 
   override protected def htmlElemRendererTransforms =
     super.htmlElemRendererTransforms andThen (
@@ -213,7 +264,7 @@ trait FileUploadInputElem extends GenFileOptValueElem with HTMLEditableElem with
       ))
 }
 
-trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableElem with LabeledElem {
+trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableElem with LabeledElem with FocusableElem {
 
   override protected def wrapName(name: String) = name
 
@@ -223,11 +274,13 @@ trait CheckboxInputElem extends GenEditableBooleanValueElem with HTMLEditableEle
 
   protected def checkboxInputAttrs: Seq[ElemAttr]
 
+  override def focusId: String = id('input)
+
   override protected def htmlElemRendererTransforms =
     super.htmlElemRendererTransforms andThen (
       ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
         ".elem-wrap [id]" #> id('wrapper) &
-        ".elem-lbl *" #> wrapName(labelStr) &
+        ".elem-lbl *+" #> wrapName(labelStr) &
         ".elem-error [id]" #> id('error)
       ) andThen
       ((ns: NodeSeq) => bind("elem", ns, "input" -%>
@@ -254,20 +307,19 @@ trait MultiCheckboxInputElem extends GenManyOfManyValueElem with HTMLEditableEle
     super.htmlElemRendererTransforms andThen (
       ".elem-wrap [style+]" #> (if (!enabled()) "display:none;" else "") &
         ".elem-wrap [id]" #> id('wrapper) &
-        ".elem-lbl *" #> wrapName(labelStr) &
+        ".elem-lbl *+" #> wrapName(labelStr) &
         ".elem-error [id]" #> id('error)
       ) andThen {
       ".elem-repeat" #> getAllManyOfManyValues().zipWithIndex.map(e => (ns: NodeSeq) => {
         val (v, idx) = e
-        bind("elem", (".elem-label *" #> v.name.toString()).apply(ns), "input" -%>
+        bind("elem", (".elem-label *+" #> v.name.toString()).apply(ns), "input" -%>
           SHtml.checkbox(
             value.contains(v),
-            selected => if (selected) value = value :+ v else value = value.filter(_ != v),
+            selected => if (selected) {if (!value.contains(v)) value = value :+ v} else value = value.filter(_ != v),
             (checkboxInputAttrs ++ Seq[ElemAttr](
               ("id" -> id(Symbol("input" + idx))),
               ("onchange" -> ("{" + SHtml.ajaxCall(JsRaw(sel(Symbol("input" + idx)) + ".is(':checked')"),
                 selected => {
-                  println("selected: " + selected)
                   if (selected == "true") value = value :+ v else value = value.filter(_ != v)
                   onChangeClientSide()
                 }).toJsCmd + "; return true; }"))

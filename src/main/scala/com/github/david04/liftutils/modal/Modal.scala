@@ -69,7 +69,7 @@ trait Modal {
   def show() =
     Run(s"if(document.getElementById('$id') == null) " +
       "$(" + template.toString.encJs + ").appendTo('body');") &
-      Run("$('#" + id + "').modal('show');")
+      Run("$('#" + id + "').modal({backdrop: 'static'});")
 
   def hide() = Run("$('#" + id + "').modal('hide');")
 }
