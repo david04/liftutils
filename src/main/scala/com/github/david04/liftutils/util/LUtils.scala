@@ -47,6 +47,10 @@ object LUtils {
     def -->[U](f: T => U): U = f(v)
   }
 
+  implicit class ToOption[T](v: T) {
+    def option: Option[T] = Option(v)
+  }
+
   implicit def __print[T](v: T) = new {
     def #!(s: String = "", t: T => String = _.toString): T = { println(s + t(v)); v }
 

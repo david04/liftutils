@@ -302,6 +302,7 @@ trait DefaultSimpleTable3 extends Table
                                   with SortableQueryableTable
                                   with LocStrHeadTable
                                   with StrRowTable
+                                  with TextAlignTable
                                   with ZebraTable {
 
   override protected def templatePath: List[String] = "templates-hidden" :: "modtbl-simple" :: Nil
@@ -417,11 +418,11 @@ trait DefaultSimpleTable3 extends Table
     )
   }
   def ColLongEdit(
-                  name: String,
-                  get: R => Long,
-                  set: (R, Long) => JsCmd,
-                  sort: Option[SortFunc]
-                  )(implicit fac: ColFactory): C = {
+                   name: String,
+                   get: R => Long,
+                   set: (R, Long) => JsCmd,
+                   sort: Option[SortFunc]
+                   )(implicit fac: ColFactory): C = {
     ColSimpleNsFactory(
       name,
       r => InPlace.str(get(r).toString, s => Try(set(r, s.toLong)).getOrElse(JsCmds.Noop), "[empty]"),

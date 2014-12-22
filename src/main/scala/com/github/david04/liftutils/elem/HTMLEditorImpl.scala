@@ -95,8 +95,11 @@ trait HTMLEditorImpl extends HTMLViewer with BasicHTMLEditor {
     }
   }
 
+  def submitBtnLabel = "Save"
+
   def submitBtnTransforms: NodeSeq => NodeSeq =
-    ".editor-btn-submit [onclick]" #> submitForm() &
+    ".editor-btn-submit *" #> submitBtnLabel &
+      ".editor-btn-submit [onclick]" #> submitForm() &
       ".editor-btn-submit [id]" #> submitBtnId
 
   protected val iframeId = Helpers.nextFuncName

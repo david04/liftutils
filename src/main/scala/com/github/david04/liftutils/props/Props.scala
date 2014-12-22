@@ -25,6 +25,19 @@ import net.liftweb.json._
 import net.liftweb.json.JsonAST.{JString, JField, JObject}
 import net.liftweb.common.Box
 
+class  Var[T](initial: => T, getter: () => Option[T], setter: Option[T] => Unit) extends FatLazy[T](null.asInstanceOf[T]) {
+  private var value = getter()
+
+  override def defined_? = synchronized(value != None)
+  override def get: T = synchronized {value.getOrElse({value = Some(initial); get})}
+  override def set(n: T): T = synchronized {value = Some(n); setter(Some(n)); n}
+  def :=(n: T): T = set(n)
+  def apply() = get
+  override def setFrom(other: FatLazy[T]): Unit = ???
+  override def reset = synchronized {value = None}
+  override def calculated_? = synchronized {value.isDefined}
+}
+
 trait Props {
 
   protected def prefix = ""
@@ -45,19 +58,14 @@ trait Props {
   def strVar(name: String, initial: => String): Var[String] = new Var(initial, () => get(name), (value: Option[String]) => set(name, value))
   def intVar(name: String, initial: => Int): Var[Int] = new Var(initial, () => getInt(name), (value: Option[Int]) => setInt(name, value))
   def boolVar(name: String, initial: => Boolean): Var[Boolean] = new Var(initial, () => getBoolean(name), (value: Option[Boolean]) => setBoolean(name, value))
-
-  class Var[T](initial: => T, getter: () => Option[T], setter: Option[T] => Unit) extends FatLazy[T](null.asInstanceOf[T]) {
-    private var value = getter()
-
-    override def defined_? = synchronized(value != None)
-    override def get: T = synchronized {value.getOrElse({value = Some(initial); get})}
-    override def set(n: T): T = synchronized {value = Some(n); setter(Some(n)); n}
-    def :=(n: T): T = set(n)
-    def apply() = get
-    override def setFrom(other: FatLazy[T]): Unit = ???
-    override def reset = synchronized {value = None}
-    override def calculated_? = synchronized {value.isDefined}
-  }
+  def listVarKeyStr[T](name: String, initial: => List[T], toKey: T => String, fromKey: String => T): Var[List[T]] =
+    new Var(
+      initial,
+      () => get(name).map(s => s.split(",").toList.filter(_ != "").map(fromKey)),
+      (value: Option[List[T]]) => set(name, value.map(_.map(toKey).mkString(",")))
+    )
+  def listVarKeyLong[T](name: String, initial: => List[T], toKey: T => Long, fromKey: Long => T): Var[List[T]] = listVarKeyStr(name, initial, v => toKey(v).toString, s => fromKey(s.toLong))
+  def listVarKeyInt[T](name: String, initial: => List[T], toKey: T => Int, fromKey: Int => T): Var[List[T]] = listVarKeyStr(name, initial, v => toKey(v).toString, s => fromKey(s.toInt))
 
   def in(prefix: String) = {
     val _prefix = prefix
