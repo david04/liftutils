@@ -57,13 +57,15 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
 
   override def focusId: String = id('input)
 
+  protected def detectPressReturn: Boolean = true
+
   protected def inputElemDefaultAttrs: Seq[ElemAttr] = Seq[ElemAttr](
     ("id" -> id('input)),
     ("placeholder" -> placeholder.getOrElse("")),
     ("onchange" -> ("{" + setJx(JsRaw("this.value+''"), Noop, () => onChangeClientSide()).toJsCmd + "; return true; }")),
-    ("onkeyup" -> (setJx(JsRaw(ValById(id('input)).toJsCmd + "+''")).toJsCmd)),
-    ("onkeydown" -> s"if (event.keyCode == 13) {${SHtml.ajaxInvoke(() => submit()).toJsCmd}}; return true;")
-  )
+    ("onkeyup" -> (setJx(JsRaw(ValById(id('input)).toJsCmd + "+''")).toJsCmd))
+  ) ++
+    (if (detectPressReturn) List(ElemAttr.pairToBasic("onkeydown" -> s"if (event.keyCode == 13) {${SHtml.ajaxInvoke(() => submit()).toJsCmd}}; return true;")) else Nil)
 
   protected def inputElem: NodeSeq = SHtml.text(getRx, s => setRx(s), textInputAttrs ++ inputElemDefaultAttrs: _*)
 

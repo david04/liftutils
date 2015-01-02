@@ -55,6 +55,8 @@ trait DefaultElems extends Loggable {
                   protected val textInputAttrs: Seq[ElemAttr] = Seq()
                   )(implicit protected val editor: BasicHTMLEditor, protected val p: LocP) extends TextAreaInputElem with EditableElem2DefaultEditorBridge {
 
+    override protected def detectPressReturn: Boolean = false
+
     protected val placeholder: Option[String] = labelStrOpt("placeholder")
 
     def getStringValue(): String = get

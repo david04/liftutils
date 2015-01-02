@@ -72,6 +72,7 @@ case class DateRangePicker(
             case JArray((JInt(from)) :: (JInt(to)) :: Nil) =>
               if (from == to && customRanges.isDefinedAt(from.toLong)) customRanges(from.toLong).onSelection.apply()
               else onSelection(from.toLong, to.toLong)
+            case _ => ???
           }).toJsCmd +
         "}" +
         "}).data('daterangepicker').notify();"

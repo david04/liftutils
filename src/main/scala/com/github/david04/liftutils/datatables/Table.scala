@@ -115,7 +115,7 @@ abstract class Table[T](
 
   def iDisplayStart = showRow.map(selector => {
     val sortCol = columns.find(_.defaultSort).get
-    val data = (values().map(t => (t, sortCol._value(t))).sortBy(_._2 match {case JString(v) => v; case JDouble(v) => v.toString; case JInt(v) => v.toString; case JBool(v) => v.toString; case v => v.toString;}) match {
+    val data = (values().map(t => (t, sortCol._value(t))).sortBy(_._2 match { case JString(v) => v; case JDouble(v) => v.toString; case JInt(v) => v.toString; case JBool(v) => v.toString; case v => v.toString;}) match {
       case asc => if (sortCol.defaultSortAscending) asc else asc.reverse
     })
     data.indexWhere(e => selector(e._1))
@@ -141,7 +141,7 @@ abstract class Table[T](
       _idx
     })
     Run("$('#" + id + "').dataTable({'bRetrieve': true}).fnUpdate(" +
-      (col.value(nw) match {case JString(s) => s.encJs}) + ", " +
+      (col.value(nw) match {case JString(s) => s.encJs case _ => ???}) + ", " +
       idx + ", " +
       columns.indexOf(col) + "," +
       // Do not redraw:

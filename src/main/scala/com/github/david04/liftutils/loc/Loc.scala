@@ -104,6 +104,7 @@ trait Loc {
               val value = param.value.asInstanceOf[JString].s
               str.replaceAllLiterally("{" + param.name + "}", if (value.startsWith("{")) locProc(value) else value)
             }))
+        case _ => ???
       }
     } else {
       fullPrefix.view.map(prefix => S.loc(prefix + "-" + suffix).map(_ => S.?(prefix + "-" + suffix))).flatten.headOption match {

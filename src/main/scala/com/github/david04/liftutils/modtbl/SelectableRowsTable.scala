@@ -83,6 +83,7 @@ trait MouseSelectableRowsTable extends SelectableRowsTable with RowIdsTable {
       val selected = rowsForIds(indexes.collect({ case JString(s) => s}))
       selectedRows = selectedRows ++ selected
       selected.map(selectedRow(_)).foldLeft(Noop)(_ & _) & changedSelection(selectedRows)
+    case _ => ???
   })
 
   protected val diselectCallback = SHtml.jsonCall(JsRaw("window.selected"), (v: JValue) => v match {
@@ -90,6 +91,7 @@ trait MouseSelectableRowsTable extends SelectableRowsTable with RowIdsTable {
       val selected = rowsForIds(indexes.collect({ case JString(s) => s}))
       selectedRows = selectedRows -- selected
       selected.map(diselectedRow(_)).foldLeft(Noop)(_ & _) & changedSelection(selectedRows)
+    case _ => ???
   })
 
   override protected def rowTransforms(row: R, rId: String, rowIdx: Int): NodeSeq => NodeSeq =

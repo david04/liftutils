@@ -148,4 +148,12 @@ object LUtils {
     def P = Run("console.log(" + c.toJsCmd.encJs + ");") & c
   }
 
+
+  case class Memo[A, B](f: A => B) extends (A => B) {
+    private val cache = collection.mutable.Map.empty[A, B]
+    def apply(x: A) = cache getOrElseUpdate(x, f(x))
+
+    def this(pf: PartialFunction[A, B]) = this((a: A) => pf(a))
+  }
+
 }
