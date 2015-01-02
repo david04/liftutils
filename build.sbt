@@ -4,7 +4,7 @@ version := "0.1.14"
 
 organization := "com.github.david04"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.2"
 
 resolvers ++= Seq(
   "Typesafe Releases" at "http://repo.typesafe.com/typesafe/maven-releases/",
@@ -18,7 +18,7 @@ resolvers ++= Seq(
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
-crossScalaVersions := Seq("2.10.4", "2.11.1")
+crossScalaVersions := Seq("2.10.4", "2.11.2")
 
 libraryDependencies ++= {
   val liftVersion = "2.6-SNAPSHOT"
