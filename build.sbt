@@ -18,10 +18,10 @@ resolvers ++= Seq(
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
-crossScalaVersions := Seq("2.10.4", "2.11.2")
+// crossScalaVersions := Seq("2.10.4", "2.11.2")
 
 libraryDependencies ++= {
-  val liftVersion = "2.6-SNAPSHOT"
+  val liftVersion = "2.6-RC2"
   Seq(
     "net.liftweb"                     %% "lift-webkit"                  % liftVersion        % "compile",
     "net.liftweb"                     %% "lift-mapper"                  % liftVersion        % "compile",
