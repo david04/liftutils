@@ -20,6 +20,8 @@
 
 package com.github.david04.liftutils.util
 
+import java.text.SimpleDateFormat
+
 import scala.xml._
 import net.liftweb.util.Helpers._
 import net.liftweb.http.SHtml
@@ -71,26 +73,30 @@ object LUtils {
   def printNs = (ns: NodeSeq) => {println(ns); ns}
   def printNs(s: String) = (ns: NodeSeq) => {println(s + ":\n" + ns); ns}
 
-  var idx = 0
+  var idx = new ThreadLocal[Int]() {override def initialValue(): Int = 0}
+  var pending = new ThreadLocal[List[String]]() {override def initialValue(): List[String] = Nil}
+  var minTime = new ThreadLocal[List[Long]]() {override def initialValue(): List[Long] = Nil}
   var lastOpen = false
-  var enabled = true
+  var enabled = new ThreadLocal[Boolean]() {override def initialValue(): Boolean = true}
 
   /**
    * Profile
    */
-  def %?[T](s: String)(b: => T): T = %?[T](s, null)(b)
+  def %?[T](s: String)(b: => T): T = %?[T](s, null, 0)(b)
+
+  def %%?[T](s: String, minTime: Long = 1000)(b: => T): T = %?[T](s, null, 0)(b)
 
   def %??[T1, T2](s: String)(f: T1 => T2): T1 => T2 = (v: T1) => %?(s)(f(v))
 
   def disableProfiling[T](b: => T): T = {
-    enabled = false
+    enabled set false
     val (ret, ex) = try {
       val ret = b
       (Some(ret), None)
     } catch {
       case t: Throwable => (None, Some(t))
     }
-    enabled = true
+    enabled set true
     (ret, ex) match {
       case (Some(ret), _) => ret
       case (_, Some(t)) => throw t
@@ -98,15 +104,26 @@ object LUtils {
     }
   }
 
-  def %?[T](s: String, rslt: T => String)(b: => T): T = {
-    if (enabled) {
-      val space = (0 until idx).map(_ => "  ").mkString
+  val fmt = new SimpleDateFormat("dd/MM/yy HH:mm:ss:SSS")
 
-      if (lastOpen) println()
-      print(space + s"Starting '$s'...")
+
+  def %?[T](s: String, rslt: T => String, _minTime: Long)(b: => T): T = {
+    if (enabled.get) {
+      val space = (0 until idx.get).map(_ => "  ").mkString
+
+      minTime set ((math.max(_minTime, minTime.get.headOption.getOrElse(0L))) :: minTime.get)
+
+      val MIN_TIME: Long = minTime.get.head
+
+      val init =
+        (if (lastOpen) System.lineSeparator() else "") +
+          (space + s"[${fmt.format(new java.util.Date())}@${Thread.currentThread().getName.takeRight(10)}] Starting '$s'...")
+
+      if (MIN_TIME == 0) print(init)
+      else pending set (init :: pending.get)
 
       lastOpen = true
-      idx = idx + 2
+      idx set (idx.get + 2)
 
       val start = System.currentTimeMillis()
       val (ret, ex) = try {
@@ -117,7 +134,7 @@ object LUtils {
       }
       val took = System.currentTimeMillis() - start
 
-      idx = idx - 2
+      idx set (idx.get - 2)
 
       val exception = ex match {
         case Some(t) => {
@@ -127,9 +144,20 @@ object LUtils {
       }
 
       val rsltStr = ret.flatMap(ret => Option(rslt).map(_(ret))).map(" [" + _ + "]").getOrElse("")
-      println(
-        if (lastOpen) s" [${took}ms]$exception$rsltStr" else s"${space}Finished '$s' [${took}ms]$exception$rsltStr"
-      )
+
+      val closing = if (lastOpen && MIN_TIME == 0) s" [${took}ms]$exception$rsltStr" else s"${space}[${fmt.format(new java.util.Date())}@${Thread.currentThread().getName.takeRight(10)}] Finished '$s' [${took}ms]$exception$rsltStr"
+
+      if (MIN_TIME == 0) println(closing)
+      else if (took >= MIN_TIME) {
+        println(pending.get.reverse.mkString("\n"))
+        println(closing)
+        pending set Nil
+      } else {
+        pending set (pending.get.tail)
+      }
+
+      minTime set minTime.get.tail
+
       ex.foreach(_.printStackTrace())
       lastOpen = false
 
@@ -155,5 +183,4 @@ object LUtils {
 
     def this(pf: PartialFunction[A, B]) = this((a: A) => pf(a))
   }
-
 }

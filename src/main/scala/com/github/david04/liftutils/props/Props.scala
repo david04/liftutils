@@ -34,7 +34,7 @@ class  Var[T](initial: => T, getter: () => Option[T], setter: Option[T] => Unit)
   def :=(n: T): T = set(n)
   def apply() = get
   override def setFrom(other: FatLazy[T]): Unit = ???
-  override def reset = synchronized {value = None}
+  override def reset = synchronized { value = None}
   override def calculated_? = synchronized {value.isDefined}
 }
 

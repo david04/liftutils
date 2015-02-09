@@ -47,7 +47,7 @@ trait TextInputElem extends GenEditableStringValueElem with HTMLEditableElem wit
   protected val toJx = (s: String) => JE.Str(s)
   protected val fromJx = (v: JValue) => v.asInstanceOf[JString].s
 
-  def getCurrentStringValue(): String = getRx()
+  def getCurrentStringValue(): String = getRx
 
   protected def textInputAttrs: Seq[ElemAttr]
 
@@ -197,7 +197,7 @@ trait MultiSelectInputElem extends GenManyOfManyValueElem with HTMLEditableElem 
 
   protected def selectInputAttrs: Seq[ElemAttr]
 
-  override def requiresIFrameSubmit(): Boolean = true
+  override def requiresIFrameSubmit: Boolean = true
 
   override def focusId: String = id('input)
 

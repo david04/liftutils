@@ -69,12 +69,12 @@ trait SxVar[T] extends SxVal[T] {
     extSet.map(_(v)).getOrElse(JsCmds.Noop) & sxNotifyDependents()
   }
 
-  def getRx(): T = {
+  def getRx: T = {
     if (current.isEmpty) current = Some(initialRx)
     current.get
   }
 
-  def apply() = getRx()
+  def apply() = getRx
   def update(v: T) = setRx(v)
 }
 
@@ -133,7 +133,7 @@ trait JxVar extends JxVal {
 
   protected val jxInitial: JsExp
 
-  def getJx(): JsExp = JsRaw(s"(window.V$id ? window.V$id : ${jxInitial.toJsCmd})")
+  def getJx: JsExp = JsRaw(s"(window.V$id ? window.V$id : ${jxInitial.toJsCmd})")
 
   def setJx(v: JsExp) = Run(s"window.V$id = " + v.toJsCmd) & jxNotifyDependents()
 

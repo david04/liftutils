@@ -81,5 +81,5 @@ case class DefaultModal(
                          protected val action: Option[(String, JsCmd)],
                          protected val height: Option[Int] = None
                          ) extends Modal {
-  def cancel = Some(cancelLbl, hide())
+  def cancel = Some((cancelLbl, hide()))
 }

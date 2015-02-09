@@ -135,8 +135,8 @@ trait FuelUXTree extends HTMLEditableElem with LabeledElem {
                 map(id).children().map(toFuelUX(_))
               }) openOr root.map(toFuelUX(_))
 
-              (("nodes", Extraction.decompose(nodes)) ~
-                ("init", nodes.filter(_.isSelected).map(_.selectNode()).foldLeft[JsCmd](Noop)(_ & _).toJsCmd.toString))
+              ((("nodes", Extraction.decompose(nodes))) ~
+                (("init", nodes.filter(_.isSelected).map(_.selectNode()).foldLeft[JsCmd](Noop)(_ & _).toJsCmd.toString)))
             }
           ).toJsCmd +
           "}}}).on('updated', function(sel) {" +

@@ -77,5 +77,5 @@ case class DefaultNiftyModal(
                               protected val action: Option[(String, JsCmd)],
                               protected val height: Option[Int] = None)(implicit protected val p: LocP) extends NiftyModal {
 
-  def cancel = Some(cancelLbl, hide())
+  def cancel = Some((cancelLbl, hide()))
 }

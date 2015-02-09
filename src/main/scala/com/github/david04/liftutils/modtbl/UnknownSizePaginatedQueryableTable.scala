@@ -20,6 +20,8 @@
 
 package com.github.david04.liftutils.modtbl
 
+import net.liftweb.util.PassThru
+
 import scala.xml.NodeSeq
 import net.liftweb.http.Templates
 import net.liftweb.util.Helpers._
@@ -31,9 +33,9 @@ trait UnknownSizePaginatedQueryableTable extends PaginatedQueryableTable {
 
   protected lazy val nPages = Int.MaxValue / 2
 
-  protected def paginationInfoTransforms(): NodeSeq => NodeSeq =
-    ".modtbl-pag-info *" #>
-      loc("pagInfo",
-        "from" -> (currentPage * pageSize + 1).toString,
-        "to" -> ((currentPage + 1) * pageSize).toString)
+  protected def paginationInfoTransforms(): NodeSeq => NodeSeq = PassThru
+//    ".modtbl-pag-info *" #>
+//      loc("pagInfoUnknown",
+//        "from" -> (currentPage * pageSize + 1).toString,
+//        "to" -> ((currentPage + 1) * pageSize).toString)
 }

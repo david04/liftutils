@@ -23,10 +23,22 @@ package com.github.david04.liftutils.modtbl
 import net.liftweb.http.S
 import net.liftweb.util.FatLazy
 import net.liftweb.http.js.JsCmds.Run
+import net.liftweb.util.Helpers._
 import com.github.david04.liftutils.elem.ID
+
+import scala.xml.NodeSeq
 
 
 trait KnownSizeTable extends PaginatedQueryableTable {
 
   protected def rowsSize: Long
+
+  protected def nPages = math.max(1, math.ceil(rowsSize / pageSize.toDouble).toInt)
+
+  protected def paginationInfoTransforms(): NodeSeq => NodeSeq =
+    ".modtbl-pag-info *" #>
+      loc("pagInfo",
+        "from" -> math.min(rowsSize, (currentPage * pageSize + 1)).toString,
+        "to" -> math.min(rowsSize, ((currentPage + 1) * pageSize)).toString,
+        "total" -> rowsSize.toString)
 }

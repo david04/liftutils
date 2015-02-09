@@ -94,6 +94,11 @@ trait Scheduler {
     thread.int()
   }
 
+  def scheduleTasks(_tasks: Seq[Task]) = synchronized {
+    tasks ++= _tasks.map(task => (task, task.run _))
+    thread.int()
+  }
+
   def cancelTask(task: Task) = synchronized {
     tasks -= task
     thread.int()

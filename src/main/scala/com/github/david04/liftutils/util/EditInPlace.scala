@@ -48,38 +48,38 @@ class InPlace1[T](
     val id = Helpers.nextFuncName
 
     val selectText =
-      """if(!window.$id) {
-        |  window.$id = true;
-        |  var range, selection;
-        |  if (document.body.createTextRange) {
-        |    range = document.body.createTextRange();
-        |    range.moveToElementText(this);
-        |    range.select();
-        |  } else if (window.getSelection) {
-        |    selection = window.getSelection();
-        |    range = document.createRange();
-        |    range.selectNodeContents(this);
-        |    selection.removeAllRanges();
-        |    selection.addRange(range);
-        |  };
-        |}
-        | """.stripMargin
+      s"""if(!window.$id) {
+                          |window.$id = true;
+                                       |var range, selection;
+                                       |if (document.body.createTextRange) {
+                                       |range = document.body.createTextRange();
+                                       |range.moveToElementText(this);
+                                       |range.select();
+                                       |} else if (window.getSelection) {
+                                       |selection = window.getSelection();
+                                       |range = document.createRange();
+                                       |range.selectNodeContents(this);
+                                       |selection.removeAllRanges();
+                                       |selection.addRange(range);
+                                       |};
+                                       |}
+                                       | """.stripMargin
 
     val selectText2 =
       s"""
          |var range, selection;
          |if (document.body.createTextRange) {
-         |  range = document.body.createTextRange();
-         |  range.moveToElementText(document.getElementById("$id"));
-         |  range.select();
-         |} else if (window.getSelection) {
-         |  selection = window.getSelection();
-         |  range = document.createRange();
-         |  range.selectNodeContents(document.getElementById("$id"));
-         |  selection.removeAllRanges();
-         |  selection.addRange(range);
-         |};
-         |""".stripMargin
+         |range = document.body.createTextRange();
+         |range.moveToElementText(document.getElementById("$id"));
+                                                                |range.select();
+                                                                |} else if (window.getSelection) {
+                                                                |selection = window.getSelection();
+                                                                |range = document.createRange();
+                                                                |range.selectNodeContents(document.getElementById("$id"));
+                                                                                                                        |selection.removeAllRanges();
+                                                                                                                        |selection.addRange(range);
+                                                                                                                        |};
+                                                                                                                        |""".stripMargin
 
     lazy val save: String = {
       Run(s"window.$id = false;" +
@@ -118,24 +118,31 @@ class InPlace[T](
                   ifEmpty: String = "",
                   setParentWidth: Boolean = false,
                   serverVal: Boolean = true,
-                  startSelected: Boolean = false
+                  startSelected: Boolean = false,
+                  cls: String = ""
                   ) {
+
+  val id = Helpers.nextFuncName
+
+  object clas {
+    def +=(cls: String): JsCmd = Run( s"""$$('#$id').addClass(${cls.encJs});""")
+    def -=(cls: String): JsCmd = Run( s"""$$('#$id').removeClass(${cls.encJs});""")
+  }
 
   def render = {
     var editing = false
-    val id = Helpers.nextFuncName
 
     val selectText2 = Run {
       s"""setTimeout(function() {
-         | var el = document.getElementById("$id");
-         | var range = document.createRange();
-         | range.selectNodeContents(el);
-         | var sel = window.getSelection();
-         | sel.removeAllRanges();
-         | sel.addRange(range);
-         | el.focus();
-         |}, 30);
-         |""".stripMargin
+         |var el = document.getElementById("$id");
+                                                 |var range = document.createRange();
+                                                 |range.selectNodeContents(el);
+                                                 |var sel = window.getSelection();
+                                                 |sel.removeAllRanges();
+                                                 |sel.addRange(range);
+                                                 |el.focus();
+                                                 |}, 30);
+                                                 |""".stripMargin
     }
 
     lazy val save: String = {
@@ -149,8 +156,8 @@ class InPlace[T](
     lazy val renderer = SHtml.idMemoize(renderer => (_: NodeSeq) => {
       def current = Some(toStr(get)).filter(_ != "").getOrElse(ifEmpty)
 
-      lazy val editMode = <div style="display:inline;" tabindex="0" id={id} class="inplace-edit" contenteditable="true" onblur={save} onkeydown={"function(event){if(event.keyCode == 13){" + save + "; return false;}}"}>{current}</div>
-      lazy val viewMode = <div style="display:inline;" tabindex="0" id={id} class="inplace-display" onclick={SHtml.ajaxInvoke(() => {editing = true; renderer.setHtml() & selectText2}).toJsCmd}>{current}</div>
+      lazy val editMode = <div style="display:inline;" tabindex="0" id={id} class={"inplace-edit " + cls} contenteditable="true" onblur={save} onkeydown={"function(event){if(event.keyCode == 13){" + save + "; return false;}}"}>{current}</div>
+      lazy val viewMode = <div style="display:inline;" tabindex="0" id={id} class={"inplace-display " + cls} onclick={SHtml.ajaxInvoke(() => {editing = true; renderer.setHtml() & selectText2}).toJsCmd}>{current}</div>
 
       if (editing) editMode else viewMode
     })
